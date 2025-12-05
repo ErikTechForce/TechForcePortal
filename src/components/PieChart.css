@@ -1,0 +1,15 @@
+.pie-chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pie-chart-empty {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+
+

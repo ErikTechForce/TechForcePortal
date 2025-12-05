@@ -1,0 +1,135 @@
+.tasks-board-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.tasks-board-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.tasks-board-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tasks-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.tasks-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clickable-item {
+  font-size: 0.95rem;
+  color: #374151;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s ease, padding-left 0.2s ease;
+}
+
+.clickable-item:last-child {
+  border-bottom: none;
+}
+
+.clickable-item:hover {
+  background-color: #f9fafb;
+  padding-left: 0.5rem;
+}
+
+.tasks-board-button-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 2rem 0;
+}
+
+.add-task-button {
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-task-button:hover {
+  background-color: #14532d;
+}
+
+.add-task-button:active {
+  transform: scale(0.98);
+}
+
+.assigned-companies-section {
+  margin-top: 2rem;
+}
+
+.assigned-companies-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.assigned-companies-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.assigned-companies-table thead {
+  background-color: #f9fafb;
+}
+
+.assigned-companies-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.assigned-companies-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.assigned-companies-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.assigned-companies-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.table-empty {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 2rem !important;
+}
+
+
+
