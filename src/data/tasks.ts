@@ -36,7 +36,13 @@ export const employees = [
   'Lisa Anderson',
 ];
 
-export const products: string[] = [];
+export const products: string[] = [
+  'Robot A',
+  'Robot B',
+  'Robot C',
+  'Robot D',
+  'Robot E'
+];
 
 export const getTaskById = (id: number): Task | undefined => {
   return tasks.find(task => task.id === id);

@@ -11,5 +11,31 @@
   text-align: center;
 }
 
+.pie-chart-tooltip {
+  position: fixed;
+  background-color: #1f2937;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-value {
+  font-size: 0.75rem;
+  color: #d1d5db;
+}
+
+
+
 
 

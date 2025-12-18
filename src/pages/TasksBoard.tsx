@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { tasks } from '../data/tasks';
+import { clients } from '../data/clients';
 import './Page.css';
 import './TasksBoard.css';
 
@@ -15,6 +16,10 @@ const TasksBoard: React.FC = () => {
 
   const handleTaskClick = (taskId: number) => {
     navigate(`/tasks/${taskId}`);
+  };
+
+  const handleClientClick = (clientId: number) => {
+    navigate(`/client/${clientId}`);
   };
 
   const todoTasks = tasks.filter(task => task.status === 'Unassigned' && [1, 2, 3, 4].includes(task.id));
@@ -79,30 +84,18 @@ const TasksBoard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>Acme Corporation</td>
-                    <td>John Smith</td>
-                    <td>Sarah Johnson</td>
-                    <td>Robotic Arm System</td>
-                  </tr>
-                  <tr>
-                    <td>TechSolutions Inc.</td>
-                    <td>Michael Chen</td>
-                    <td>Robert Martinez</td>
-                    <td>Automated Assembly Line</td>
-                  </tr>
-                  <tr>
-                    <td>Global Industries Ltd.</td>
-                    <td>Emily Davis</td>
-                    <td>Jennifer Brown</td>
-                    <td>Warehouse Automation</td>
-                  </tr>
-                  <tr>
-                    <td>Innovation Dynamics</td>
-                    <td>David Wilson</td>
-                    <td>Thomas Anderson</td>
-                    <td>Quality Control System</td>
-                  </tr>
+                  {clients.map((client) => (
+                    <tr 
+                      key={client.id}
+                      onClick={() => handleClientClick(client.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td>{client.company}</td>
+                      <td>{client.employee}</td>
+                      <td>{client.pointOfContact}</td>
+                      <td>{client.product}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

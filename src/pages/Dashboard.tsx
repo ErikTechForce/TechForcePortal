@@ -2,6 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+import LeadsConversionChart from '../components/LeadsConversionChart';
+import SalesChart from '../components/SalesChart';
+import PieChart from '../components/PieChart';
 import { tasks } from '../data/tasks';
 import './Dashboard.css';
 
@@ -13,6 +16,115 @@ const Dashboard: React.FC = () => {
   };
 
   const dashboardTasks = tasks.filter(task => task.status === 'In Progress');
+  
+  // Sample data for charts - showcasing different conversion rate ranges
+  // Red (< 2%), Yellow (2-5%), Green (> 5%)
+  const leadsData = {
+    30: { totalLeads: 100, convertedLeads: 1 }, // 1.0% (Red)
+    90: { totalLeads: 100, convertedLeads: 3 }, // 3.0% (Yellow)
+    180: { totalLeads: 100, convertedLeads: 4 }, // 4.0% (Yellow)
+    365: { totalLeads: 100, convertedLeads: 7 } // 7.0% (Green)
+  };
+  
+  const salesProductData = {
+    '1month': [
+      { product: 'Robot A', sales: 12 },
+      { product: 'Robot B', sales: 18 },
+      { product: 'Robot C', sales: 15 },
+      { product: 'Robot D', sales: 22 },
+      { product: 'Robot E', sales: 20 }
+    ],
+    '3months': [
+      { product: 'Robot A', sales: 35 },
+      { product: 'Robot B', sales: 52 },
+      { product: 'Robot C', sales: 44 },
+      { product: 'Robot D', sales: 65 },
+      { product: 'Robot E', sales: 58 }
+    ],
+    '6months': [
+      { product: 'Robot A', sales: 72 },
+      { product: 'Robot B', sales: 108 },
+      { product: 'Robot C', sales: 90 },
+      { product: 'Robot D', sales: 132 },
+      { product: 'Robot E', sales: 120 }
+    ],
+    '1year': [
+      { product: 'Robot A', sales: 144 },
+      { product: 'Robot B', sales: 216 },
+      { product: 'Robot C', sales: 180 },
+      { product: 'Robot D', sales: 264 },
+      { product: 'Robot E', sales: 240 }
+    ]
+  };
+
+  // Calculate total sales from product sales for each period
+  const calculateTotalFromProducts = (products: typeof salesProductData['1month']) => {
+    return products.reduce((sum, p) => sum + p.sales, 0);
+  };
+
+  // Generate monthly sales data that matches product totals
+  const generateMonthlySalesData = (months: number, periodTotal: number) => {
+    const data = [];
+    const today = new Date();
+    const avgMonthly = Math.floor(periodTotal / months);
+    const remainder = periodTotal % months;
+    
+    for (let i = months - 1; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      // Distribute total evenly, with remainder added to first month
+      const monthlyTotal = avgMonthly + (i === months - 1 ? remainder : 0);
+      // Add slight variation for realism (±5%)
+      const variation = Math.floor(monthlyTotal * 0.05 * (Math.random() * 2 - 1));
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        total: Math.max(1, monthlyTotal + variation)
+      });
+    }
+    
+    // Ensure the sum matches the period total exactly
+    const currentSum = data.reduce((sum, d) => sum + d.total, 0);
+    const difference = periodTotal - currentSum;
+    if (difference !== 0) {
+      data[data.length - 1].total += difference;
+    }
+    
+    return data;
+  };
+
+  const salesTotalData = {
+    '1month': generateMonthlySalesData(1, calculateTotalFromProducts(salesProductData['1month'])),
+    '3months': generateMonthlySalesData(3, calculateTotalFromProducts(salesProductData['3months'])),
+    '6months': generateMonthlySalesData(6, calculateTotalFromProducts(salesProductData['6months'])),
+    '1year': generateMonthlySalesData(12, calculateTotalFromProducts(salesProductData['1year']))
+  };
+  
+  const robotsData = [
+    {
+      label: 'Online',
+      value: 13,
+      color: '#4ade80'
+    },
+    {
+      label: 'Offline',
+      value: 5,
+      color: '#6b7280'
+    },
+    {
+      label: 'Needs Service',
+      value: 2,
+      color: '#dc2626'
+    }
+  ];
+
+  const socialMediaFeed = [
+    { platform: 'Instagram', activity: 'TechForce has just posted a reel on Instagram', time: '2 hours ago' },
+    { platform: 'LinkedIn', activity: 'TechForce shared a new article about robotics innovation', time: '5 hours ago' },
+    { platform: 'Twitter', activity: 'TechForce tweeted about the latest product launch', time: '1 day ago' },
+    { platform: 'Facebook', activity: 'TechForce posted a video showcasing new features', time: '1 day ago' },
+    { platform: 'Instagram', activity: 'TechForce uploaded a new photo gallery', time: '2 days ago' },
+    { platform: 'LinkedIn', activity: 'TechForce announced a partnership with industry leaders', time: '3 days ago' }
+  ];
+  
   return (
     <div className="dashboard-container">
       <Header />
@@ -23,18 +135,42 @@ const Dashboard: React.FC = () => {
             <h2 className="dashboard-title">Dashboard</h2>
             <p className="dashboard-subtitle">Welcome to TechForce Robotics Company Portal</p>
             
+            <div className="dashboard-charts-row">
+              <div className="dashboard-chart-card">
+                <LeadsConversionChart data={leadsData} />
+              </div>
+              <div className="dashboard-chart-card">
+                <SalesChart productData={salesProductData} totalData={salesTotalData} />
+              </div>
+              <div className="dashboard-chart-card">
+                <h3 className="chart-title">Robots Online</h3>
+                <div className="robots-chart-wrapper">
+                  <PieChart data={robotsData} size={200} />
+                </div>
+              </div>
+            </div>
+            
             <div className="dashboard-cards">
               <div className="dashboard-card">
-                <h3 className="card-title">Leads</h3>
+                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
                   <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    Acme Corporation
+                    FutureTech Solutions
                   </div>
                   <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    TechSolutions Inc.
+                    Digital Innovations
                   </div>
                   <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    Global Industries Ltd.
+                    Smart Systems LLC
+                  </div>
+                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
+                    NextGen Robotics
+                  </div>
+                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
+                    Automation Pro
+                  </div>
+                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
+                    RoboTech Industries
                   </div>
                 </div>
               </div>
@@ -50,6 +186,17 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="dashboard-card">
                 <h3 className="card-title">Feed</h3>
+                <div className="card-content">
+                  {socialMediaFeed.map((item, index) => (
+                    <div key={index} className="feed-item">
+                      <div className="feed-activity">{item.activity}</div>
+                      <div className="feed-meta">
+                        <span className="feed-platform">{item.platform}</span>
+                        <span className="feed-time">{item.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

@@ -1,10 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+import { clients } from '../data/clients';
+import { leads } from '../data/leads';
 import './Page.css';
 import './Client.css';
 
 const Client: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleClientClick = (clientId: number) => {
+    navigate(`/client/${clientId}`);
+  };
+
+  const handleLeadClick = (leadId: number) => {
+    navigate(`/lead/${leadId}`);
+  };
+
   return (
     <div className="page-container">
       <Header />
@@ -35,9 +48,18 @@ const Client: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={4} className="table-empty">No clients found</td>
-                  </tr>
+                  {clients.map((client) => (
+                    <tr 
+                      key={client.id} 
+                      onClick={() => handleClientClick(client.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td>{client.company}</td>
+                      <td>{client.employee}</td>
+                      <td>{client.pointOfContact}</td>
+                      <td>{client.product}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -58,9 +80,18 @@ const Client: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={4} className="table-empty">No leads found</td>
-                  </tr>
+                  {leads.map((lead) => (
+                    <tr 
+                      key={lead.id} 
+                      onClick={() => handleLeadClick(lead.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td>{lead.companyName}</td>
+                      <td>{lead.pointOfContact}</td>
+                      <td>{lead.contactInformation}</td>
+                      <td>{lead.source}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
