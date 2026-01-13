@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import SearchableDropdown from '../components/SearchableDropdown';
 import { getClientById } from '../data/clients';
-import { products } from '../data/tasks';
+import { getOrdersByCompanyName } from '../data/orders';
 import './Page.css';
 import './ClientDetail.css';
+import './Orders.css';
 
 const ClientDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -17,27 +17,33 @@ const ClientDetail: React.FC = () => {
   const [company, setCompany] = useState(clientData?.company || '');
   const [employee, setEmployee] = useState(clientData?.employee || '');
   const [pointOfContact, setPointOfContact] = useState(clientData?.pointOfContact || '');
-  const [product, setProduct] = useState(clientData?.product || '');
+  const [billingAddress, setBillingAddress] = useState('');
   const [contactEmail, setContactEmail] = useState(clientData?.contactEmail || '');
   const [contactPhone, setContactPhone] = useState(clientData?.contactPhone || '');
+  const [siteLocationAddress, setSiteLocationAddress] = useState('');
   const [notes, setNotes] = useState(clientData?.notes || '');
+
+  // Get orders for this client
+  const clientOrders = clientData ? getOrdersByCompanyName(clientData.company) : [];
 
   useEffect(() => {
     if (clientData) {
       setCompany(clientData.company);
-      setEmployee(clientData.employee);
+      setEmployee(clientData.employee || '');
       setPointOfContact(clientData.pointOfContact);
-      setProduct(clientData.product);
       setContactEmail(clientData.contactEmail || '');
       setContactPhone(clientData.contactPhone || '');
       setNotes(clientData.notes || '');
+      // Set placeholder addresses
+      setBillingAddress('123 Business St, Suite 100, City, State 12345');
+      setSiteLocationAddress('456 Industrial Blvd, Building A, City, State 12345');
     }
   }, [clientData]);
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle update logic here
-    console.log('Client updated:', { company, employee, pointOfContact, product, contactEmail, contactPhone, notes });
+    console.log('Client updated:', { company, employee, pointOfContact, billingAddress, contactEmail, contactPhone, siteLocationAddress, notes });
     // Navigate back to clients
     navigate('/client');
   };
@@ -79,8 +85,8 @@ const ClientDetail: React.FC = () => {
                     id="company"
                     className="form-input"
                     value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    required
+                    disabled
+                    readOnly
                   />
                 </div>
 
@@ -93,17 +99,6 @@ const ClientDetail: React.FC = () => {
                     value={employee}
                     onChange={(e) => setEmployee(e.target.value)}
                     required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="product" className="form-label">Product</label>
-                  <SearchableDropdown
-                    options={products}
-                    value={product}
-                    onChange={setProduct}
-                    placeholder="Select or type product name..."
-                    required={true}
                   />
                 </div>
               </div>
@@ -143,6 +138,62 @@ const ClientDetail: React.FC = () => {
                     onChange={(e) => setContactPhone(e.target.value)}
                   />
                 </div>
+
+                <div className="form-group">
+                  <label htmlFor="billingAddress" className="form-label">Billing Address</label>
+                  <textarea
+                    id="billingAddress"
+                    className="form-textarea"
+                    value={billingAddress}
+                    onChange={(e) => setBillingAddress(e.target.value)}
+                    rows={3}
+                    placeholder="Enter billing address..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="siteLocationAddress" className="form-label">Site Location Address</label>
+                  <textarea
+                    id="siteLocationAddress"
+                    className="form-textarea"
+                    value={siteLocationAddress}
+                    onChange={(e) => setSiteLocationAddress(e.target.value)}
+                    rows={3}
+                    placeholder="Enter site location address..."
+                  />
+                </div>
+
+                {clientOrders.length > 0 && (
+                  <div className="form-group">
+                    <label className="form-label">Orders</label>
+                    <div className="orders-table-wrapper">
+                      <table className="orders-table">
+                        <thead>
+                          <tr>
+                            <th>Order Number</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Employee</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {clientOrders.map((order) => (
+                            <tr key={order.id}>
+                              <td>{order.orderNumber}</td>
+                              <td>{order.category}</td>
+                              <td>
+                                <span className={`status-badge status-${order.status.toLowerCase().replace(' ', '-')}`}>
+                                  {order.status}
+                                </span>
+                              </td>
+                              <td>{order.employee || 'unassigned'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-section">

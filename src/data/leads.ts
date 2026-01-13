@@ -12,7 +12,7 @@ export interface Lead {
 export const leads: Lead[] = [
   {
     id: 1,
-    companyName: 'FutureTech Solutions',
+    companyName: 'FutureTech Solutions Inc.',
     pointOfContact: 'Mark Thompson',
     contactInformation: 'mark.thompson@futuretech.com',
     source: 'LinkedIn',
@@ -22,7 +22,7 @@ export const leads: Lead[] = [
   },
   {
     id: 2,
-    companyName: 'Digital Innovations',
+    companyName: 'Digital Innovations Group',
     pointOfContact: 'Jessica Lee',
     contactInformation: 'jessica.lee@digitalinnov.com',
     source: 'TechForce',
@@ -32,7 +32,7 @@ export const leads: Lead[] = [
   },
   {
     id: 3,
-    companyName: 'Smart Systems LLC',
+    companyName: 'Smart Systems Corporation',
     pointOfContact: 'Robert Garcia',
     contactInformation: 'robert.garcia@smartsystems.com',
     source: 'Facebook',
@@ -42,7 +42,7 @@ export const leads: Lead[] = [
   },
   {
     id: 4,
-    companyName: 'NextGen Robotics',
+    companyName: 'NextGen Robotics Systems',
     pointOfContact: 'Amanda White',
     contactInformation: 'amanda.white@nextgen.com',
     source: 'Twitter',
@@ -52,7 +52,7 @@ export const leads: Lead[] = [
   },
   {
     id: 5,
-    companyName: 'Automation Pro',
+    companyName: 'Automation Pro Solutions',
     pointOfContact: 'James Miller',
     contactInformation: 'james.miller@automationpro.com',
     source: 'TechForce',
@@ -62,7 +62,7 @@ export const leads: Lead[] = [
   },
   {
     id: 6,
-    companyName: 'RoboTech Industries',
+    companyName: 'RoboTech Industries Group',
     pointOfContact: 'Maria Rodriguez',
     contactInformation: 'maria.rodriguez@robotech.com',
     source: 'Instagram',
@@ -75,4 +75,7 @@ export const leads: Lead[] = [
 export const getLeadById = (id: number): Lead | undefined => {
   return leads.find(lead => lead.id === id);
 };
+
+
+
 

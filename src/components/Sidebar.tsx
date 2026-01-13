@@ -12,6 +12,7 @@ const Sidebar: React.FC = () => {
   
   const mainMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Orders', path: '/orders' },
     { label: 'Tasks Board', path: '/tasks' },
     { label: 'Client', path: '/client' },
     { label: 'Inventory', path: '/inventory' },

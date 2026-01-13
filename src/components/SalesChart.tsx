@@ -54,27 +54,27 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
   const currentProductData = productData[timePeriod];
   const currentTotalData = totalData[timePeriod];
   
-  const chartHeight = 200;
-  const chartPadding = 40;
-  const labelBottomPadding = 25; // Extra space for two-line labels
+  const chartHeight = 150;
+  const chartPadding = 30;
+  const labelBottomPadding = 20; // Extra space for two-line labels
   
   // For product view
   const maxProductSales = Math.max(...currentProductData.map(d => d.sales), 1);
-  const barWidth = 60;
-  const barSpacing = 20;
+  const barWidth = 45;
+  const barSpacing = 15;
   const productChartWidth = currentProductData.length * (barWidth + barSpacing) - barSpacing;
   
   // For total view
   const maxTotalSales = Math.max(...currentTotalData.map(d => d.total), 1);
   const chartPaddingLeft = 10;
   const chartPaddingRight = 10;
-  const totalBarSpacing = 12;
-  const availableWidth = 600 - chartPaddingLeft - chartPaddingRight;
+  const totalBarSpacing = 10;
+  const availableWidth = 450 - chartPaddingLeft - chartPaddingRight;
   
-  // Target bar width similar to 6 months view (~85px)
-  const targetBarWidth = 85;
+  // Target bar width similar to 6 months view (~65px)
+  const targetBarWidth = 65;
   const maxBarWidth = targetBarWidth;
-  const minBarWidth = 35;
+  const minBarWidth = 25;
   
   // Calculate bar width, but cap it for 1 month and 3 months to match 6 months visually
   const calculatedBarWidth = (availableWidth - (currentTotalData.length - 1) * totalBarSpacing) / currentTotalData.length;

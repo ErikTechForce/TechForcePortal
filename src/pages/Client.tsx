@@ -55,7 +55,7 @@ const Client: React.FC = () => {
                       style={{ cursor: 'pointer' }}
                     >
                       <td>{client.company}</td>
-                      <td>{client.employee}</td>
+                      <td>{client.employee || 'unassigned'}</td>
                       <td>{client.pointOfContact}</td>
                       <td>{client.product}</td>
                     </tr>

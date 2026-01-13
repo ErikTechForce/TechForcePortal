@@ -2,10 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import LeadsConversionChart from '../components/LeadsConversionChart';
+import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
 import { tasks } from '../data/tasks';
+import { leads } from '../data/leads';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -15,16 +16,11 @@ const Dashboard: React.FC = () => {
     navigate(`/tasks/${taskId}`);
   };
 
-  const dashboardTasks = tasks.filter(task => task.status === 'In Progress');
-  
-  // Sample data for charts - showcasing different conversion rate ranges
-  // Red (< 2%), Yellow (2-5%), Green (> 5%)
-  const leadsData = {
-    30: { totalLeads: 100, convertedLeads: 1 }, // 1.0% (Red)
-    90: { totalLeads: 100, convertedLeads: 3 }, // 3.0% (Yellow)
-    180: { totalLeads: 100, convertedLeads: 4 }, // 4.0% (Yellow)
-    365: { totalLeads: 100, convertedLeads: 7 } // 7.0% (Green)
+  const handleLeadClick = (leadId: number) => {
+    navigate(`/lead/${leadId}`);
   };
+
+  const dashboardTasks = tasks.filter(task => task.status === 'In Progress');
   
   const salesProductData = {
     '1month': [
@@ -137,7 +133,7 @@ const Dashboard: React.FC = () => {
             
             <div className="dashboard-charts-row">
               <div className="dashboard-chart-card">
-                <LeadsConversionChart data={leadsData} />
+                <Pending />
               </div>
               <div className="dashboard-chart-card">
                 <SalesChart productData={salesProductData} totalData={salesTotalData} />
@@ -145,7 +141,7 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-chart-card">
                 <h3 className="chart-title">Robots Online</h3>
                 <div className="robots-chart-wrapper">
-                  <PieChart data={robotsData} size={200} />
+                  <PieChart data={robotsData} size={150} />
                 </div>
               </div>
             </div>
@@ -154,24 +150,15 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    FutureTech Solutions
-                  </div>
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    Digital Innovations
-                  </div>
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    Smart Systems LLC
-                  </div>
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    NextGen Robotics
-                  </div>
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    Automation Pro
-                  </div>
-                  <div className="clickable-item" onClick={(e) => e.preventDefault()}>
-                    RoboTech Industries
-                  </div>
+                  {leads.map((lead) => (
+                    <div 
+                      key={lead.id} 
+                      className="clickable-item" 
+                      onClick={() => handleLeadClick(lead.id)}
+                    >
+                      {lead.companyName}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="dashboard-card">

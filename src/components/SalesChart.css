@@ -1,7 +1,7 @@
 .sales-chart {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 1rem;
   background-color: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -13,13 +13,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .sales-chart-toggles {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .view-toggle {
@@ -93,10 +96,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   overflow: visible;
   width: 100%;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
 }
 
 .bar-label {

@@ -8,6 +8,10 @@ import Client from './pages/Client';
 import ClientDetail from './pages/ClientDetail';
 import LeadDetail from './pages/LeadDetail';
 import Inventory from './pages/Inventory';
+import ProductDetail from './pages/ProductDetail';
+import RobotDetail from './pages/RobotDetail';
+import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
 import Robots from './pages/Robots';
 import './App.css';
 
@@ -24,6 +28,10 @@ function App() {
         <Route path="/client/:clientId" element={<ClientDetail />} />
         <Route path="/lead/:leadId" element={<LeadDetail />} />
         <Route path="/inventory" element={<Inventory />} />
+        <Route path="/inventory/product/:productName" element={<ProductDetail />} />
+        <Route path="/inventory/product/:productName/robot/:serialNumber" element={<RobotDetail />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:orderNumber" element={<OrderDetail />} />
         <Route path="/robots" element={<Robots />} />
       </Routes>
     </Router>

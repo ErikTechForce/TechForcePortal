@@ -1,0 +1,842 @@
+.order-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+.back-button:active {
+  transform: scale(0.98);
+}
+
+.order-detail-form {
+  margin-top: 2rem;
+  max-width: 900px;
+}
+
+.form-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1.5rem 0;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.form-input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.clickable-company {
+  cursor: pointer;
+  background-color: #f9fafb;
+}
+
+.clickable-company:hover {
+  background-color: #f3f4f6;
+  border-color: #15803d;
+}
+
+.products-table-wrapper {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products-table thead {
+  background-color: #f9fafb;
+}
+
+.products-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.products-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.products-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.products-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.total-row {
+  background-color: #f9fafb;
+  border-top: 2px solid #e5e7eb;
+}
+
+.total-row td {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.no-products {
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-button,
+.save-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.cancel-button {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.save-button {
+  background-color: #15803d;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #14532d;
+}
+
+.save-button:active,
+.cancel-button:active {
+  transform: scale(0.98);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.shipping-info-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shipping-info-button:hover {
+  background-color: #14532d;
+}
+
+.shipping-info-button:active {
+  transform: scale(0.98);
+}
+
+.installation-appointment-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.installation-appointment-button:hover {
+  background-color: #14532d;
+}
+
+.installation-appointment-button:active {
+  transform: scale(0.98);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.form-row .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Order Information Card */
+.order-info-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  max-width: 900px;
+  border-left: 4px solid #6b7280;
+}
+
+.order-info-card.stage-contract {
+  border-left-color: #3b82f6;
+}
+
+.order-info-card.stage-delivery {
+  border-left-color: #f59e0b;
+}
+
+.order-info-card.stage-installation {
+  border-left-color: #10b981;
+}
+
+.order-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.order-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.order-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-info-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.order-info-value {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.order-info-value.clickable-company {
+  color: #15803d;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.order-info-value.clickable-company:hover {
+  color: #14532d;
+}
+
+.stage-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stage-badge.stage-contract {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.stage-badge.stage-delivery {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.stage-badge.stage-installation {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.edit-order-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: auto;
+}
+
+.edit-order-button:hover {
+  background-color: #14532d;
+}
+
+.edit-order-button:active {
+  transform: scale(0.98);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.modal-form {
+  padding: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.templated-modal-content {
+  max-width: 800px;
+  width: 90%;
+}
+
+.templated-messages-list {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.templated-message-item {
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.templated-message-item:hover {
+  background-color: #f9fafb;
+  border-color: #15803d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.templated-message-title {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.templated-message-preview {
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.templated-messages-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.templated-messages-list::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.templated-messages-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.templated-messages-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Chat Log Styles */
+.chat-log-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  height: 550px;
+}
+
+.chat-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.chat-view-modal-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #15803d;
+  background-color: white;
+  border: 1px solid #15803d;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-view-modal-button:hover {
+  background-color: #f0fdf4;
+  border-color: #14532d;
+  color: #14532d;
+}
+
+.chat-view-modal-button:active {
+  transform: scale(0.98);
+}
+
+.chat-log-modal-content {
+  max-width: 1000px;
+  width: 95%;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-log-modal-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin: 1rem 1rem 0 1rem;
+  min-height: 500px;
+  max-height: calc(95vh - 280px);
+}
+
+.modal-chat-form {
+  margin: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.modal-chat-form .chat-input {
+  min-height: 100px;
+  max-height: 250px;
+}
+
+.chat-log-modal-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-log-modal-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.chat-log-modal-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.chat-log-modal-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.chat-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  min-height: 180px;
+}
+
+.chat-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.chat-message {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.chat-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.chat-message-user {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.chat-message-timestamp {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.chat-message-content {
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.7;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  letter-spacing: 0.01em;
+}
+
+.chat-empty {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+  margin: 0;
+}
+
+.chat-input-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.chat-buttons-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.chat-input {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 200px;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.chat-templated-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-templated-button:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.chat-templated-button:active {
+  transform: scale(0.98);
+}
+
+.chat-send-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-send-button:hover:not(:disabled) {
+  background-color: #14532d;
+}
+
+.chat-send-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.chat-send-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.chat-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Activity Log Styles */
+.activity-log-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  max-width: 900px;
+}
+
+.activity-log-container {
+  margin-top: 1rem;
+}
+
+.activity-log-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.activity-log-table thead {
+  background-color: #f9fafb;
+}
+
+.activity-log-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.activity-log-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.activity-log-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.activity-log-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.activity-log-empty {
+  color: #9ca3af;
+  font-style: italic;
+  padding: 1rem 0;
+  margin: 0;
+}
+
+
