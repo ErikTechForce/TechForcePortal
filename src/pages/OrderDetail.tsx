@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { PDFDocument, rgb, StandardFonts, PDFImage } from 'pdf-lib';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
@@ -66,6 +67,13 @@ const OrderDetail: React.FC = () => {
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
   const [isInstallationModalOpen, setIsInstallationModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [contractLink, setContractLink] = useState('');
+  const [signature, setSignature] = useState<string | null>(null);
+  const signatureCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [filledPdfUrl, setFilledPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [editStage, setEditStage] = useState<'Contract' | 'Delivery' | 'Installation'>(
     orderData?.category === 'Contract' ? 'Contract' : 
     orderData?.category === 'Inventory' ? 'Delivery' : 
@@ -469,6 +477,362 @@ Techforce Team`
     setIsEditModalOpen(false);
   };
 
+  // Fallback random ID generator if crypto.randomUUID() is not available
+  const generateRandomId = useCallback(() => {
+    // Generate a 32-character random hex string
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }, []);
+
+  // Contract generation handlers
+  const generateContractLink = useCallback(() => {
+    if (!orderData) return '';
+    // Generate a random, secure contract ID to avoid unwanted access
+    // Using crypto.randomUUID() for a cryptographically secure random identifier
+    const randomId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : generateRandomId();
+    const contractId = randomId.replace(/-/g, ''); // Remove hyphens for cleaner URL
+    // In a real app, this would be a backend-generated URL and stored securely
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/contract/${contractId}`;
+  }, [orderData, generateRandomId]);
+
+  // PDF Form Field Mapping Configuration
+  // Update these field names to match your PDF form field names
+  // To find the actual field names, use the inspectPdfFields function below
+  const PDF_FIELD_MAPPING: Record<string, string> = {
+    // Map our data fields to PDF form field names
+    businessName: 'Business Name / Location',
+    serviceAddress: 'Service Address',
+    cityStateZip: 'City, State, Zip',
+    locationContactNamePhone: 'Location Contact Name & Phone',
+    locationContactEmail: 'Location Contact Email',
+    authorizedPersonName: 'Authorized Person Name',
+    authorizedPersonTitle: 'Authorized Person Title',
+    authorizedPersonEmail: 'Authorized Person Email',
+    authorizedPersonPhone: 'Authorized Person Phone',
+    effectiveDate: 'Effective Date',
+    // Add more mappings as needed
+  };
+
+  // Utility function to inspect PDF form fields (for debugging)
+  const inspectPdfFields = async () => {
+    try {
+      const pdfUrl = '/trialAgreementLocation.pdf';
+      const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const form = pdfDoc.getForm();
+      
+      const fields: string[] = [];
+      form.getFields().forEach((field) => {
+        const fieldName = field.getName();
+        fields.push(fieldName);
+      });
+      
+      console.log('=== PDF Form Fields ===');
+      console.log('Available form fields:', fields);
+      console.log('Field count:', fields.length);
+      fields.forEach((field, index) => {
+        console.log(`${index + 1}. "${field}"`);
+      });
+      console.log('======================');
+      
+      // Also show in an alert for easy copying
+      alert(`Found ${fields.length} form fields:\n\n${fields.join('\n')}\n\nCheck console for details.`);
+      
+      return fields;
+    } catch (error) {
+      console.error('Error inspecting PDF fields:', error);
+      return [];
+    }
+  };
+
+  // Text and Image Placement Coordinates Configuration
+  // Update these X, Y coordinates to match where text/images should be placed on your PDF
+  // Coordinates are in points (72 points = 1 inch), measured from bottom-left corner
+  // You'll need to measure your PDF to find the exact positions
+  const TEXT_PLACEMENTS: Record<string, { x: number; y: number; fontSize?: number; width?: number; height?: number }> = {
+    // Page 1 coordinates (adjust these based on your PDF layout)
+    effectiveDate: { x: 400, y: 750, fontSize: 10 }, // Example: Effective Date position
+    businessName: { x: 100, y: 700, fontSize: 10 }, // Business Name / Location
+    serviceAddress: { x: 100, y: 680, fontSize: 10 }, // Service Address
+    cityStateZip: { x: 100, y: 660, fontSize: 10 }, // City, State, Zip
+    locationContactNamePhone: { x: 100, y: 640, fontSize: 10 }, // Location Contact Name & Phone
+    locationContactEmail: { x: 100, y: 620, fontSize: 10 }, // Location Contact Email
+    authorizedPersonName: { x: 100, y: 600, fontSize: 10 }, // Authorized Person Name
+    authorizedPersonTitle: { x: 300, y: 600, fontSize: 10 }, // Authorized Person Title
+    authorizedPersonEmail: { x: 100, y: 580, fontSize: 10 }, // Authorized Person Email
+    authorizedPersonPhone: { x: 100, y: 560, fontSize: 10 }, // Authorized Person Phone
+    // Signature placement - next to "Signature:" in right column under "Business Name 'Client'"
+    // Based on typical PDF layout: right column signature area
+    // Adjust these if needed - x should be to the right (around 300-400 for right column)
+    // y should be in the lower-middle area where signature section is (around 200-300)
+    clientSignature: { x: 330, y: 590, width: 180, height: 54 }, // Client signature position (10% smaller)
+    // Add more placements as needed
+  };
+
+  const fillPdfWithData = async (signatureImage?: string | null) => {
+    if (!orderData || !client) return null;
+
+    try {
+      setIsGeneratingPdf(true);
+      
+      // Fetch the PDF template
+      const pdfUrl = '/trialAgreementLocation.pdf';
+      const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
+      
+      // Load the PDF
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      
+      // Get current date for effective date
+      const today = new Date();
+      const formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+      
+      // Count products (robots, bins, bases)
+      const robotCount = products.filter(p => p.productName.includes('Robot')).length;
+      const binCount = products.filter(p => p.productName.includes('Bin')).length;
+      const baseCount = products.filter(p => p.productName.includes('Base')).length;
+      
+      // Parse addresses
+      const parseAddress = (address: string) => {
+        if (!address) return { street: '', city: '', state: '', zip: '' };
+        const lines = address.split('\n');
+        const street = lines[0] || '';
+        const cityStateZip = lines[1] || '';
+        const match = cityStateZip.match(/(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/);
+        if (match) {
+          return {
+            street,
+            city: match[1].trim(),
+            state: match[2].trim(),
+            zip: match[3].trim()
+          };
+        }
+        return { street, city: '', state: '', zip: '' };
+      };
+      
+      // Use placeholder addresses or parse from available data
+      const serviceAddress = parseAddress(siteLocation || shippingAddress || '');
+      const billingAddr = parseAddress(shippingAddress || '');
+      
+      // Get pages (signature is typically on the last page)
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const lastPage = pages[pages.length - 1]; // Use last page for signature
+      
+      // Load a font
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      // Helper function to place text on PDF
+      const placeText = (key: string, text: string, page = firstPage) => {
+        const placement = TEXT_PLACEMENTS[key];
+        if (!placement) {
+          console.warn(`No placement coordinates found for: ${key}`);
+          return false;
+        }
+        
+        try {
+          page.drawText(text, {
+            x: placement.x,
+            y: placement.y,
+            size: placement.fontSize || 10,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+          console.log(`✓ Placed "${key}" at (${placement.x}, ${placement.y}): ${text}`);
+          return true;
+        } catch (e) {
+          console.error(`Error placing text for "${key}":`, e);
+          return false;
+        }
+      };
+      
+      // Try to fill form fields first (if any exist)
+      try {
+        const form = pdfDoc.getForm();
+        const fields = form.getFields();
+        console.log(`Found ${fields.length} form fields, attempting to fill...`);
+        
+        // Try filling the ENVELOPEID field if it exists (though it's not useful)
+        // This is just to show the form field approach still works
+      } catch (e) {
+        console.log('No form fields found or form not accessible, using text placement only');
+      }
+      
+      // Place text on the PDF using coordinates
+      console.log('=== Placing Text on PDF ===');
+      placeText('effectiveDate', formattedDate);
+      placeText('businessName', orderData.companyName);
+      placeText('serviceAddress', serviceAddress.street);
+      placeText('cityStateZip', `${serviceAddress.city}, ${serviceAddress.state} ${serviceAddress.zip}`);
+      placeText('locationContactNamePhone', `${client.pointOfContact} ${client.contactPhone || ''}`);
+      placeText('locationContactEmail', client.contactEmail || '');
+      placeText('authorizedPersonName', client.pointOfContact);
+      placeText('authorizedPersonEmail', client.contactEmail || '');
+      placeText('authorizedPersonPhone', client.contactPhone || '');
+      console.log('=== Finished Placing Text ===');
+      
+      // Place signature image if provided
+      if (signatureImage) {
+        try {
+          console.log('=== Placing Signature on PDF ===');
+          const signaturePlacement = TEXT_PLACEMENTS.clientSignature;
+          
+          // Get page dimensions for reference
+          const pageSize = lastPage.getSize();
+          console.log(`Page dimensions: ${pageSize.width} × ${pageSize.height} points`);
+          
+          // Convert data URL to image bytes
+          const imageBytes = await fetch(signatureImage).then(res => res.arrayBuffer());
+          const signaturePdfImage = await pdfDoc.embedPng(imageBytes);
+          
+          // Get signature dimensions
+          const sigWidth = signaturePlacement.width || 200;
+          const sigHeight = signaturePlacement.height || 60;
+          
+          // Place signature on the last page (where signature section typically is)
+          // Using exact coordinates from TEXT_PLACEMENTS (no offset)
+          lastPage.drawImage(signaturePdfImage, {
+            x: signaturePlacement.x,
+            y: signaturePlacement.y,
+            width: sigWidth,
+            height: sigHeight,
+          });
+          
+          console.log(`✓ Placed signature at (${signaturePlacement.x}, ${signaturePlacement.y})`);
+          console.log(`  Signature size: ${sigWidth} × ${sigHeight} points`);
+          console.log('=== Finished Placing Signature ===');
+        } catch (error) {
+          console.error('Error placing signature on PDF:', error);
+        }
+      }
+      
+      // Generate PDF bytes
+      const pdfBytes = await pdfDoc.save();
+      
+      // Create blob URL
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      setIsGeneratingPdf(false);
+      return url;
+    } catch (error) {
+      console.error('Error filling PDF:', error);
+      setIsGeneratingPdf(false);
+      return null;
+    }
+  };
+
+  const handleGenerateContract = () => {
+    const link = generateContractLink();
+    setContractLink(link);
+    setIsContractModalOpen(true);
+    // Clear signature canvas if it exists
+    if (signatureCanvasRef.current) {
+      const ctx = signatureCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, signatureCanvasRef.current.width, signatureCanvasRef.current.height);
+      }
+    }
+  };
+
+  // Cleanup blob URL on unmount or modal close
+  useEffect(() => {
+    return () => {
+      if (filledPdfUrl && filledPdfUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(filledPdfUrl);
+      }
+    };
+  }, [filledPdfUrl]);
+
+  const handleCopyLink = () => {
+    if (contractLink) {
+      navigator.clipboard.writeText(contractLink).then(() => {
+        alert('Contract link copied to clipboard!');
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = contractLink;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Contract link copied to clipboard!');
+      });
+    }
+  };
+
+  // Signature pad handlers
+  const startDrawing = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    setIsDrawing(true);
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }, []);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }, [isDrawing]);
+
+  const stopDrawing = useCallback(() => {
+    setIsDrawing(false);
+  }, []);
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setSignature(null);
+  };
+
+  const saveSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const dataURL = canvas.toDataURL('image/png');
+    setSignature(dataURL);
+    alert('Signature saved! The contract can now be finalized.');
+  };
+
+  useEffect(() => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }, []);
+
   const handleEditClick = () => {
     // Set edit values to current values
     setEditStage(stage);
@@ -625,6 +989,19 @@ Techforce Team`
                 )}
               </div>
             </div>
+
+            {/* Generate Contract Button - Only for Contract stage */}
+            {stage === 'Contract' && (
+              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', paddingLeft: '1rem' }}>
+                <button 
+                  type="button"
+                  className="generate-contract-button"
+                  onClick={handleGenerateContract}
+                >
+                  Generate Contract
+                </button>
+              </div>
+            )}
 
             {/* Shipping Information Button - Only for Delivery stage */}
             {stage === 'Delivery' && (
@@ -1371,6 +1748,59 @@ Techforce Team`
                         <div className="templated-message-preview">{template.message}</div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contract Generation Modal */}
+            {isContractModalOpen && (
+              <div className="modal-overlay" onClick={() => setIsContractModalOpen(false)}>
+                <div className="modal-content contract-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">Generate Contract</h3>
+                    <button 
+                      className="modal-close-button"
+                      onClick={() => setIsContractModalOpen(false)}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <div className="contract-modal-body">
+                    {/* Contract Link Section */}
+                    <div className="contract-link-section">
+                      <label className="form-label">Shareable Contract Link</label>
+                      <div className="contract-link-container">
+                        <input
+                          type="text"
+                          className="contract-link-input"
+                          value={contractLink}
+                          readOnly
+                        />
+                        <button
+                          type="button"
+                          className="copy-link-button"
+                          onClick={handleCopyLink}
+                        >
+                          Copy Link
+                        </button>
+                      </div>
+                      <p className="contract-link-help">
+                        Share this link with the client to view and sign the contract.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={() => setIsContractModalOpen(false)}
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
               </div>

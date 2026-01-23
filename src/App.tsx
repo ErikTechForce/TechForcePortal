@@ -13,6 +13,7 @@ import RobotDetail from './pages/RobotDetail';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Robots from './pages/Robots';
+import Contract from './pages/Contract';
 import './App.css';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:orderNumber" element={<OrderDetail />} />
         <Route path="/robots" element={<Robots />} />
+        <Route path="/contract/:contractId" element={<Contract />} />
       </Routes>
     </Router>
   );

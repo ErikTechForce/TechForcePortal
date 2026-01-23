@@ -256,6 +256,238 @@
   transform: scale(0.98);
 }
 
+.generate-contract-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generate-contract-button:hover {
+  background-color: #14532d;
+}
+
+.generate-contract-button:active {
+  transform: scale(0.98);
+}
+
+/* Contract Modal Styles */
+.contract-modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 95vh;
+}
+
+.contract-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  overflow-y: auto;
+  max-height: calc(95vh - 200px);
+}
+
+.contract-link-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contract-link-container {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.contract-link-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background-color: #f9fafb;
+  font-family: monospace;
+}
+
+.copy-link-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.copy-link-button:hover {
+  background-color: #14532d;
+}
+
+.copy-link-button:active {
+  transform: scale(0.98);
+}
+
+.contract-link-help {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.pdf-viewer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pdf-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f9fafb;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+  display: block;
+  background-color: #f9fafb;
+}
+
+.pdf-container {
+  min-height: 600px;
+}
+
+.pdf-alternative-link {
+  text-align: center;
+}
+
+.pdf-fallback {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-fallback p {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  max-width: 500px;
+}
+
+.pdf-download-link {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #15803d;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pdf-download-link:hover {
+  background-color: #14532d;
+}
+
+.signature-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.signature-pad-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.signature-canvas {
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  cursor: crosshair;
+  background-color: white;
+  touch-action: none;
+}
+
+.signature-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.clear-signature-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-signature-button:hover {
+  background-color: #e5e7eb;
+}
+
+.save-signature-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #15803d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-signature-button:hover {
+  background-color: #14532d;
+}
+
+.signature-preview {
+  padding: 1rem;
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.signature-saved-message {
+  color: #15803d;
+  font-weight: 600;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.signature-image {
+  max-width: 300px;
+  max-height: 100px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+}
+
 .form-row {
   display: flex;
   gap: 1rem;
