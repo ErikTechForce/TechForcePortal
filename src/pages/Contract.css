@@ -22,6 +22,14 @@
   margin: 0;
 }
 
+.contract-fill-error {
+  padding: 1rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
 .pdf-viewer-section {
   margin-bottom: 3rem;
 }
@@ -77,6 +85,95 @@
 
 .pdf-download-link:hover {
   background-color: #14532d;
+}
+
+.contract-thanks-section {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.contract-thanks-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.contract-thanks-message {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.contract-thanks-loading {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.contract-billing-section {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.contract-billing-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.contract-billing-description {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 1.5rem 0;
+}
+
+.contract-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.5rem;
+}
+
+.contract-billing-grid .contract-form-group-full {
+  grid-column: 1 / -1;
+}
+
+.contract-billing-section .form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.contract-billing-section .form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #1f2937;
+  background-color: white;
+}
+
+.contract-billing-section .form-input:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
+}
+
+@media (max-width: 640px) {
+  .contract-billing-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .signature-section {

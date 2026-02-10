@@ -1,0 +1,132 @@
+.verify-required-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #15803d 0%, #14532d 100%);
+  padding: 20px;
+}
+
+.verify-required-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.verify-required-header {
+  margin-bottom: 24px;
+}
+
+.verify-required-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 12px;
+}
+
+.verify-required-header p {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.verify-required-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.verify-required-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.verify-required-form .form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.verify-required-form .form-group input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.verify-required-form .form-group input:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.verify-required-form .form-group input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.verify-required-message {
+  font-size: 14px;
+  color: #15803d;
+  text-align: center;
+}
+
+.verify-required-error {
+  font-size: 14px;
+  color: #b91c1c;
+  text-align: center;
+}
+
+.verify-required-button {
+  padding: 12px 24px;
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+}
+
+.verify-required-button:hover:not(:disabled) {
+  background-color: #166534;
+}
+
+.verify-required-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.verify-required-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.verify-required-link {
+  font-size: 14px;
+  color: #15803d;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.verify-required-link:hover {
+  text-decoration: underline;
+}
