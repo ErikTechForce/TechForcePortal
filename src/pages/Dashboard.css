@@ -125,6 +125,30 @@
   padding-left: 0.5rem;
 }
 
+.dashboard-task-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dashboard-task-name {
+  font-weight: 500;
+}
+
+.dashboard-task-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dashboard-pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  color: #1f2937;
+}
+
 .activity-log-section {
   background-color: white;
   border: 1px solid #e5e7eb;

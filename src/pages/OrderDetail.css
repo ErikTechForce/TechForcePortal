@@ -31,6 +31,22 @@
   max-width: 900px;
 }
 
+/* Shared alignment for all order-detail table sections (Contract, Delivery, Installation) */
+.order-detail-table-section {
+  margin: 0 1rem 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.order-detail-table-section .section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.75rem 0;
+}
+
 .form-section {
   margin-bottom: 2.5rem;
   padding-bottom: 2rem;
@@ -276,6 +292,73 @@
   transform: scale(0.98);
 }
 
+.generate-invoice-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #1d4ed8;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.generate-invoice-button:hover {
+  background-color: #1e40af;
+}
+
+.generate-invoice-button:active {
+  transform: scale(0.98);
+}
+
+.invoice-table-section {
+  margin: 0 1rem 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.invoice-table-section .section-title {
+  margin-bottom: 0.75rem;
+}
+
+.invoice-table-wrapper {
+  overflow-x: auto;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.invoice-table th,
+.invoice-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.invoice-table th {
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.invoice-table-empty {
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem !important;
+}
+
+.invoice-view-pdf-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+.invoice-view-pdf-link:hover {
+  text-decoration: underline;
+}
+
 .contracts-table-section {
   margin: 0 1rem 1.5rem;
   padding: 1rem;
@@ -424,6 +507,72 @@
   background: #991b1b;
   border-color: #991b1b;
   color: white;
+}
+
+.order-detail-delete-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.order-delete-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #b91c1c;
+  background: transparent;
+  border: 1px solid #b91c1c;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.order-delete-button:hover {
+  background: #b91c1c;
+  color: white;
+}
+
+/* Delete order modal spacing */
+.order-delete-modal .order-delete-modal-body {
+  padding: 1.5rem;
+}
+
+.order-delete-message {
+  margin: 0 0 1.5rem;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.order-delete-modal-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  border-top: 1px solid #e5e7eb;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.order-delete-confirm-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  background: #b91c1c;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.order-delete-confirm-button:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.order-delete-confirm-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Contract Modal Styles */

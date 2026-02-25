@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
+import { fetchClientById } from '../api/clients';
 import { getLeadById } from '../data/leads';
 import { products } from '../data/tasks';
 import './Page.css';
@@ -12,18 +13,57 @@ const LeadDetail: React.FC = () => {
   const navigate = useNavigate();
   const { leadId } = useParams<{ leadId: string }>();
   const leadIdNum = leadId ? parseInt(leadId, 10) : null;
-  const leadData = leadIdNum ? getLeadById(leadIdNum) : null;
 
-  const [companyName, setCompanyName] = useState(leadData?.companyName || '');
-  const [pointOfContact, setPointOfContact] = useState(leadData?.pointOfContact || '');
-  const [contactInformation, setContactInformation] = useState(leadData?.contactInformation || '');
-  const [source, setSource] = useState(leadData?.source || '');
-  const [phoneNumber, setPhoneNumber] = useState(leadData?.phoneNumber || '');
-  const [productInterested, setProductInterested] = useState(leadData?.productInterested || '');
-  const [notes, setNotes] = useState(leadData?.notes || '');
+  const [apiLead, setApiLead] = useState<Awaited<ReturnType<typeof fetchClientById>>>(null);
+  const [loading, setLoading] = useState(true);
+  const [useFallback, setUseFallback] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+
+  const staticLead = leadIdNum ? getLeadById(leadIdNum) : null;
+  const leadData = useFallback ? staticLead : (apiLead?.type === 'lead' ? apiLead : null);
+
+  const [companyName, setCompanyName] = useState('');
+  const [pointOfContact, setPointOfContact] = useState('');
+  const [contactInformation, setContactInformation] = useState('');
+  const [source, setSource] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [productInterested, setProductInterested] = useState('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    if (leadData) {
+    if (!leadIdNum) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setNotFound(false);
+      setUseFallback(false);
+      try {
+        const c = await fetchClientById(leadIdNum);
+        if (cancelled) return;
+        if (!c) {
+          setNotFound(true);
+          setApiLead(null);
+        } else if (c.type === 'lead') {
+          setApiLead(c);
+        } else {
+          setNotFound(true);
+          setApiLead(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setUseFallback(true);
+          setApiLead(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [leadIdNum]);
+
+  useEffect(() => {
+    if (!leadData) return;
+    if ('companyName' in leadData) {
       setCompanyName(leadData.companyName);
       setPointOfContact(leadData.pointOfContact);
       setContactInformation(leadData.contactInformation);
@@ -31,6 +71,14 @@ const LeadDetail: React.FC = () => {
       setPhoneNumber(leadData.phoneNumber || '');
       setProductInterested(leadData.productInterested || '');
       setNotes(leadData.notes || '');
+    } else {
+      setCompanyName(leadData.company);
+      setPointOfContact(leadData.point_of_contact);
+      setContactInformation(leadData.contact_email ?? '');
+      setSource(leadData.source ?? '');
+      setPhoneNumber(leadData.contact_phone ?? '');
+      setProductInterested(leadData.product ?? '');
+      setNotes(leadData.notes ?? '');
     }
   }, [leadData]);
 
@@ -42,7 +90,24 @@ const LeadDetail: React.FC = () => {
     navigate('/client');
   };
 
-  if (!leadData) {
+  if (loading && !leadData) {
+    return (
+      <div className="page-container">
+        <Header />
+        <div className="page-layout">
+          <Sidebar />
+          <main className="page-main">
+            <div className="page-content">
+              <h2 className="page-title">Lead Details</h2>
+              <p className="page-subtitle">Loading...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !leadData) {
     return (
       <div className="page-container">
         <Header />

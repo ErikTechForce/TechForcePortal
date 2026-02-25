@@ -26,6 +26,15 @@
   transform: scale(0.98);
 }
 
+.product-detail-actions {
+  margin-bottom: 1.5rem;
+}
+
+.product-detail-actions .save-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
 .product-tables-container {
   margin-top: 2rem;
   display: flex;
@@ -35,6 +44,11 @@
 
 .product-table-section {
   width: 100%;
+  margin-top: 2rem;
+}
+
+.product-table-section:first-of-type {
+  margin-top: 0;
 }
 
 .product-table-title {
@@ -51,9 +65,167 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.product-inventory-list-table-wrapper {
+  width: 100%;
+  overflow: visible;
+}
+
+.product-inventory-list-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.product-inventory-list-table th,
+.product-inventory-list-table td {
+  padding: 0.5rem 0.5rem;
+  font-size: 0.75rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.product-inventory-total-row {
+  font-weight: 600;
+  background-color: #f9fafb;
+  border-top: 2px solid #e5e7eb;
+}
+
+.product-inventory-total-row td {
+  padding: 0.75rem;
+}
+
+.add-inventory-modal {
+  margin: 2rem;
+  max-width: 560px;
+}
+
+.add-inventory-modal .modal-body {
+  padding: 1.5rem 2rem;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.add-inventory-modal .form-group {
+  margin-bottom: 1.25rem;
+}
+
+/* Card layout for inventory edit modal */
+.inventory-modal-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.inventory-modal-card:last-of-type {
+  margin-bottom: 0;
+}
+
+.inventory-modal-card-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.inventory-modal-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.inventory-modal-card-fields .form-group {
+  margin-bottom: 1rem;
+}
+
+.inventory-modal-card-fields .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.inventory-modal-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1.25rem;
+}
+
+.inventory-modal-card-grid .form-group {
+  margin-bottom: 1rem;
+}
+
+.add-inventory-modal .modal-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-inventory-modal .modal-actions .modal-delete-btn {
+  margin-right: auto;
+}
+
+.product-table-actions-header {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.product-table-actions-cell {
+  white-space: nowrap;
+}
+
+.product-inventory-edit-btn,
+.product-inventory-delete-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.35rem;
+  border: 1px solid transparent;
+}
+
+.product-inventory-edit-btn {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.product-inventory-edit-btn:hover {
+  background-color: #dbeafe;
+}
+
+.product-inventory-delete-btn {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.product-inventory-delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+.product-inventory-row-clickable {
+  cursor: pointer;
+}
+
+.product-inventory-row-clickable:hover {
+  background-color: #f0fdf4;
+}
+
 .product-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.product-table th,
+.product-table td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .product-table thead {
@@ -114,6 +286,7 @@
   background-color: #fce7f3;
   color: #9f1239;
 }
+
 
 
 

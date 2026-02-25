@@ -1,16 +1,69 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { PDFDocument, rgb, StandardFonts, PDFImage } from 'pdf-lib';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
+import {
+  fetchOrderByOrderNumber,
+  deleteOrder,
+  updateOrder,
+  fetchOrderInvoices,
+  fetchOrderActivityLog,
+  addOrderActivityLog,
+  createInvoiceWithPdf,
+  sendInvoiceConfirmation,
+  type OrderRow,
+  type OrderInvoiceRow,
+  type InvoiceConfirmationPayload,
+} from '../api/orderApi';
+import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
+import { createTask } from '../api/tasks';
 import { getOrderByOrderNumber } from '../data/orders';
-import { getProductsByOrderNumber } from '../data/orderProducts';
+import { getProductsByOrderNumber, type OrderProduct } from '../data/orderProducts';
 import { getClientByCompanyName } from '../data/clients';
-import { employees } from '../data/tasks';
+import { fetchClients, type ClientRow } from '../api/clients';
 import './Page.css';
 import './OrderDetail.css';
 import './Orders.css';
+
+/** Shape used by OrderDetail (camelCase) */
+interface OrderDetailData {
+  id: number;
+  companyName: string;
+  orderNumber: string;
+  status: string;
+  employee: string | null;
+  category: 'Contract' | 'Inventory' | 'Installation';
+  lastContactDate?: string;
+  trackingNumber?: string;
+  estimatedDeliveryDate?: string;
+  shippingAddress?: string;
+  deliverTo?: string;
+  installationAppointmentTime?: string;
+  installationEmployee?: string;
+  siteLocation?: string;
+}
+
+function mapApiOrderToDetail(row: OrderRow): OrderDetailData {
+  return {
+    id: row.id,
+    companyName: row.company_name,
+    orderNumber: row.order_number,
+    status: row.status,
+    employee: row.employee_name ?? null,
+    category: row.category as 'Contract' | 'Inventory' | 'Installation',
+    lastContactDate: row.last_contact_date ?? undefined,
+    trackingNumber: row.tracking_number ?? undefined,
+    estimatedDeliveryDate: row.estimated_delivery_date ?? undefined,
+    shippingAddress: row.shipping_address ?? undefined,
+    deliverTo: row.deliver_to ?? undefined,
+    installationAppointmentTime: row.installation_appointment_time ?? undefined,
+    installationEmployee: row.installation_employee_name ?? undefined,
+    siteLocation: row.site_location ?? undefined,
+  };
+}
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -131,18 +184,125 @@ const ONE_TIME_UNIT_PRICES: Record<string, number> = {
   qtyHandheldTablet: 350,
 };
 
+/** Map contract form qty field keys to product display names for order product table */
+const CONTRACT_QTY_TO_PRODUCT_NAME: Record<string, string> = {
+  qtyTimEBot: 'TIM-E Bot',
+  qtyTimECharger: 'TIM-E Charger',
+  qtyBaseMetalMonthly: 'Base - Metal',
+  qtyInsulatedFoodTransportMonthly: 'Insulated Food Transport',
+  qtyWheeledBinMonthly: 'Wheeled Bin',
+  qtyUniversalPlatformMonthly: 'Universal Platform',
+  qtyDoorOpenersMonthly: 'Door Openers',
+  qtyNeuralTechBrainMonthly: 'NeuralTech Brain',
+  qtyElevatorHardwareMonthly: 'Elevator Hardware + Software',
+  qtyLuggageCartMonthly: 'Luggage Cart',
+  qtyConcessionBinTall: 'Concession Bin - Tall',
+  qtyStackingChairCart: 'Stacking Chair Cart',
+  qtyCargoCart: 'Cargo Cart',
+  qtyHousekeepingCart: 'Housekeeping Cart',
+  qtyBIME: 'BIM-E',
+  qtyMobileBIME: 'Mobile BIM-E',
+  qtyBaseMetalOneTime: 'Base - Metal (One-time)',
+  qtyInsulatedFoodTransportOneTime: 'Insulated Food Transport (One-time)',
+  qtyWheeledBinOneTime: 'Wheeled Bin (One-time)',
+  qtyUniversalPlatformOneTime: 'Universal Platform (One-time)',
+  qtyPlasticBags: 'Plastic Bags',
+  qtyDoorOpenerHardwareOneTime: 'Door Opener Hardware',
+  qtyHandheldTablet: 'Handheld Tablet w/ App',
+};
+
+function buildOrderProductsFromContractForm(orderNumber: string, formData: Record<string, string>): OrderProduct[] {
+  const expanded: OrderProduct[] = [];
+  let idBase = Date.now();
+  for (const [key, productName] of Object.entries(CONTRACT_QTY_TO_PRODUCT_NAME)) {
+    const qty = parseInt(formData[key] || '0', 10) || 0;
+    for (let i = 0; i < qty; i++) {
+      expanded.push({
+        id: idBase++,
+        orderNumber,
+        productName,
+        quantity: 1,
+        unitPrice: 0,
+        total: 0,
+        serialNumber: `${productName.replace(/\s+/g, '')}-${String(i + 1).padStart(3, '0')}`,
+        status: 'Pending',
+      });
+    }
+  }
+  return expanded;
+}
+
 const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { orderNumber } = useParams<{ orderNumber: string }>();
-  const orderData = orderNumber ? getOrderByOrderNumber(orderNumber) : null;
-  const products = orderNumber ? getProductsByOrderNumber(orderNumber) : [];
+  const [orderData, setOrderData] = useState<OrderDetailData | null>(() =>
+    orderNumber ? (getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null : null
+  );
+  const [loading, setLoading] = useState(!!orderNumber);
+  const [products, setProducts] = useState<OrderProduct[]>(() => (orderNumber ? getProductsByOrderNumber(orderNumber) : []));
+  const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
 
-  // Find client by company name
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const users = await fetchVerifiedUsers();
+        if (!cancelled) setVerifiedUsers(users);
+      } catch {
+        if (!cancelled) setVerifiedUsers([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!orderNumber) return;
+    let cancelled = false;
+    setLoading(true);
+    fetchOrderByOrderNumber(orderNumber)
+      .then((apiOrder: OrderRow | null) => {
+        if (cancelled) return;
+        if (apiOrder) {
+          setOrderData(mapApiOrderToDetail(apiOrder));
+        } else {
+          setOrderData((getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setOrderData((getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [orderNumber]);
+
+  // Find client by company name (local fallback for contact display)
   const client = orderData ? getClientByCompanyName(orderData.companyName) : null;
+  const [apiClient, setApiClient] = useState<ClientRow | null>(null);
+
+  useEffect(() => {
+    if (!orderData?.companyName) {
+      setApiClient(null);
+      return;
+    }
+    let cancelled = false;
+    fetchClients('client')
+      .then((list) => {
+        if (cancelled) return;
+        const match = list.find((c) => c.company === orderData.companyName);
+        setApiClient(match ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setApiClient(null);
+      });
+    return () => { cancelled = true; };
+  }, [orderData?.companyName]);
 
   const [stage, setStage] = useState<'Contract' | 'Delivery' | 'Installation'>(
-    orderData?.category === 'Contract' ? 'Contract' : 
-    orderData?.category === 'Inventory' ? 'Delivery' : 
+    orderData?.category === 'Contract' ? 'Contract' :
+    orderData?.category === 'Inventory' ? 'Delivery' :
     'Installation'
   );
   const [status, setStatus] = useState(orderData?.status || 'Pending');
@@ -161,6 +321,21 @@ const OrderDetail: React.FC = () => {
   const [installationAppointmentTime, setInstallationAppointmentTime] = useState(orderData?.installationAppointmentTime || '');
   const [installationEmployee, setInstallationEmployee] = useState(orderData?.installationEmployee || '');
   const [siteLocation, setSiteLocation] = useState(orderData?.siteLocation || '');
+
+  useEffect(() => {
+    if (!orderData) return;
+    setStage(orderData.category === 'Contract' ? 'Contract' : orderData.category === 'Inventory' ? 'Delivery' : 'Installation');
+    setStatus(orderData.status || 'Pending');
+    setEmployee(orderData.employee || '');
+    setLastContactDate(orderData.lastContactDate || '');
+    setTrackingNumber(orderData.trackingNumber || '');
+    setEstimatedDeliveryDate(orderData.estimatedDeliveryDate || '');
+    setShippingAddress(orderData.shippingAddress || '');
+    setDeliverTo(orderData.deliverTo || '');
+    setInstallationAppointmentTime(orderData.installationAppointmentTime || '');
+    setInstallationEmployee(orderData.installationEmployee || '');
+    setSiteLocation(orderData.siteLocation || '');
+  }, [orderData]);
   const [installationDate, setInstallationDate] = useState('');
   const [installationTime, setInstallationTime] = useState('');
   const [siteStreetAddress, setSiteStreetAddress] = useState('');
@@ -180,6 +355,27 @@ const OrderDetail: React.FC = () => {
   const [orderContracts, setOrderContracts] = useState<ContractRow[]>([]);
   const [contractsLoading, setContractsLoading] = useState(false);
   const [contractToDelete, setContractToDelete] = useState<{ id: number; label: string } | null>(null);
+  const [deleteOrderModalOpen, setDeleteOrderModalOpen] = useState(false);
+  const [orderInvoices, setOrderInvoices] = useState<OrderInvoiceRow[]>([]);
+  const [orderInvoicesLoading, setOrderInvoicesLoading] = useState(false);
+  const [isGenerateInvoiceModalOpen, setIsGenerateInvoiceModalOpen] = useState(false);
+  const [generateInvoiceStep, setGenerateInvoiceStep] = useState<'confirm' | 'dates'>('confirm');
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [invoiceTermsType, setInvoiceTermsType] = useState<'One Time' | 'Net'>('One Time');
+  const [invoiceTermsNetDays, setInvoiceTermsNetDays] = useState('30');
+  const [invoiceBillingFromClient, setInvoiceBillingFromClient] = useState('');
+  const [invoiceBillingEntityFromClient, setInvoiceBillingEntityFromClient] = useState('');
+  const [invoiceShippingFromContract, setInvoiceShippingFromContract] = useState('');
+  const [invoiceStageShippingFromContract, setInvoiceStageShippingFromContract] = useState('');
+  const [orderProductsFromContract, setOrderProductsFromContract] = useState<OrderProduct[]>([]);
+  const [invoiceProductsFromContract, setInvoiceProductsFromContract] = useState<OrderProduct[]>([]);
+  const [generateInvoiceSubmitting, setGenerateInvoiceSubmitting] = useState(false);
+  const [isUploadPdfModalOpen, setIsUploadPdfModalOpen] = useState(false);
+  const [uploadPdfFile, setUploadPdfFile] = useState<File | null>(null);
+  const [uploadPdfSubmitting, setUploadPdfSubmitting] = useState(false);
+  const [deleteOrderStep, setDeleteOrderStep] = useState<1 | 2>(1);
+  const [deleteOrderSubmitting, setDeleteOrderSubmitting] = useState(false);
   const [contractFormData, setContractFormData] = useState<ContractFormData>({
     businessName: '',
     serviceAddress: '',
@@ -352,40 +548,92 @@ const OrderDetail: React.FC = () => {
   const [isChatLogModalOpen, setIsChatLogModalOpen] = useState(false);
   const chatEndRef = React.useRef<HTMLDivElement>(null);
 
-  // Default contract form data from order and client
+  // Default contract form data from order and client (service address from client page when available)
   const getDefaultContractFormData = useCallback((): ContractFormData => {
     const today = new Date();
     const effectiveDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
     const parseAddress = (address: string) => {
       if (!address) return { street: '', city: '', state: '', zip: '' };
-      const lines = address.split('\n');
-      const street = lines[0] || '';
-      const cityStateZip = lines[1] || '';
-      const match = cityStateZip.match(/(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/);
-      if (match) {
+      const trimmed = address.trim();
+      const lines = trimmed.split(/\n/).map((l) => l.trim()).filter(Boolean);
+      const stateZipRegex = /\b([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/;
+      const cityStateZipRegex = /^(.+?),\s*([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/;
+
+      if (lines.length >= 2) {
+        const cityStateZip = lines[1];
+        const match = cityStateZip.match(cityStateZipRegex);
+        if (match) {
+          return {
+            street: lines[0],
+            city: match[1].trim(),
+            state: match[2].trim().toUpperCase(),
+            zip: match[3].trim()
+          };
+        }
+      }
+
+      const singleLineMatch = trimmed.match(/^(.+?),\s*([^,]+?),\s*([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/);
+      if (singleLineMatch) {
         return {
-          street,
-          city: match[1].trim(),
-          state: match[2].trim(),
-          zip: match[3].trim()
+          street: singleLineMatch[1].trim(),
+          city: singleLineMatch[2].trim(),
+          state: singleLineMatch[3].trim().toUpperCase(),
+          zip: singleLineMatch[4].trim()
         };
       }
-      return { street, city: '', state: '', zip: '' };
+
+      const parts = trimmed.split(',').map((p) => p.trim()).filter(Boolean);
+      if (parts.length >= 4) {
+        const last = parts[parts.length - 1];
+        const zipOnlyMatch = last.match(/^(\d{5}(?:-\d{4})?)\s*$/);
+        if (zipOnlyMatch) {
+          const zip = zipOnlyMatch[1];
+          const state = parts[parts.length - 2];
+          const city = parts[parts.length - 3];
+          const street = parts.slice(0, -3).join(', ');
+          return {
+            street,
+            city,
+            state: state.length === 2 ? state.toUpperCase() : state,
+            zip
+          };
+        }
+      }
+      if (parts.length >= 3) {
+        const last = parts[parts.length - 1];
+        const stateZipMatch = last.match(stateZipRegex);
+        if (stateZipMatch) {
+          const state = stateZipMatch[1].toUpperCase();
+          const zip = stateZipMatch[2];
+          const city = parts[parts.length - 2];
+          const street = parts.slice(0, -2).join(', ');
+          return { street, city, state, zip };
+        }
+      }
+
+      if (lines.length >= 1) {
+        return { street: lines[0], city: '', state: '', zip: '' };
+      }
+      return { street: trimmed, city: '', state: '', zip: '' };
     };
-    const addr = parseAddress(siteLocation || orderData?.shippingAddress || '');
+    const addressSource = apiClient?.site_location || siteLocation || orderData?.shippingAddress || '';
+    const addr = parseAddress(addressSource);
+    const contactName = apiClient?.point_of_contact ?? client?.pointOfContact ?? '';
+    const contactEmail = apiClient?.contact_email ?? client?.contactEmail ?? '';
+    const contactPhone = apiClient?.contact_phone ?? client?.contactPhone ?? '';
     return {
       businessName: orderData?.companyName || '',
       serviceAddress: addr.street,
       city: addr.city,
       state: addr.state,
       zip: addr.zip,
-      locationContactName: client?.pointOfContact ?? '',
-      locationContactPhone: client?.contactPhone ?? '',
-      locationContactEmail: client?.contactEmail || '',
-      authorizedPersonName: client?.pointOfContact || '',
+      locationContactName: contactName,
+      locationContactPhone: contactPhone,
+      locationContactEmail: contactEmail || '',
+      authorizedPersonName: contactName || '',
       authorizedPersonTitle: '',
-      authorizedPersonEmail: client?.contactEmail || '',
-      authorizedPersonPhone: client?.contactPhone || '',
+      authorizedPersonEmail: contactEmail || '',
+      authorizedPersonPhone: contactPhone || '',
       effectiveDate,
       termStartDate: effectiveDate,
       implementationCost: '',
@@ -421,7 +669,7 @@ const OrderDetail: React.FC = () => {
       discountType: 'flat',
       discountValue: '',
     };
-  }, [orderData, client, siteLocation]);
+  }, [orderData, client, apiClient, siteLocation]);
 
   // Templated messages
   const templatedMessages = [
@@ -485,16 +733,48 @@ Techforce Team`
     return `${date} ${time}`;
   }, []);
 
-  // Helper function to add activity log entry
-  const addActivityLog = React.useCallback((action: string, user: string = 'System') => {
-    const newEntry: ActivityLogEntry = {
-      id: Date.now(),
-      timestamp: getCurrentTimestamp(),
-      action,
-      user
-    };
-    setActivityLog(prev => [newEntry, ...prev]);
-  }, [getCurrentTimestamp]);
+  // Format activity log timestamp from API for display
+  const formatActivityTimestamp = React.useCallback((ts: string) => {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) + ' ' +
+        d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch {
+      return ts;
+    }
+  }, []);
+
+  // Helper to add activity log entry (persisted to server when orderNumber exists)
+  const addActivityLog = React.useCallback(async (action: string, user: string = 'System') => {
+    if (orderNumber) {
+      try {
+        const row = await addOrderActivityLog(orderNumber, { action, user });
+        const newEntry: ActivityLogEntry = {
+          id: row.id,
+          timestamp: formatActivityTimestamp(row.timestamp),
+          action: row.action,
+          user: row.user,
+        };
+        setActivityLog(prev => [newEntry, ...prev]);
+      } catch {
+        const newEntry: ActivityLogEntry = {
+          id: Date.now(),
+          timestamp: getCurrentTimestamp(),
+          action,
+          user,
+        };
+        setActivityLog(prev => [newEntry, ...prev]);
+      }
+    } else {
+      const newEntry: ActivityLogEntry = {
+        id: Date.now(),
+        timestamp: getCurrentTimestamp(),
+        action,
+        user,
+      };
+      setActivityLog(prev => [newEntry, ...prev]);
+    }
+  }, [orderNumber, getCurrentTimestamp, formatActivityTimestamp]);
 
   // Scroll chat to bottom when new messages are added
   React.useEffect(() => {
@@ -572,7 +852,7 @@ Techforce Team`
       case 'Contract':
         return ['Pending', 'In Progress', 'Approved'];
       case 'Delivery':
-        return ['Pending', 'In Shipment', 'Delivered'];
+        return ['Pending', 'Awaiting Invoice', 'Invoice Ready'];
       case 'Installation':
         return ['Pending', 'Scheduled', 'In Progress', 'Completed'];
       default:
@@ -660,23 +940,35 @@ Techforce Team`
       setEditInstallationEmployee(orderData.installationEmployee || '');
       setEditSiteLocation(orderData.siteLocation || '');
       
-      // Initialize activity log with order creation entry
-      const now = new Date();
-      const date = now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-      const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      const timestamp = `${date} ${time}`;
-      
-      const initialLog: ActivityLogEntry[] = [
-        {
-          id: Date.now() - 1000,
-          timestamp: timestamp,
-          action: `Order ${orderData.orderNumber} created`,
-          user: orderData.employee || 'System'
-        }
-      ];
-      setActivityLog(initialLog);
     }
   }, [orderData]);
+
+  // Fetch persisted activity log when order is loaded
+  useEffect(() => {
+    if (!orderNumber) return;
+    let cancelled = false;
+    fetchOrderActivityLog(orderNumber)
+      .then((entries) => {
+        if (cancelled) return;
+        const formatted: ActivityLogEntry[] = entries.map((e) => ({
+          id: e.id,
+          timestamp: (() => {
+            try {
+              const d = new Date(e.timestamp);
+              return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) + ' ' +
+                d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            } catch { return e.timestamp; }
+          })(),
+          action: e.action,
+          user: e.user,
+        }));
+        setActivityLog(formatted);
+      })
+      .catch(() => {
+        if (!cancelled) setActivityLog([]);
+      });
+    return () => { cancelled = true; };
+  }, [orderNumber]);
 
   // When stage changes, validate and update status if needed
   useEffect(() => {
@@ -706,77 +998,118 @@ Techforce Team`
     navigate('/orders');
   };
 
-  const handleEditSave = (e: React.FormEvent) => {
+  const [editSaveError, setEditSaveError] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+
+  const handleEditSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!orderNumber) return;
+    setEditSaveError('');
+    setEditSaving(true);
+
     // Track changes and add to activity log
     const changes: string[] = [];
-    
-    if (stage !== editStage) {
-      changes.push(`Stage changed from ${stage} to ${editStage}`);
-    }
-    if (status !== editStatus) {
-      changes.push(`Status changed from ${status} to ${editStatus}`);
-    }
+    if (stage !== editStage) changes.push(`Stage changed from ${stage} to ${editStage}`);
+    if (status !== editStatus) changes.push(`Status changed from ${status} to ${editStatus}`);
     if (employee !== editEmployee) {
-      const oldEmployee = employee || 'unassigned';
-      const newEmployee = editEmployee || 'unassigned';
-      changes.push(`Employee changed from ${oldEmployee} to ${newEmployee}`);
+      changes.push(`Employee changed from ${employee || 'unassigned'} to ${editEmployee || 'unassigned'}`);
     }
-    if (lastContactDate !== editLastContactDate) {
-      if (editLastContactDate) {
-        changes.push(`Last contact date ${lastContactDate ? `changed to ${editLastContactDate}` : `set to ${editLastContactDate}`}`);
+    if (lastContactDate !== editLastContactDate && editLastContactDate) {
+      changes.push(lastContactDate ? `Last contact date changed to ${editLastContactDate}` : `Last contact date set to ${editLastContactDate}`);
+    }
+    if (editStage !== 'Delivery') {
+      if (trackingNumber !== editTrackingNumber && editTrackingNumber) {
+        changes.push(trackingNumber ? `Tracking number changed to ${editTrackingNumber}` : `Tracking number set to ${editTrackingNumber}`);
+      }
+      if (estimatedDeliveryDate !== editEstimatedDeliveryDate && editEstimatedDeliveryDate) {
+        changes.push(estimatedDeliveryDate ? `Estimated delivery date changed to ${editEstimatedDeliveryDate}` : `Estimated delivery date set to ${editEstimatedDeliveryDate}`);
       }
     }
-    if (trackingNumber !== editTrackingNumber) {
-      if (editTrackingNumber) {
-        changes.push(`Tracking number ${trackingNumber ? `changed to ${editTrackingNumber}` : `set to ${editTrackingNumber}`}`);
-      }
+    if (installationAppointmentTime !== editInstallationAppointmentTime && editInstallationAppointmentTime) {
+      changes.push(installationAppointmentTime ? `Installation appointment changed to ${editInstallationAppointmentTime}` : `Installation appointment set to ${editInstallationAppointmentTime}`);
     }
-    if (estimatedDeliveryDate !== editEstimatedDeliveryDate) {
-      if (editEstimatedDeliveryDate) {
-        changes.push(`Estimated delivery date ${estimatedDeliveryDate ? `changed to ${editEstimatedDeliveryDate}` : `set to ${editEstimatedDeliveryDate}`}`);
+    changes.forEach(change => addActivityLog(change, editEmployee || 'System'));
+    if (changes.length === 0) addActivityLog('Order information updated', editEmployee || 'System');
+
+    try {
+      const payload: Parameters<typeof updateOrder>[1] = {
+        employee_name: editEmployee?.trim() || null,
+        category: editStage === 'Delivery' ? 'Inventory' : editStage,
+        status: editStatus,
+        last_contact_date: editLastContactDate?.trim() || null,
+        shipping_address: editShippingAddress?.trim() || null,
+        deliver_to: editDeliverTo?.trim() || null,
+        installation_appointment_time: editInstallationAppointmentTime?.trim() || null,
+        installation_employee_name: editInstallationEmployee?.trim() || null,
+        site_location: editSiteLocation?.trim() || null,
+      };
+      if (editStage !== 'Delivery') {
+        payload.tracking_number = editTrackingNumber?.trim() || null;
+        payload.estimated_delivery_date = editEstimatedDeliveryDate?.trim() || null;
       }
-    }
-    if (installationAppointmentTime !== editInstallationAppointmentTime) {
-      if (editInstallationAppointmentTime) {
-        changes.push(`Installation appointment ${installationAppointmentTime ? `changed to ${editInstallationAppointmentTime}` : `set to ${editInstallationAppointmentTime}`}`);
-      }
+      const updated = await updateOrder(orderNumber, payload);
+      setOrderData(mapApiOrderToDetail(updated));
+      setStage(editStage);
+      setStatus(editStatus);
+      setEmployee(editEmployee);
+      setLastContactDate(editLastContactDate);
+      setTrackingNumber(editTrackingNumber);
+      setEstimatedDeliveryDate(editEstimatedDeliveryDate);
+      setInstallationAppointmentTime(editInstallationAppointmentTime);
+      setShippingAddress(editShippingAddress);
+      setDeliverTo(editDeliverTo);
+      setInstallationEmployee(editInstallationEmployee);
+      setSiteLocation(editSiteLocation);
+      setIsEditModalOpen(false);
+    } catch (err) {
+      setEditSaveError(err instanceof Error ? err.message : 'Failed to save order.');
+    } finally {
+      setEditSaving(false);
     }
 
-    // Add activity log entries for each change
-    changes.forEach(change => {
-      addActivityLog(change, editEmployee || 'System');
-    });
-
-    // If no specific changes, log a general update
-    if (changes.length === 0) {
-      addActivityLog('Order information updated', editEmployee || 'System');
+    // When moving from Contract to Delivery: fill shipping from most recent signed contract and product table from contract quantities
+    const wasContractToDelivery = stage === 'Contract' && editStage === 'Delivery';
+    if (wasContractToDelivery && orderNumber) {
+      try {
+        const res = await fetch(`${API_BASE}/api/contracts?order_number=${encodeURIComponent(orderNumber)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const contracts: ContractRow[] = data.contracts || [];
+        const signed = contracts.filter((c) => c.status === 'signed').sort((a, b) => (new Date(b.signed_at || 0).getTime() - new Date(a.signed_at || 0).getTime()));
+        const latestSigned = signed[0];
+        if (!latestSigned) return;
+        const formRes = await fetch(`${API_BASE}/api/contracts/${latestSigned.id}/form-data`);
+        if (!formRes.ok) return;
+        const formData = await formRes.json();
+        const fd = (formData.form_data || {}) as Record<string, string>;
+        const serviceAddr = (fd.serviceAddress || '').trim();
+        const city = (fd.city || '').trim();
+        const state = (fd.state || '').trim();
+        const zip = (fd.zip || '').trim();
+        const cityStateZip = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+        const fullAddress = [serviceAddr, cityStateZip].filter(Boolean).join('\n');
+        if (fullAddress) {
+          setShippingAddress(fullAddress);
+          setEditShippingAddress(fullAddress);
+          setStreetAddress(serviceAddr);
+          setCity(city);
+          setState(state);
+          setZipCode(zip);
+          setEditStreetAddress(serviceAddr);
+          setEditCity(city);
+          setEditState(state);
+          setEditZipCode(zip);
+        }
+        const built = buildOrderProductsFromContractForm(orderNumber, fd);
+        if (built.length > 0) setProducts(built);
+      } catch {
+        // ignore
+      }
     }
-
-    // Update the state with edited values
-    setStage(editStage);
-    setStatus(editStatus);
-    setEmployee(editEmployee);
-    setLastContactDate(editLastContactDate);
-    setTrackingNumber(editTrackingNumber);
-    setEstimatedDeliveryDate(editEstimatedDeliveryDate);
-    setInstallationAppointmentTime(editInstallationAppointmentTime);
-    
-    // Handle save logic here
-    console.log('Order updated:', { 
-      orderNumber, 
-      stage: editStage, 
-      status: editStatus, 
-      employee: editEmployee,
-      lastContactDate: editLastContactDate,
-      trackingNumber: editTrackingNumber,
-      installationAppointmentTime: editInstallationAppointmentTime
-    });
-    setIsEditModalOpen(false);
   };
 
   const handleEditCancel = () => {
+    setEditSaveError('');
     // Reset edit values to current values
     setEditStage(stage);
     setEditStatus(status);
@@ -1187,6 +1520,112 @@ Techforce Team`
     }
   }, [orderNumber, stage, fetchOrderContracts]);
 
+  const fetchInvoicesForOrder = useCallback(async () => {
+    if (!orderNumber) return;
+    setOrderInvoicesLoading(true);
+    try {
+      const list = await fetchOrderInvoices(orderNumber);
+      setOrderInvoices(list);
+    } catch {
+      setOrderInvoices([]);
+    } finally {
+      setOrderInvoicesLoading(false);
+    }
+  }, [orderNumber]);
+
+  useEffect(() => {
+    if (orderNumber) fetchInvoicesForOrder();
+  }, [orderNumber, fetchInvoicesForOrder]);
+
+  // No contracts: clear contract-derived product table and shipping
+  useEffect(() => {
+    if (orderContracts.length === 0) {
+      setOrderProductsFromContract([]);
+      if (stage !== 'Delivery' && stage !== 'Installation') setInvoiceStageShippingFromContract('');
+    }
+  }, [orderContracts.length, stage]);
+
+  // Contract stage: load products from most recently created contract
+  useEffect(() => {
+    if (stage !== 'Contract' || !orderNumber || orderContracts.length === 0) return;
+    const byCreated = [...orderContracts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const latest = byCreated[0];
+    if (!latest) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/contracts/${latest.id}/form-data`);
+        if (!res.ok || cancelled) return;
+        const formData = await res.json();
+        const fd = (formData.form_data || {}) as Record<string, string>;
+        const built = buildOrderProductsFromContractForm(orderNumber, fd);
+        if (!cancelled) setOrderProductsFromContract(built);
+      } catch {
+        if (!cancelled) setOrderProductsFromContract([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [orderNumber, stage, orderContracts]);
+
+  // Invoice/Installation stage: load shipping address and products from latest signed contract
+  useEffect(() => {
+    if ((stage !== 'Delivery' && stage !== 'Installation') || !orderNumber || orderContracts.length === 0) {
+      if (stage !== 'Delivery' && stage !== 'Installation') {
+        setInvoiceStageShippingFromContract('');
+      }
+      return;
+    }
+    const signed = orderContracts.filter((c) => c.status === 'signed').sort((a, b) => (new Date(b.signed_at || 0).getTime() - new Date(a.signed_at || 0).getTime()));
+    const latest = signed[0];
+    if (!latest) {
+      setInvoiceStageShippingFromContract('');
+      setOrderProductsFromContract([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/contracts/${latest.id}/form-data`);
+        if (!res.ok || cancelled) return;
+        const formData = await res.json();
+        const fd = (formData.form_data || {}) as Record<string, string>;
+        const serviceAddr = (fd.serviceAddress || '').trim();
+        const city = (fd.city || '').trim();
+        const state = (fd.state || '').trim();
+        const zip = (fd.zip || '').trim();
+        const cityStateZip = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+        const shipping = [serviceAddr, cityStateZip].filter(Boolean).join('\n');
+        const built = buildOrderProductsFromContractForm(orderNumber, fd);
+        if (!cancelled) {
+          setInvoiceStageShippingFromContract(shipping);
+          setOrderProductsFromContract(built);
+        }
+      } catch {
+        if (!cancelled) {
+          setInvoiceStageShippingFromContract('');
+          setOrderProductsFromContract([]);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [orderNumber, stage, orderContracts]);
+
+  // Sync products when order number changes (e.g. navigating to different order)
+  useEffect(() => {
+    if (orderNumber) setProducts(getProductsByOrderNumber(orderNumber));
+  }, [orderNumber]);
+
+  // Contract stage: derive status from contracts (no contracts → Pending; has contract but none signed → In Progress; any signed → Approved)
+  useEffect(() => {
+    if (stage !== 'Contract') return;
+    if (orderContracts.length === 0) {
+      setStatus('Pending');
+      return;
+    }
+    const hasSigned = orderContracts.some((c) => c.status === 'signed');
+    setStatus(hasSigned ? 'Approved' : 'In Progress');
+  }, [stage, orderContracts]);
+
   const signedContractIdsLoggedRef = React.useRef<Set<number>>(new Set());
   useEffect(() => {
     orderContracts.forEach((c) => {
@@ -1232,6 +1671,34 @@ Techforce Team`
       fetchOrderContracts();
     } catch {
       alert('Failed to delete contract.');
+    }
+  };
+
+  const openDeleteOrderModal = () => {
+    setDeleteOrderStep(1);
+    setDeleteOrderModalOpen(true);
+  };
+
+  const closeDeleteOrderModal = () => {
+    setDeleteOrderModalOpen(false);
+    setDeleteOrderStep(1);
+  };
+
+  const handleDeleteOrderConfirmStep1 = () => {
+    setDeleteOrderStep(2);
+  };
+
+  const handleDeleteOrderConfirmStep2 = async () => {
+    if (!orderNumber) return;
+    setDeleteOrderSubmitting(true);
+    try {
+      await deleteOrder(orderNumber);
+      closeDeleteOrderModal();
+      navigate('/orders');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete order.');
+    } finally {
+      setDeleteOrderSubmitting(false);
     }
   };
 
@@ -1440,6 +1907,23 @@ Techforce Team`
     }
   };
 
+  if (loading && !orderData) {
+    return (
+      <div className="page-container">
+        <Header />
+        <div className="page-layout">
+          <Sidebar />
+          <main className="page-main">
+            <div className="page-content">
+              <h2 className="page-title">Order Details</h2>
+              <p className="page-subtitle">Loading order...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   if (!orderData) {
     return (
       <div className="page-container">
@@ -1509,7 +1993,7 @@ Techforce Team`
                   <label className="order-info-label">Stage</label>
                   <div className="order-info-value">
                     <span className={`stage-badge stage-${stage.toLowerCase()}`}>
-                      {stage}
+                      {stage === 'Delivery' ? 'Invoice' : stage}
                     </span>
                   </div>
                 </div>
@@ -1517,7 +2001,7 @@ Techforce Team`
                 <div className="order-info-item">
                   <label className="order-info-label">Status</label>
                   <div className="order-info-value">
-                    <span className={`status-badge status-${status.toLowerCase().replace(' ', '-')}`}>
+                    <span className={`status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}`}>
                       {status}
                     </span>
                   </div>
@@ -1538,20 +2022,12 @@ Techforce Team`
                 )}
 
                 {stage === 'Delivery' && (
-                  <>
-                    <div className="order-info-item">
-                      <label className="order-info-label">Tracking Number</label>
-                      <div className="order-info-value">{trackingNumber || 'Not set'}</div>
+                  <div className="order-info-item">
+                    <label className="order-info-label">Shipping Address</label>
+                    <div className="order-info-value" style={{ whiteSpace: 'pre-wrap' }}>
+                      {invoiceStageShippingFromContract || shippingAddress || 'Not set'}
                     </div>
-                    <div className="order-info-item">
-                      <label className="order-info-label">Estimated Delivery Date</label>
-                      <div className="order-info-value">{estimatedDeliveryDate || 'Not set'}</div>
-                    </div>
-                    <div className="order-info-item">
-                      <label className="order-info-label">Shipping Address</label>
-                      <div className="order-info-value">{shippingAddress || 'Not set'}</div>
-                    </div>
-                  </>
+                  </div>
                 )}
 
                 {stage === 'Installation' && (
@@ -1577,9 +2053,9 @@ Techforce Team`
               </div>
             </div>
 
-            {/* Generate Contract Button - Only for Contract stage */}
+            {/* Generate Contract and Move to Invoice - Contract stage */}
             {stage === 'Contract' && (
-              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', paddingLeft: '1rem' }}>
+              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.75rem', paddingLeft: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   type="button"
                   className="generate-contract-button"
@@ -1587,59 +2063,102 @@ Techforce Team`
                 >
                   Generate Contract
                 </button>
+                {status === 'Approved' && (
+                  <button
+                    type="button"
+                    className="generate-invoice-button"
+                    onClick={async () => {
+                      if (!orderNumber) return;
+                      try {
+                        const updated = await updateOrder(orderNumber, { category: 'Inventory' });
+                        setOrderData(mapApiOrderToDetail(updated));
+                        setStage('Delivery');
+                        addActivityLog('Order moved to Invoice stage', employee || 'System');
+                      } catch (err) {
+                        alert((err as Error).message || 'Failed to move order to Invoice stage.');
+                      }
+                    }}
+                  >
+                    Move to Invoice Stage
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Shipping Information Button - Only for Delivery stage */}
+            {/* Generate Invoice and Move to Installation - Delivery (Invoice) stage */}
             {stage === 'Delivery' && (
-              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', paddingLeft: '1rem' }}>
-                <button 
+              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.75rem', paddingLeft: '1rem', flexWrap: 'wrap' }}>
+                <button
                   type="button"
-                  className="shipping-info-button"
-                  onClick={() => {
-                    setEditTrackingNumber(trackingNumber);
-                    setEditDeliverTo(deliverTo);
-                    // Parse existing shipping address if it exists
-                    if (shippingAddress) {
-                      // Try to parse the address (simple parsing - can be improved)
-                      const addressLines = shippingAddress.split('\n');
-                      if (addressLines.length > 0) {
-                        const firstLine = addressLines[0];
-                        const aptMatch = firstLine.match(/(.*?)(?:Apt|Unit|#|Suite)\s*([A-Z0-9-]+)/i);
-                        if (aptMatch) {
-                          setEditStreetAddress(aptMatch[1].trim());
-                          setEditAptNumber(aptMatch[2].trim());
-                        } else {
-                          setEditStreetAddress(firstLine);
-                          setEditAptNumber('');
-                        }
-                        if (addressLines.length > 1) {
-                          const cityStateZip = addressLines[1];
-                          const match = cityStateZip.match(/(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/);
-                          if (match) {
-                            setEditCity(match[1].trim());
-                            setEditState(match[2].trim());
-                            setEditZipCode(match[3].trim());
-                          }
-                        }
-                        if (addressLines.length > 2) {
-                          setEditCountry(addressLines[2].trim());
-                        }
+                  className="generate-invoice-button"
+                  onClick={async () => {
+                    setGenerateInvoiceStep('confirm');
+                    setIsGenerateInvoiceModalOpen(true);
+                    if (!orderNumber) return;
+                    try {
+                      const res = await fetch(`${API_BASE}/api/contracts?order_number=${encodeURIComponent(orderNumber)}`);
+                      if (!res.ok) return;
+                      const data = await res.json();
+                      const contracts: ContractRow[] = data.contracts || [];
+                      const signed = contracts.filter((c) => c.status === 'signed').sort((a, b) => (new Date(b.signed_at || 0).getTime() - new Date(a.signed_at || 0).getTime()));
+                      const latestSigned = signed[0];
+                      if (!latestSigned) {
+                        setInvoiceBillingFromClient('');
+                        return;
                       }
-                    } else {
-                      // Reset fields if no address exists
-                      setEditStreetAddress('');
-                      setEditAptNumber('');
-                      setEditCity('');
-                      setEditState('');
-                      setEditZipCode('');
-                      setEditCountry('United States');
+                      const formRes = await fetch(`${API_BASE}/api/contracts/${latestSigned.id}/form-data`);
+                      if (!formRes.ok) return;
+                      const formData = await formRes.json();
+                      const fd = (formData.form_data || {}) as Record<string, string>;
+                      const billingEntity = (fd.billingEntity || '').trim();
+                      const billingAddress = (fd.billingAddress || '').trim();
+                      const billingCity = (fd.billingCity || '').trim();
+                      const billingState = (fd.billingState || '').trim();
+                      const billingZip = (fd.billingZip || '').trim();
+                      const billingCityStateZip = [billingCity, [billingState, billingZip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+                      const hasClientBilling = !!(billingEntity || billingAddress || billingCity || billingState || billingZip);
+                      const fullBilling = hasClientBilling
+                        ? [billingAddress || billingEntity, billingCityStateZip].filter(Boolean).join('\n')
+                        : '';
+                      setInvoiceBillingFromClient(fullBilling);
+                      setInvoiceBillingEntityFromClient(billingEntity);
+                      const serviceAddr = (fd.serviceAddress || '').trim();
+                      const city = (fd.city || '').trim();
+                      const state = (fd.state || '').trim();
+                      const zip = (fd.zip || '').trim();
+                      const cityStateZip = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+                      setInvoiceShippingFromContract([serviceAddr, cityStateZip].filter(Boolean).join('\n'));
+                      const builtProducts = buildOrderProductsFromContractForm(orderNumber, fd);
+                      setInvoiceProductsFromContract(builtProducts);
+                    } catch {
+                      setInvoiceBillingFromClient('');
+                      setInvoiceBillingEntityFromClient('');
+                      setInvoiceShippingFromContract('');
+                      setInvoiceProductsFromContract([]);
                     }
-                    setIsShippingModalOpen(true);
                   }}
                 >
-                  Enter Shipping Information
+                  Generate Invoice
                 </button>
+                {status === 'Invoice Ready' && (
+                  <button
+                    type="button"
+                    className="installation-appointment-button"
+                    onClick={async () => {
+                      if (!orderNumber) return;
+                      try {
+                        const updated = await updateOrder(orderNumber, { category: 'Installation' });
+                        setOrderData(mapApiOrderToDetail(updated));
+                        setStage('Installation');
+                        addActivityLog('Order moved to Installation stage', employee || 'System');
+                      } catch (err) {
+                        alert((err as Error).message || 'Failed to move order to Installation stage.');
+                      }
+                    }}
+                  >
+                    Move to Installation Stage
+                  </button>
+                )}
               </div>
             )}
 
@@ -1654,10 +2173,11 @@ Techforce Team`
                     setEditInstallationDate(installationDate);
                     setEditInstallationTime(installationTime);
                     setEditInstallationEmployee(installationEmployee);
-                    setEditSiteLocation(siteLocation);
-                    // Parse existing site location if it exists
-                    if (siteLocation) {
-                      const addressLines = siteLocation.split('\n');
+                    // Pre-fill site address from contract stage (latest signed contract) when order has no site location yet
+                    const addressToParse = siteLocation || invoiceStageShippingFromContract || '';
+                    setEditSiteLocation(addressToParse);
+                    if (addressToParse) {
+                      const addressLines = addressToParse.split('\n');
                       if (addressLines.length > 0) {
                         const firstLine = addressLines[0];
                         const aptMatch = firstLine.match(/(.*?)(?:Apt|Unit|#|Suite)\s*([A-Z0-9-]+)/i);
@@ -1675,14 +2195,19 @@ Techforce Team`
                             setEditSiteCity(match[1].trim());
                             setEditSiteState(match[2].trim());
                             setEditSiteZipCode(match[3].trim());
+                          } else {
+                            setEditSiteCity('');
+                            setEditSiteState('');
+                            setEditSiteZipCode('');
                           }
                         }
                         if (addressLines.length > 2) {
                           setEditSiteCountry(addressLines[2].trim());
+                        } else {
+                          setEditSiteCountry('United States');
                         }
                       }
                     } else {
-                      // Reset fields if no address exists
                       setEditSiteStreetAddress('');
                       setEditSiteAptNumber('');
                       setEditSiteCity('');
@@ -1747,7 +2272,7 @@ Techforce Team`
                         onChange={(e) => setEditStage(e.target.value as 'Contract' | 'Delivery' | 'Installation')}
                   >
                     <option value="Contract">Contract</option>
-                    <option value="Delivery">Delivery</option>
+                    <option value="Delivery">Invoice</option>
                     <option value="Installation">Installation</option>
                   </select>
                 </div>
@@ -1771,7 +2296,7 @@ Techforce Team`
                 <div className="form-group">
                       <label htmlFor="editEmployee" className="form-label">Employee</label>
                       <SearchableDropdown
-                        options={employees}
+                        options={verifiedUsers.map((u) => u.username)}
                         value={editEmployee}
                         onChange={setEditEmployee}
                         placeholder="Select or type employee name..."
@@ -1793,32 +2318,6 @@ Techforce Team`
                       </div>
                     )}
 
-                    {editStage === 'Delivery' && (
-                      <>
-                        <div className="form-group">
-                          <label htmlFor="editTrackingNumber" className="form-label">Tracking Number</label>
-                          <input
-                            type="text"
-                            id="editTrackingNumber"
-                            className="form-input"
-                            value={editTrackingNumber}
-                            onChange={(e) => setEditTrackingNumber(e.target.value)}
-                            placeholder="e.g., TRK-123456789"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="editEstimatedDeliveryDate" className="form-label">Estimated Delivery Date</label>
-                          <input
-                            type="date"
-                            id="editEstimatedDeliveryDate"
-                            className="form-input"
-                            value={editEstimatedDeliveryDate}
-                            onChange={(e) => setEditEstimatedDeliveryDate(e.target.value)}
-                          />
-                        </div>
-                      </>
-                    )}
-
                     {editStage === 'Installation' && (
                       <div className="form-group">
                         <label htmlFor="editInstallationAppointmentTime" className="form-label">Installation Appointment Time</label>
@@ -1833,12 +2332,15 @@ Techforce Team`
                       </div>
                     )}
 
+                    {editSaveError && (
+                      <p className="create-order-error" role="alert" style={{ marginBottom: '1rem' }}>{editSaveError}</p>
+                    )}
                     <div className="modal-actions">
-                      <button type="button" className="cancel-button" onClick={handleEditCancel}>
+                      <button type="button" className="cancel-button" onClick={handleEditCancel} disabled={editSaving}>
                         Cancel
                       </button>
-                      <button type="submit" className="save-button">
-                        Save
+                      <button type="submit" className="save-button" disabled={editSaving}>
+                        {editSaving ? 'Saving…' : 'Save'}
                       </button>
                     </div>
                   </form>
@@ -2008,6 +2510,227 @@ Techforce Team`
               </div>
             )}
 
+            {/* Generate Invoice Modal (2 steps) */}
+            {isGenerateInvoiceModalOpen && (
+              <div className="modal-overlay" onClick={() => !generateInvoiceSubmitting && (setIsGenerateInvoiceModalOpen(false), setGenerateInvoiceStep('confirm'))}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">
+                      {generateInvoiceStep === 'confirm' ? 'Confirm invoice details' : 'Invoice date & terms'}
+                    </h3>
+                    <button
+                      className="modal-close-button"
+                      onClick={() => !generateInvoiceSubmitting && (setIsGenerateInvoiceModalOpen(false), setGenerateInvoiceStep('confirm'))}
+                      aria-label="Close"
+                      disabled={generateInvoiceSubmitting}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {generateInvoiceStep === 'confirm' ? (
+                    <>
+                      <div style={{ padding: '0 1.25rem 1rem' }}>
+                        <p style={{ marginBottom: '0.75rem' }}><strong>Order:</strong> {orderData?.orderNumber} — {orderData?.companyName}</p>
+                        <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Billing entity</p>
+                        <p style={{ margin: '0 0 1rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: 4, fontSize: '0.9rem' }}>
+                          {invoiceBillingEntityFromClient || '—'}
+                        </p>
+                        <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Billing address</p>
+                        <pre style={{ margin: '0 0 1rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: 4, fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                          {invoiceBillingFromClient || '—'}
+                        </pre>
+                        <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Shipping address</p>
+                        <pre style={{ margin: '0 0 1rem', padding: '0.5rem', background: '#f5f5f5', borderRadius: 4, fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                          {(() => {
+                            const orderShipping = (shippingAddress || '').trim();
+                            const contractShipping = (invoiceShippingFromContract || '').trim();
+                            if (orderShipping) return orderShipping;
+                            if (contractShipping && contractShipping !== (invoiceBillingFromClient || '').trim()) return contractShipping;
+                            return 'Same as billing';
+                          })()}
+                        </pre>
+                        <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Products</p>
+                        <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                          {(() => {
+                            const list = products.length ? products : invoiceProductsFromContract;
+                            return list.length ? list.map((p) => (
+                              <li key={p.id}>{p.productName}{p.serialNumber ? ` (${p.serialNumber})` : ''}</li>
+                            )) : <li>No products</li>;
+                          })()}
+                        </ul>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="cancel-button" onClick={() => setIsGenerateInvoiceModalOpen(false)}>Cancel</button>
+                        <button type="button" className="save-button" onClick={() => {
+                          const today = new Date().toISOString().slice(0, 10);
+                          setInvoiceDate(today);
+                          setInvoiceDueDate(today);
+                          setGenerateInvoiceStep('dates');
+                        }}>Confirm & continue</button>
+                      </div>
+                    </>
+                  ) : (
+                    <form className="modal-form" style={{ padding: '0 1.25rem 1rem' }} onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!orderNumber || !orderData) return;
+                      setGenerateInvoiceSubmitting(true);
+                      try {
+                        const termsStr = invoiceTermsType === 'One Time' ? 'One Time' : `Net ${invoiceTermsNetDays.trim() || '30'}`;
+                        const productsToSend = products.length ? products : invoiceProductsFromContract;
+                        const orderShipping = (shippingAddress || '').trim();
+                        const contractShipping = (invoiceShippingFromContract || '').trim();
+                        const billingTrim = (invoiceBillingFromClient || '').trim();
+                        const shippingToSend = orderShipping || (contractShipping && contractShipping !== billingTrim ? contractShipping : billingTrim);
+                        await sendInvoiceConfirmation(orderNumber, {
+                          companyName: orderData.companyName,
+                          billingEntity: invoiceBillingEntityFromClient || '',
+                          billingAddress: invoiceBillingFromClient || '',
+                          shippingAddress: shippingToSend || '',
+                          products: productsToSend.map((p) => ({
+                            productName: p.productName,
+                            serialNumber: p.serialNumber ?? undefined,
+                            quantity: p.quantity ?? 1,
+                          })),
+                          invoiceDate: invoiceDate || new Date().toISOString().slice(0, 10),
+                          dueDate: invoiceDueDate || new Date().toISOString().slice(0, 10),
+                          terms: termsStr,
+                          userEmail: user?.email,
+                        });
+                        const updated = await updateOrder(orderNumber, { status: 'Awaiting Invoice' });
+                        setOrderData(mapApiOrderToDetail(updated));
+                        setStatus('Awaiting Invoice');
+                        alert('Invoice confirmation has been sent to erik@techforcerobotics.com.');
+                        setIsGenerateInvoiceModalOpen(false);
+                        setGenerateInvoiceStep('confirm');
+                      } catch (err) {
+                        alert((err as Error).message || 'Failed to send invoice confirmation.');
+                      } finally {
+                        setGenerateInvoiceSubmitting(false);
+                      }
+                    }}>
+                      <div className="form-group">
+                        <label htmlFor="invoiceDate" className="form-label">Invoice date</label>
+                        <input
+                          type="date"
+                          id="invoiceDate"
+                          className="form-input"
+                          value={invoiceDate}
+                          onChange={(e) => setInvoiceDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="invoiceDueDate" className="form-label">Due date</label>
+                        <input
+                          type="date"
+                          id="invoiceDueDate"
+                          className="form-input"
+                          value={invoiceDueDate}
+                          onChange={(e) => setInvoiceDueDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="invoiceTermsType" className="form-label">Terms</label>
+                        <select
+                          id="invoiceTermsType"
+                          className="form-input"
+                          value={invoiceTermsType}
+                          onChange={(e) => setInvoiceTermsType(e.target.value as 'One Time' | 'Net')}
+                        >
+                          <option value="One Time">One Time</option>
+                          <option value="Net">Net</option>
+                        </select>
+                      </div>
+                      {invoiceTermsType === 'Net' && (
+                        <div className="form-group">
+                          <label htmlFor="invoiceTermsNetDays" className="form-label">Net (number of days)</label>
+                          <input
+                            type="number"
+                            id="invoiceTermsNetDays"
+                            className="form-input"
+                            min={1}
+                            max={999}
+                            value={invoiceTermsNetDays}
+                            onChange={(e) => setInvoiceTermsNetDays(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                            placeholder="e.g. 30"
+                          />
+                        </div>
+                      )}
+                      <div className="modal-actions">
+                        <button type="button" className="cancel-button" onClick={() => setGenerateInvoiceStep('confirm')}>Back</button>
+                        <button type="submit" className="save-button" disabled={generateInvoiceSubmitting}>
+                          {generateInvoiceSubmitting ? 'Sending…' : 'Submit & send email'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Upload Invoice PDF Modal */}
+            {isUploadPdfModalOpen && (
+              <div className="modal-overlay" onClick={() => !uploadPdfSubmitting && (setIsUploadPdfModalOpen(false), setUploadPdfFile(null))}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">Upload invoice PDF</h3>
+                    <button
+                      className="modal-close-button"
+                      onClick={() => !uploadPdfSubmitting && (setIsUploadPdfModalOpen(false), setUploadPdfFile(null))}
+                      aria-label="Close"
+                      disabled={uploadPdfSubmitting}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <form className="modal-form" style={{ padding: '0 1.25rem 1rem' }} onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!orderNumber || !uploadPdfFile) return;
+                    setUploadPdfSubmitting(true);
+                    try {
+                      const reader = new FileReader();
+                      const base64 = await new Promise<string>((resolve, reject) => {
+                        reader.onload = () => resolve((reader.result as string) || '');
+                        reader.onerror = () => reject(new Error('Failed to read file'));
+                        reader.readAsDataURL(uploadPdfFile);
+                      });
+                      await createInvoiceWithPdf(orderNumber, { pdfBase64: base64 });
+                      await fetchInvoicesForOrder();
+                      addActivityLog('Invoice PDF uploaded', employee || 'System');
+                      const updated = await fetchOrderByOrderNumber(orderNumber);
+                      if (updated) {
+                        setOrderData(mapApiOrderToDetail(updated));
+                        setStatus(updated.status || status);
+                      }
+                      setIsUploadPdfModalOpen(false);
+                      setUploadPdfFile(null);
+                    } catch (err) {
+                      alert((err as Error).message || 'Failed to upload PDF.');
+                    } finally {
+                      setUploadPdfSubmitting(false);
+                    }
+                  }}>
+                    <div className="form-group">
+                      <label htmlFor="invoicePdfFile" className="form-label">PDF file</label>
+                      <input
+                        type="file"
+                        id="invoicePdfFile"
+                        accept=".pdf,application/pdf"
+                        className="form-input"
+                        onChange={(e) => setUploadPdfFile(e.target.files?.[0] || null)}
+                      />
+                      {uploadPdfFile && <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>{uploadPdfFile.name}</p>}
+                    </div>
+                    <div className="modal-actions">
+                      <button type="button" className="cancel-button" onClick={() => { setIsUploadPdfModalOpen(false); setUploadPdfFile(null); }}>Cancel</button>
+                      <button type="submit" className="save-button" disabled={!uploadPdfFile || uploadPdfSubmitting}>
+                        {uploadPdfSubmitting ? 'Uploading…' : 'Upload'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
             {/* Chat Log - commented out */}
             {false && (
             <>
@@ -2140,57 +2863,78 @@ Techforce Team`
                     </button>
                   </div>
                   
-                  <form className="modal-form" onSubmit={(e) => {
+                  <form className="modal-form" onSubmit={async (e) => {
                     e.preventDefault();
                     // Build date and time string (convert 24-hour to 12-hour format for display)
                     const time12Hour = editInstallationTime ? convertTo12Hour(editInstallationTime) : '';
                     const dateTimeString = editInstallationDate && editInstallationTime 
                       ? `${editInstallationDate} ${time12Hour}`
                       : '';
-                    setInstallationAppointmentTime(dateTimeString);
-                    setEditInstallationAppointmentTime(dateTimeString);
-                    setInstallationDate(editInstallationDate);
-                    setInstallationTime(editInstallationTime);
-                    setInstallationEmployee(editInstallationEmployee);
-                    
-                    // Build full site location address string from components
                     const addressParts = [];
                     if (editSiteStreetAddress) addressParts.push(editSiteStreetAddress);
                     if (editSiteAptNumber) addressParts.push(`Apt ${editSiteAptNumber}`);
                     const addressLine1 = addressParts.join(', ');
-                    
                     const addressLine2 = [];
                     if (editSiteCity) addressLine2.push(editSiteCity);
                     if (editSiteState) addressLine2.push(editSiteState);
                     if (editSiteZipCode) addressLine2.push(editSiteZipCode);
                     const cityStateZip = addressLine2.join(', ');
-                    
                     const fullSiteLocation = [addressLine1, cityStateZip, editSiteCountry].filter(Boolean).join('\n');
-                    setSiteLocation(fullSiteLocation);
-                    setEditSiteLocation(fullSiteLocation);
-                    setSiteStreetAddress(editSiteStreetAddress);
-                    setSiteAptNumber(editSiteAptNumber);
-                    setSiteCity(editSiteCity);
-                    setSiteState(editSiteState);
-                    setSiteZipCode(editSiteZipCode);
-                    setSiteCountry(editSiteCountry);
-                    
-                    // Add activity log entries
-                    if (installationAppointmentTime !== dateTimeString && dateTimeString) {
-                      addActivityLog(`Installation appointment ${installationAppointmentTime ? `changed to ${dateTimeString}` : `set to ${dateTimeString}`}`, employee || 'System');
+
+                    try {
+                      const updated = await updateOrder(orderNumber, {
+                        installation_appointment_time: dateTimeString || null,
+                        installation_employee_name: editInstallationEmployee?.trim() || null,
+                        site_location: fullSiteLocation.trim() || null,
+                      });
+                      setOrderData(mapApiOrderToDetail(updated));
+                      setInstallationAppointmentTime(dateTimeString);
+                      setEditInstallationAppointmentTime(dateTimeString);
+                      setInstallationDate(editInstallationDate);
+                      setInstallationTime(editInstallationTime);
+                      setInstallationEmployee(editInstallationEmployee);
+                      setSiteLocation(fullSiteLocation);
+                      setEditSiteLocation(fullSiteLocation);
+                      setSiteStreetAddress(editSiteStreetAddress);
+                      setSiteAptNumber(editSiteAptNumber);
+                      setSiteCity(editSiteCity);
+                      setSiteState(editSiteState);
+                      setSiteZipCode(editSiteZipCode);
+                      setSiteCountry(editSiteCountry);
+
+                      if (installationAppointmentTime !== dateTimeString && dateTimeString) {
+                        addActivityLog(`Installation appointment ${installationAppointmentTime ? `changed to ${dateTimeString}` : `set to ${dateTimeString}`}`, employee || 'System');
+                      }
+                      if (installationEmployee !== editInstallationEmployee && editInstallationEmployee) {
+                        addActivityLog(`Installation employee ${installationEmployee ? `changed to ${editInstallationEmployee}` : `assigned to ${editInstallationEmployee}`}`, employee || 'System');
+                      }
+                      if (siteLocation !== fullSiteLocation && fullSiteLocation) {
+                        addActivityLog(`Site location ${siteLocation ? 'updated' : 'set'}`, employee || 'System');
+                      }
+
+                      // Create installation task with installation tag, assigned to the selected employee
+                      const assigneeUserId = editInstallationEmployee?.trim()
+                        ? verifiedUsers.find((u) => u.username === editInstallationEmployee.trim())?.id
+                        : undefined;
+                      const taskName = `Installation: ${orderData?.companyName || orderNumber}${fullSiteLocation ? ` - ${fullSiteLocation.split('\n')[0].trim()}` : ''}`;
+                      await createTask({
+                        name: taskName,
+                        tags: ['installation'],
+                        assigned_to_user_id: assigneeUserId,
+                        due_date: editInstallationDate || undefined,
+                        notes: orderNumber ? `Order: ${orderNumber}` : undefined,
+                      });
+                      addActivityLog('Installation task created and assigned', employee || 'System');
+
+                      setIsInstallationModalOpen(false);
+                    } catch (err) {
+                      alert((err as Error).message || 'Failed to save installation appointment.');
                     }
-                    if (installationEmployee !== editInstallationEmployee && editInstallationEmployee) {
-                      addActivityLog(`Installation employee ${installationEmployee ? `changed to ${editInstallationEmployee}` : `assigned to ${editInstallationEmployee}`}`, employee || 'System');
-                    }
-                    if (siteLocation !== fullSiteLocation && fullSiteLocation) {
-                      addActivityLog(`Site location ${siteLocation ? 'updated' : 'set'}`, employee || 'System');
-                    }
-                    setIsInstallationModalOpen(false);
                   }}>
                     <div className="form-group">
                       <label htmlFor="installationEmployee" className="form-label">Assign Employee</label>
                   <SearchableDropdown
-                    options={employees}
+                    options={verifiedUsers.map((u) => u.username)}
                         value={editInstallationEmployee}
                         onChange={setEditInstallationEmployee}
                     placeholder="Select or type employee name..."
@@ -2764,11 +3508,11 @@ Techforce Team`
               </div>
             )}
 
-            {/* Contract stage: Contracts → Activity Log → Products. Delivery/Installation: Products → Activity Log → Contracts. */}
+            {/* Contract stage: Contracts → Activity log → Invoice → Products */}
             {stage === 'Contract' && (
               <>
-                <div className="contracts-table-section">
-                  <h4 className="contracts-table-title">Contracts</h4>
+                <div className="order-detail-table-section contracts-table-section">
+                  <h3 className="section-title">Contracts</h3>
                   {contractsLoading ? (
                     <p className="contracts-table-loading">Loading contracts…</p>
                   ) : orderContracts.length === 0 ? (
@@ -2831,7 +3575,7 @@ Techforce Team`
                     </div>
                   )}
                 </div>
-                <div className="activity-log-section">
+                <div className="order-detail-table-section activity-log-section">
                   <h3 className="section-title">Activity Log</h3>
                   {activityLog.length > 0 ? (
                     <div className="activity-log-container">
@@ -2858,9 +3602,57 @@ Techforce Team`
                     <p className="activity-log-empty">No activity recorded yet.</p>
                   )}
                 </div>
-                <div className="form-section">
+                <div className="order-detail-table-section invoice-table-section">
+                  <h3 className="section-title">Invoice</h3>
+                  <div className="invoice-table-wrapper">
+                    {orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : (
+                      <>
+                        <table className="invoice-table">
+                          <thead>
+                            <tr>
+                              <th>Item</th>
+                              <th>PDF</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderInvoices.length === 0 ? (
+                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
+                            ) : (
+                              orderInvoices.map((inv) => (
+                                <tr key={inv.id}>
+                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                  <td>
+                                    {inv.has_pdf ? (
+                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <button
+                            type="button"
+                            className="save-button"
+                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                          >
+                            Upload PDF
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="order-detail-table-section form-section">
                   <h3 className="section-title">Products</h3>
-                  {products.length > 0 ? (
+                  {orderContracts.length === 0 ? (
+                    <p className="no-products">No contracts yet. Generate a contract to see products.</p>
+                  ) : orderProductsFromContract.length > 0 ? (
                     <div className="products-table-wrapper">
                       <table className="products-table">
                         <thead>
@@ -2871,7 +3663,7 @@ Techforce Team`
                           </tr>
                         </thead>
                         <tbody>
-                          {products.map((product) => (
+                          {orderProductsFromContract.map((product) => (
                             <tr key={product.id}>
                               <td>{product.productName}</td>
                               <td>{product.serialNumber || 'N/A'}</td>
@@ -2907,11 +3699,58 @@ Techforce Team`
               </>
             )}
 
-            {(stage === 'Delivery' || stage === 'Installation') && (
+            {/* Delivery stage: Invoice → Products → Contracts → Activity log */}
+            {stage === 'Delivery' && (
               <>
-                <div className="form-section">
+                <div className="order-detail-table-section invoice-table-section">
+                  <h3 className="section-title">Invoice</h3>
+                  <div className="invoice-table-wrapper">
+                    {orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : (
+                      <>
+                        <table className="invoice-table">
+                          <thead>
+                            <tr>
+                              <th>Item</th>
+                              <th>PDF</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderInvoices.length === 0 ? (
+                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
+                            ) : (
+                              orderInvoices.map((inv) => (
+                                <tr key={inv.id}>
+                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                  <td>
+                                    {inv.has_pdf ? (
+                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <button
+                            type="button"
+                            className="save-button"
+                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                          >
+                            Upload PDF
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="order-detail-table-section form-section">
                   <h3 className="section-title">Products</h3>
-                  {products.length > 0 ? (
+                  {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
                     <div className="products-table-wrapper">
                       <table className="products-table">
                         <thead>
@@ -2922,7 +3761,7 @@ Techforce Team`
                           </tr>
                         </thead>
                         <tbody>
-                          {products.map((product) => (
+                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => (
                             <tr key={product.id}>
                               <td>{product.productName}</td>
                               <td>{product.serialNumber || 'N/A'}</td>
@@ -2940,7 +3779,51 @@ Techforce Team`
                     <p className="no-products">No products found for this order.</p>
                   )}
                 </div>
-                <div className="activity-log-section">
+                <div className="order-detail-table-section contracts-table-section">
+                  <h3 className="section-title">Contracts</h3>
+                  {contractsLoading ? (
+                    <p className="contracts-table-loading">Loading contracts…</p>
+                  ) : orderContracts.length === 0 ? (
+                    <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
+                  ) : (
+                    <div className="contracts-table-wrapper">
+                      <table className="contracts-table">
+                        <thead>
+                          <tr>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Generated</th>
+                            <th>Signed</th>
+                            <th>Link</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderContracts.map((c) => (
+                            <tr key={c.id}>
+                              <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
+                              <td>
+                                <span className={`contract-status contract-status-${c.status}`}>
+                                  {c.status === 'signed' ? 'Signed' : 'Pending'}
+                                </span>
+                              </td>
+                              <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
+                              <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
+                              <td>
+                                <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
+                              </td>
+                              <td className="contracts-table-actions">
+                                <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
+                                <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract">✕</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+                <div className="order-detail-table-section activity-log-section">
                   <h3 className="section-title">Activity Log</h3>
                   {activityLog.length > 0 ? (
                     <div className="activity-log-container">
@@ -2967,8 +3850,133 @@ Techforce Team`
                     <p className="activity-log-empty">No activity recorded yet.</p>
                   )}
                 </div>
-                <div className="contracts-table-section">
-                  <h4 className="contracts-table-title">Contracts</h4>
+                {contractToDelete && (
+                  <div className="modal-overlay" onClick={() => setContractToDelete(null)}>
+                    <div className="modal-content contract-delete-modal" onClick={(e) => e.stopPropagation()}>
+                      <div className="modal-header">
+                        <h3 className="modal-title">Delete contract</h3>
+                        <button type="button" className="modal-close-button" onClick={() => setContractToDelete(null)} aria-label="Close">×</button>
+                      </div>
+                      <p className="contract-delete-message">Are you sure you want to delete this {contractToDelete.label}? This cannot be undone.</p>
+                      <div className="modal-actions">
+                        <button type="button" className="cancel-button" onClick={() => setContractToDelete(null)}>Cancel</button>
+                        <button type="button" className="save-button contract-delete-confirm-button" onClick={handleConfirmDeleteContract}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Installation stage: Products → Activity log → Invoice → Contracts */}
+            {stage === 'Installation' && (
+              <>
+                <div className="order-detail-table-section form-section">
+                  <h3 className="section-title">Products</h3>
+                  {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
+                    <div className="products-table-wrapper">
+                      <table className="products-table">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>Serial Number</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => (
+                            <tr key={product.id}>
+                              <td>{product.productName}</td>
+                              <td>{product.serialNumber || 'N/A'}</td>
+                              <td>
+                                <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
+                                  {product.status || 'Pending'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="no-products">No products found for this order.</p>
+                  )}
+                </div>
+                <div className="order-detail-table-section activity-log-section">
+                  <h3 className="section-title">Activity Log</h3>
+                  {activityLog.length > 0 ? (
+                    <div className="activity-log-container">
+                      <table className="activity-log-table">
+                        <thead>
+                          <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>User</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activityLog.map((entry) => (
+                            <tr key={entry.id}>
+                              <td>{entry.timestamp}</td>
+                              <td>{entry.action}</td>
+                              <td>{entry.user}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="activity-log-empty">No activity recorded yet.</p>
+                  )}
+                </div>
+                <div className="order-detail-table-section invoice-table-section">
+                  <h3 className="section-title">Invoice</h3>
+                  <div className="invoice-table-wrapper">
+                    {orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : (
+                      <>
+                        <table className="invoice-table">
+                          <thead>
+                            <tr>
+                              <th>Item</th>
+                              <th>PDF</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderInvoices.length === 0 ? (
+                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
+                            ) : (
+                              orderInvoices.map((inv) => (
+                                <tr key={inv.id}>
+                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                  <td>
+                                    {inv.has_pdf ? (
+                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <button
+                            type="button"
+                            className="save-button"
+                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                          >
+                            Upload PDF
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="order-detail-table-section contracts-table-section">
+                  <h3 className="section-title">Contracts</h3>
                   {contractsLoading ? (
                     <p className="contracts-table-loading">Loading contracts…</p>
                   ) : orderContracts.length === 0 ? (
@@ -3092,9 +4100,54 @@ Techforce Team`
               </>
             )}
 
+            <div className="order-detail-delete-section">
+              <button
+                type="button"
+                className="order-delete-button"
+                onClick={openDeleteOrderModal}
+              >
+                Delete order
+              </button>
+            </div>
           </div>
         </main>
       </div>
+
+      {deleteOrderModalOpen && (
+        <div className="modal-overlay" onClick={closeDeleteOrderModal}>
+          <div className="modal-content order-delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Delete order</h3>
+              <button type="button" className="modal-close-button" onClick={closeDeleteOrderModal} aria-label="Close">×</button>
+            </div>
+            <div className="order-delete-modal-body">
+              {deleteOrderStep === 1 ? (
+                <>
+                  <p className="order-delete-message">
+                    Are you sure you want to delete this order? Related contracts, invoices, and products may be affected. This cannot be undone.
+                  </p>
+                  <div className="modal-actions order-delete-modal-actions">
+                    <button type="button" className="cancel-button" onClick={closeDeleteOrderModal}>Cancel</button>
+                    <button type="button" className="update-button" onClick={handleDeleteOrderConfirmStep1}>Continue</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="order-delete-message">
+                    This is your last chance. Click &quot;Delete order permanently&quot; to remove this order.
+                  </p>
+                  <div className="modal-actions order-delete-modal-actions">
+                    <button type="button" className="cancel-button" onClick={() => setDeleteOrderStep(1)}>Back</button>
+                    <button type="button" className="order-delete-confirm-button" onClick={handleDeleteOrderConfirmStep2} disabled={deleteOrderSubmitting}>
+                      {deleteOrderSubmitting ? 'Deleting…' : 'Delete order permanently'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

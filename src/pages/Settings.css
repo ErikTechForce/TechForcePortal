@@ -1,0 +1,24 @@
+.settings-success {
+  color: #15803d;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.settings-roles-checkbox-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.settings-role-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.settings-role-checkbox input {
+  margin: 0;
+}

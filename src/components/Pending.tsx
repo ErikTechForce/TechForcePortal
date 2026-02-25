@@ -1,30 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchOrders, type OrderRow } from '../api/orderApi';
 import { contractsOrders, inventoryOrders, installationOrders } from '../data/orders';
 import './Pending.css';
 
 type TabType = 'Contracts' | 'Inventory' | 'Installation';
 
+interface PendingOrderItem {
+  id: number;
+  orderNumber: string;
+  companyName: string;
+  employee: string | null;
+}
+
+const mapApiOrderToPending = (row: OrderRow): PendingOrderItem => ({
+  id: row.id,
+  orderNumber: row.order_number,
+  companyName: row.company_name,
+  employee: row.employee_name ?? null,
+});
+
 const Pending: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('Contracts');
+  const [apiOrders, setApiOrders] = useState<OrderRow[]>([]);
+  const [useFallback, setUseFallback] = useState(false);
 
-  const getCompaniesForTab = (tab: TabType) => {
-    switch (tab) {
-      case 'Contracts':
-        return contractsOrders;
-      case 'Inventory':
-        return inventoryOrders;
-      case 'Installation':
-        return installationOrders;
-      default:
-        return [];
+  useEffect(() => {
+    let cancelled = false;
+    fetchOrders()
+      .then((orders) => {
+        if (!cancelled) {
+          setApiOrders(orders);
+          setUseFallback(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setUseFallback(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const ordersByTab = useMemo(() => {
+    if (useFallback) {
+      return {
+        Contracts: contractsOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
+        Inventory: inventoryOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
+        Installation: installationOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
+      };
     }
+    const contract = apiOrders.filter((o) => o.category === 'Contract').map(mapApiOrderToPending);
+    const inventory = apiOrders.filter((o) => o.category === 'Inventory').map(mapApiOrderToPending);
+    const installation = apiOrders.filter((o) => o.category === 'Installation').map(mapApiOrderToPending);
+    return { Contracts: contract, Inventory: inventory, Installation: installation };
+  }, [apiOrders, useFallback]);
+
+  const getCompaniesForTab = (tab: TabType): PendingOrderItem[] => {
+    return ordersByTab[tab] ?? [];
   };
 
-  const getCountForTab = (tab: TabType): number => {
-    return getCompaniesForTab(tab).length;
-  };
+  const getCountForTab = (tab: TabType): number => getCompaniesForTab(tab).length;
 
   const handleCompanyClick = (orderNumber: string) => {
     // Navigate to order detail page
@@ -47,7 +82,7 @@ const Pending: React.FC = () => {
           className={`pending-tab ${activeTab === 'Inventory' ? 'active' : ''}`}
           onClick={() => setActiveTab('Inventory')}
         >
-          Inventory
+          Invoice
           <span className="pending-count">({getCountForTab('Inventory')})</span>
         </button>
         <button

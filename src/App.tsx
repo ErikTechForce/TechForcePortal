@@ -14,12 +14,14 @@ import ProductDetail from './pages/ProductDetail';
 import RobotDetail from './pages/RobotDetail';
 import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
+import CreateOrder from './pages/CreateOrder';
 import Robots from './pages/Robots';
 import Contract from './pages/Contract';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import VerifyEmailRequired from './pages/VerifyEmailRequired';
+import Settings from './pages/Settings';
 import './App.css';
 
 function App() {
@@ -42,11 +44,13 @@ function App() {
             <Route path="/client/:clientId" element={<ClientDetail />} />
             <Route path="/lead/:leadId" element={<LeadDetail />} />
             <Route path="/inventory" element={<Inventory />} />
-            <Route path="/inventory/product/:productName" element={<ProductDetail />} />
-            <Route path="/inventory/product/:productName/robot/:serialNumber" element={<RobotDetail />} />
+            <Route path="/inventory/product/:productId" element={<ProductDetail />} />
+            <Route path="/inventory/product/:productId/robot/:serialNumber" element={<RobotDetail />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/new" element={<CreateOrder />} />
             <Route path="/orders/:orderNumber" element={<OrderDetail />} />
             <Route path="/robots" element={<Robots />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

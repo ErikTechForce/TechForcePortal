@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { employees } from '../data/tasks';
+import { fetchVerifiedUsers } from '../api/users';
+import { getInventoryProducts } from '../data/inventory';
 import './Page.css';
 import './RobotDetail.css';
 
@@ -16,16 +17,29 @@ interface ActivityLogEntry {
 
 const RobotDetail: React.FC = () => {
   const navigate = useNavigate();
-  const { productName, serialNumber } = useParams<{ productName: string; serialNumber: string }>();
-
-  const decodedProductName = productName ? decodeURIComponent(productName) : 'Product';
+  const { productId, serialNumber } = useParams<{ productId: string; serialNumber: string }>();
+  const product = productId ? getInventoryProducts().find((p) => p.id === productId) : null;
+  const decodedProductName = product?.name ?? (productId ? 'Product' : 'Product');
   const decodedSerialNumber = serialNumber ? decodeURIComponent(serialNumber) : '';
 
-  // Initialize state with placeholder/default values
+  const [verifiedUserNames, setVerifiedUserNames] = useState<string[]>([]);
   const [status, setStatus] = useState('Active');
-  const [assignedTo, setAssignedTo] = useState(employees[0] || '');
+  const [assignedTo, setAssignedTo] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const users = await fetchVerifiedUsers();
+        if (!cancelled) setVerifiedUserNames(users.map((u) => u.username));
+      } catch {
+        if (!cancelled) setVerifiedUserNames([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Placeholder activity log data
   const activityLog: ActivityLogEntry[] = [
@@ -72,16 +86,16 @@ const RobotDetail: React.FC = () => {
       notes
     });
     // Navigate back to product detail page
-    if (productName) {
-      navigate(`/inventory/product/${productName}`);
+    if (productId) {
+      navigate(`/inventory/product/${productId}`);
     } else {
       navigate('/inventory');
     }
   };
 
   const handleBack = () => {
-    if (productName) {
-      navigate(`/inventory/product/${productName}`);
+    if (productId) {
+      navigate(`/inventory/product/${productId}`);
     } else {
       navigate('/inventory');
     }
@@ -140,7 +154,7 @@ const RobotDetail: React.FC = () => {
                 <div className="form-group">
                   <label htmlFor="assignedTo" className="form-label">Assigned To</label>
                   <SearchableDropdown
-                    options={employees}
+                    options={verifiedUserNames}
                     value={assignedTo}
                     onChange={setAssignedTo}
                     placeholder="Select or type employee name..."

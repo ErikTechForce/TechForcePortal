@@ -1,6 +1,7 @@
 .task-detail-form {
   margin-top: 2rem;
-  max-width: 600px;
+  max-width: 100%;
+  width: 100%;
 }
 
 .form-group {
@@ -90,5 +91,135 @@
 .update-button:active,
 .cancel-button:active {
   transform: scale(0.98);
+}
+
+.task-detail-cards {
+  max-width: 720px;
+}
+
+.task-detail-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.task-detail-tags {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.task-detail-tag-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.task-detail-tag-checkbox input {
+  margin: 0;
+}
+
+/* Task info card (order-detail style) */
+.task-info-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  border-left: 4px solid #15803d;
+}
+
+.task-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.task-info-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.task-info-section:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.task-info-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.task-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.task-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-info-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.task-info-value {
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.task-info-value .form-input,
+.task-info-value .form-select,
+.task-info-value .form-textarea {
+  margin-top: 0;
+}
+
+.task-info-card .task-detail-tags {
+  margin-top: 0.5rem;
+}
+
+.task-info-card .form-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.task-detail-notes-section {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.task-detail-notes-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.75rem 0;
+}
+
+.task-detail-notes-input {
+  width: 100%;
+  min-height: 120px;
 }
 

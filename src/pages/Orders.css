@@ -1,8 +1,121 @@
+.orders-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.orders-create-button {
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.orders-create-button:hover {
+  background-color: #14532d;
+}
+
+.orders-create-button:active {
+  transform: scale(0.98);
+}
+
+.orders-search-row {
+  margin-bottom: 1rem;
+}
+
+.orders-search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.orders-search-input:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15);
+}
+
 .orders-tables-container {
   margin-top: 2rem;
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+}
+
+.orders-company-link,
+.client-order-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.orders-company-link:hover,
+.client-order-link:hover {
+  text-decoration: underline;
+}
+
+.orders-table-empty {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 2rem !important;
+}
+
+.create-order-source-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.create-order-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.create-order-radio-label input {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #15803d;
+}
+
+.create-order-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.create-order-error {
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.create-order-site-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.create-order-site-state-zip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .orders-table-section {
@@ -93,6 +206,16 @@
 }
 
 .status-delivered {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-awaiting-invoice {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-invoice-ready {
   background-color: #d1fae5;
   color: #065f46;
 }

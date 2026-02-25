@@ -124,6 +124,7 @@ const Contract: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [fillError, setFillError] = useState<string | null>(null);
   const [billingEntity, setBillingEntity] = useState('');
+  const [billingAddress, setBillingAddress] = useState('');
   const [billingCity, setBillingCity] = useState('');
   const [billingState, setBillingState] = useState('');
   const [billingZip, setBillingZip] = useState('');
@@ -355,7 +356,8 @@ const Contract: React.FC = () => {
         placeText('locationContactNamePhone', formData.locationContactNamePhone);
         placeText('locationContactEmail', formData.locationContactEmail);
         placeText('billingEntity', billingEntity);
-        placeText('billingCityStateZip', [[billingCity], [billingState, billingZip].filter(Boolean).join(' ')].filter(Boolean).join(', '));
+        const billingCityStateZipLine = [billingAddress, [billingCity, [billingState, billingZip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+        placeText('billingCityStateZip', billingCityStateZipLine);
         placeText('billingContactNamePhone', `${billingContactName} ${billingContactPhone}`.trim());
         placeText('billingContactEmail', billingContactEmail);
         placeText('authorizedPersonName', formData.authorizedPersonName);
@@ -500,7 +502,14 @@ const Contract: React.FC = () => {
       const patchRes = await fetch(`${API_BASE}/api/contracts/${encodeURIComponent(contractId)}/signed`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pdf_signed: base64 }),
+        body: JSON.stringify({
+          pdf_signed: base64,
+          billingEntity: billingEntity?.trim() || undefined,
+          billingAddress: billingAddress?.trim() || undefined,
+          billingCity: billingCity?.trim() || undefined,
+          billingState: billingState?.trim() || undefined,
+          billingZip: billingZip?.trim() || undefined,
+        }),
       });
       if (!patchRes.ok) {
         const err = await patchRes.json().catch(() => ({}));
@@ -653,6 +662,16 @@ const Contract: React.FC = () => {
                 value={billingEntity}
                 onChange={(e) => setBillingEntity(e.target.value)}
                 placeholder="Company or entity name"
+              />
+            </div>
+            <div className="contract-form-group contract-form-group-full">
+              <label className="form-label">Billing Address</label>
+              <input
+                type="text"
+                className="form-input"
+                value={billingAddress}
+                onChange={(e) => setBillingAddress(e.target.value)}
+                placeholder="Street address"
               />
             </div>
             <div className="contract-form-group">

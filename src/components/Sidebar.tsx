@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
     { label: 'Robots', path: '/robots' },
   ];
 
-  const settingsMenuItem: MenuItem = { label: 'Setting', path: '/setting' };
+  const settingsMenuItem: MenuItem = { label: 'Settings', path: '/settings' };
 
   const isActive = (path: string) => {
     return location.pathname === path;

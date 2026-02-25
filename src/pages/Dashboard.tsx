@@ -1,16 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
-import { tasks } from '../data/tasks';
-import { leads } from '../data/leads';
+import { fetchClients, type ClientRow } from '../api/clients';
+import { fetchTasks, type TaskRow } from '../api/tasks';
+import { useAuth } from '../context/AuthContext';
+import { leads as staticLeads } from '../data/leads';
+import { getRobotFleetStats } from '../data/inventory';
 import './Dashboard.css';
+
+const STATUS_PILL_COLORS: Record<string, string> = {
+  Unassigned: '#e5e7eb',
+  'To-Do': '#bfdbfe',
+  'In Progress': '#fde68a',
+  Completed: '#bbf7d0',
+};
+
+const PRIORITY_PILL_COLORS: Record<string, string> = {
+  Low: '#d1fae5',
+  Medium: '#fef3c7',
+  High: '#fed7aa',
+  Urgent: '#fecaca',
+};
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
+  const [useFallback, setUseFallback] = useState(false);
+  const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchClients('lead')
+      .then((leads) => {
+        if (!cancelled) {
+          setApiLeads(leads);
+          setUseFallback(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setApiLeads([]);
+          setUseFallback(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const leadsList = useFallback ? staticLeads : apiLeads;
 
   const handleTaskClick = (taskId: number) => {
     navigate(`/tasks/${taskId}`);
@@ -20,7 +61,21 @@ const Dashboard: React.FC = () => {
     navigate(`/lead/${leadId}`);
   };
 
-  const dashboardTasks = tasks.filter(task => task.status === 'In Progress');
+  useEffect(() => {
+    if (!user?.id) {
+      setDashboardTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchTasks(user.id)
+      .then((sections) => {
+        if (!cancelled) setDashboardTasks([...sections.todo, ...sections.inProgress]);
+      })
+      .catch(() => {
+        if (!cancelled) setDashboardTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
   
   const salesProductData = {
     '1month': [
@@ -94,20 +149,21 @@ const Dashboard: React.FC = () => {
     '1year': generateMonthlySalesData(12, calculateTotalFromProducts(salesProductData['1year']))
   };
   
+  const robotStats = getRobotFleetStats();
   const robotsData = [
     {
-      label: 'Online',
-      value: 13,
+      label: 'Deployed',
+      value: robotStats.deployed,
       color: '#4ade80'
     },
     {
-      label: 'Offline',
-      value: 5,
+      label: 'In Storage',
+      value: robotStats.inStorage,
       color: '#6b7280'
     },
     {
-      label: 'Needs Service',
-      value: 2,
+      label: 'In Need of Maintenance',
+      value: robotStats.needsMaintenance,
       color: '#dc2626'
     }
   ];
@@ -150,25 +206,45 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
-                  {leads.map((lead) => (
+                  {leadsList.map((lead) => (
                     <div 
                       key={lead.id} 
                       className="clickable-item" 
                       onClick={() => handleLeadClick(lead.id)}
                     >
-                      {lead.companyName}
+                      {useFallback ? (lead as { companyName: string }).companyName : (lead as ClientRow).company}
                     </div>
                   ))}
                 </div>
               </div>
               <div className="dashboard-card">
-                <h3 className="card-title">Tasks</h3>
+                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Tasks</h3>
                 <div className="card-content">
-                  {dashboardTasks.map((task) => (
-                    <div key={task.id} className="clickable-item" onClick={() => handleTaskClick(task.id)}>
-                      {task.name}
-                    </div>
-                  ))}
+                  {dashboardTasks.length === 0 ? (
+                    <p className="page-subtitle" style={{ margin: 0 }}>No tasks assigned to you</p>
+                  ) : (
+                    dashboardTasks.map((task) => (
+                      <div key={task.id} className="clickable-item dashboard-task-item" onClick={() => handleTaskClick(task.id)}>
+                        <span className="dashboard-task-name">{task.name}</span>
+                        <div className="dashboard-task-pills">
+                          <span
+                            className="dashboard-pill"
+                            style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
+                          >
+                            {task.status}
+                          </span>
+                          {task.priority && (
+                            <span
+                              className="dashboard-pill"
+                              style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                            >
+                              {task.priority}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="dashboard-card">

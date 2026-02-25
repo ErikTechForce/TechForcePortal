@@ -78,6 +78,11 @@
   margin: 2rem 0;
 }
 
+.client-button-row--top {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
 .add-client-button {
   background-color: #15803d;
   color: white;
@@ -152,6 +157,37 @@
   color: #9ca3af;
   font-style: italic;
   padding: 2rem !important;
+}
+
+.add-client-type-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.add-client-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.add-client-radio-label input {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #15803d;
+}
+
+.add-client-error {
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content--wide {
+  max-width: 520px;
 }
 
 

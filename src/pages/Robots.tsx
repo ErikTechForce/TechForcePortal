@@ -1,47 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import PieChart from '../components/PieChart';
+import { getRobotFleetStats } from '../data/inventory';
 import './Page.css';
 import './Robots.css';
 
-interface RobotStats {
-  online: number;
-  offline: number;
-  needsService: number;
-}
-
 const Robots: React.FC = () => {
-  // Placeholder data - will be replaced with actual data
-  const [robotStats] = useState<RobotStats>({
-    online: 13,
-    offline: 5,
-    needsService: 2
-  });
+  const robotStats = getRobotFleetStats();
 
-  const total = robotStats.online + robotStats.offline + robotStats.needsService;
+  const total = robotStats.deployed + robotStats.inStorage + robotStats.needsMaintenance;
   
   const pieChartData = [
     {
-      label: 'Online',
-      value: robotStats.online,
+      label: 'Deployed',
+      value: robotStats.deployed,
       color: '#4ade80'
     },
     {
-      label: 'Offline',
-      value: robotStats.offline,
+      label: 'In Storage',
+      value: robotStats.inStorage,
       color: '#6b7280'
     },
     {
-      label: 'Needs Service',
-      value: robotStats.needsService,
+      label: 'In Need of Maintenance',
+      value: robotStats.needsMaintenance,
       color: '#dc2626'
     }
   ];
 
-  const onlinePercentage = total > 0 ? Math.round((robotStats.online / total) * 100) : 0;
-  const offlinePercentage = total > 0 ? Math.round((robotStats.offline / total) * 100) : 0;
-  const needsServicePercentage = total > 0 ? Math.round((robotStats.needsService / total) * 100) : 0;
+  const deployedPercentage = total > 0 ? Math.round((robotStats.deployed / total) * 100) : 0;
+  const inStoragePercentage = total > 0 ? Math.round((robotStats.inStorage / total) * 100) : 0;
+  const needsMaintenancePercentage = total > 0 ? Math.round((robotStats.needsMaintenance / total) * 100) : 0;
 
   return (
     <div className="page-container">
@@ -62,18 +52,18 @@ const Robots: React.FC = () => {
                 <h3 className="robots-stats-title">Robot Status</h3>
                 <div className="robots-stats-item">
                   <span className="robots-stats-indicator robots-stats-indicator-online"></span>
-                  <span className="robots-stats-percentage">{onlinePercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.online} Online)</span>
+                  <span className="robots-stats-percentage">{deployedPercentage}%</span>
+                  <span className="robots-stats-label">({robotStats.deployed} Deployed)</span>
                 </div>
                 <div className="robots-stats-item">
                   <span className="robots-stats-indicator robots-stats-indicator-offline"></span>
-                  <span className="robots-stats-percentage">{offlinePercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.offline} Offline)</span>
+                  <span className="robots-stats-percentage">{inStoragePercentage}%</span>
+                  <span className="robots-stats-label">({robotStats.inStorage} In Storage)</span>
                 </div>
                 <div className="robots-stats-item">
                   <span className="robots-stats-indicator robots-stats-indicator-service"></span>
-                  <span className="robots-stats-percentage">{needsServicePercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.needsService} In Need of Service)</span>
+                  <span className="robots-stats-percentage">{needsMaintenancePercentage}%</span>
+                  <span className="robots-stats-label">({robotStats.needsMaintenance} In Need of Maintenance)</span>
                 </div>
               </div>
             </div>
