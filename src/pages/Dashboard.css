@@ -196,6 +196,16 @@
   margin: 0;
 }
 
+.activity-log-time {
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.activity-log-user {
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
 .dashboard-card .card-content {
   max-height: 300px;
   overflow-y: auto;

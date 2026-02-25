@@ -54,6 +54,25 @@ app.get('/api/db-info', async (req, res) => {
   }
 });
 
+// GET /api/activity — site-wide activity log for dashboard (orders, tasks, etc.)
+app.get('/api/activity', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(String(req.query.limit || '50'), 10) || 50, 200);
+    const result = await pool.query(
+      `SELECT id, action, "user", created_at FROM site_activity ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({ entries: result.rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string; code?: string };
+    if (e.code === '42P01') {
+      res.json({ entries: [] });
+      return;
+    }
+    res.status(500).json({ error: (e as { message?: string }).message || 'Failed to fetch activity.' });
+  }
+});
+
 // Tables info endpoint (verify tables exist)
 app.get('/api/tables', async (req, res) => {
   try {
@@ -579,10 +598,19 @@ app.post('/api/orders', async (req, res) => {
       ? await pool.query('SELECT name FROM employees WHERE id = $1', [employee_id])
       : { rows: [] };
     const employee_name = (empNameResult.rows[0] as { name?: string } | undefined)?.name ?? null;
+    const activityUser = employee_name ?? 'System';
     await pool.query(
       `INSERT INTO activity_logs (order_number, action, "user") VALUES ($1, $2, $3)`,
-      [order_number, `Order ${order_number} created`, employee_name ?? 'System']
+      [order_number, `Order ${order_number} created`, activityUser]
     );
+    try {
+      await pool.query(
+        `INSERT INTO site_activity (action, "user") VALUES ($1, $2)`,
+        [`Order ${order_number} created`, activityUser]
+      );
+    } catch {
+      // site_activity table may not exist yet
+    }
     res.status(201).json({
       id: row.id,
       order_number: row.order_number,
@@ -645,7 +673,7 @@ app.patch('/api/orders/:orderNumber', async (req, res) => {
     }
     if (body.category !== undefined) {
       const cat = body.category?.trim();
-      if (cat && ['Contract', 'Inventory', 'Installation'].includes(cat)) {
+      if (cat && ['Contract', 'Inventory', 'Installation', 'Completed'].includes(cat)) {
         updates.push(`category = $${paramIndex++}`);
         values.push(cat);
       }
@@ -702,6 +730,15 @@ app.patch('/api/orders/:orderNumber', async (req, res) => {
       `UPDATE orders SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE order_number = $${paramIndex}`,
       values
     );
+    const actingUser = (body as { acting_user?: string }).acting_user?.trim() || 'System';
+    try {
+      await pool.query(
+        `INSERT INTO site_activity (action, "user") VALUES ($1, $2)`,
+        [`Order ${orderNumber} updated`, actingUser]
+      );
+    } catch {
+      // site_activity table may not exist yet
+    }
     const getResult = await pool.query(
       `SELECT o.id, o.order_number, o.company_name, o.status, o.category, o.employee_id, o.last_contact_date,
               o.tracking_number, o.estimated_delivery_date, o.shipping_address, o.deliver_to,
@@ -936,6 +973,16 @@ app.post('/api/tasks', async (req, res) => {
       }
     }
 
+    try {
+      const siteAction = empName?.name ? `Task created: ${name} (assigned to ${empName.name})` : `Task created: ${name}`;
+      await pool.query(
+        `INSERT INTO site_activity (action, "user") VALUES ($1, 'System')`,
+        [siteAction]
+      );
+    } catch {
+      // site_activity table may not exist yet
+    }
+
     res.status(201).json(taskRowToJson(
       { ...task, assigned_to_name: empName?.name ?? null, client_company: clientCompany?.company ?? null },
       tags
@@ -1057,6 +1104,22 @@ app.patch('/api/tasks/:id', async (req, res) => {
         sendTaskAssignedEmail(assigneeEmail, taskName, id, taskLink).catch((mailErr) => {
           console.error('Task assigned email send failed:', mailErr);
         });
+      }
+    }
+
+    if (updates.length > 0) {
+      try {
+        const taskName = String(row.name || 'Task');
+        const assigneeName = row.assigned_to_name != null ? String(row.assigned_to_name) : null;
+        const siteAction = body.assigned_to_user_id !== undefined && assigneeName
+          ? `User ${assigneeName} assigned to task: ${taskName}`
+          : `Task updated: ${taskName}`;
+        await pool.query(
+          `INSERT INTO site_activity (action, "user") VALUES ($1, 'System')`,
+          [siteAction]
+        );
+      } catch {
+        // site_activity table may not exist yet
       }
     }
 
@@ -1311,7 +1374,7 @@ app.get('/api/orders/:orderNumber/activity-log', async (req, res) => {
   }
 });
 
-// POST /api/orders/:orderNumber/activity-log — append an activity log entry
+// POST /api/orders/:orderNumber/activity-log — append an activity log entry (also adds to site_activity for dashboard)
 app.post('/api/orders/:orderNumber/activity-log', async (req, res) => {
   try {
     const orderNumber = req.params.orderNumber;
@@ -1326,11 +1389,120 @@ app.post('/api/orders/:orderNumber/activity-log', async (req, res) => {
        RETURNING id, order_number, timestamp, action, "user"`,
       [orderNumber, action, user]
     );
+    try {
+      await pool.query(
+        `INSERT INTO site_activity (action, "user") VALUES ($1, $2)`,
+        [`Order ${orderNumber}: ${action}`, user]
+      );
+    } catch {
+      // site_activity table may not exist yet
+    }
     const row = result.rows[0];
     res.status(201).json(row);
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to add activity log entry.' });
+  }
+});
+
+// GET /api/sales/product-counts — product sales from completed orders (TIM-E Bot, BIM-E), all periods
+app.get('/api/sales/product-counts', async (req, res) => {
+  try {
+    const periods = [
+      { key: '1month', months: 1 },
+      { key: '3months', months: 3 },
+      { key: '6months', months: 6 },
+      { key: '1year', months: 12 },
+    ] as const;
+
+    const result: Record<string, { productData: { product: string; sales: number }[]; totalData: { date: string; total: number }[] }> = {};
+
+    for (const { key, months } of periods) {
+      const since = new Date();
+      since.setMonth(since.getMonth() - months);
+      since.setHours(0, 0, 0, 0);
+
+      const ordersResult = await pool.query(
+        `SELECT o.order_number, o.updated_at
+         FROM orders o
+         WHERE o.category = 'Completed' AND o.updated_at >= $1
+         ORDER BY o.updated_at ASC`,
+        [since]
+      );
+
+      let totalTimE = 0;
+      let totalBime = 0;
+      const byMonth = new Map<string, { label: string; totalUnits: number }>();
+
+      const sumAllQtyFromFormData = (fd: Record<string, unknown>): number => {
+        let sum = 0;
+        for (const [k, v] of Object.entries(fd)) {
+          if (k.toLowerCase().startsWith('qty') && (typeof v === 'string' || typeof v === 'number')) {
+            sum += parseInt(String(v), 10) || 0;
+          }
+        }
+        return sum;
+      };
+
+      for (const row of ordersResult.rows as { order_number: string; updated_at: string }[]) {
+        const contractResult = await pool.query(
+          `SELECT form_data, qty_tim_e_bot, qty_bime FROM contracts
+           WHERE order_number = $1 AND status = 'signed'
+           ORDER BY signed_at DESC NULLS LAST LIMIT 1`,
+          [row.order_number]
+        );
+        const c = contractResult.rows[0] as { form_data?: unknown; qty_tim_e_bot?: string | null; qty_bime?: string | null } | undefined;
+        let qtyTimE = 0;
+        let qtyBime = 0;
+        let orderTotalUnits = 0;
+        if (c) {
+          if (c.form_data && typeof c.form_data === 'object') {
+            const fd = c.form_data as Record<string, unknown>;
+            orderTotalUnits = sumAllQtyFromFormData(fd);
+          }
+          if (c.qty_tim_e_bot != null && c.qty_tim_e_bot !== '') qtyTimE = parseInt(String(c.qty_tim_e_bot), 10) || 0;
+          else if (c.form_data && typeof c.form_data === 'object') {
+            const fd = c.form_data as Record<string, unknown>;
+            qtyTimE = parseInt(String(fd.qtyTimEBot ?? fd.qty_tim_e_bot ?? 0), 10) || 0;
+          }
+          if (c.qty_bime != null && c.qty_bime !== '') qtyBime = parseInt(String(c.qty_bime), 10) || 0;
+          else if (c.form_data && typeof c.form_data === 'object') {
+            const fd = c.form_data as Record<string, unknown>;
+            qtyBime = parseInt(String(fd.qtyBIME ?? fd.qty_bime ?? 0), 10) || 0;
+          }
+          if (orderTotalUnits === 0) orderTotalUnits = qtyTimE + qtyBime;
+        }
+        totalTimE += qtyTimE;
+        totalBime += qtyBime;
+        const updatedAt = new Date(row.updated_at);
+        const monthKey = `${updatedAt.getFullYear()}-${String(updatedAt.getMonth() + 1).padStart(2, '0')}`;
+        const label = updatedAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        if (!byMonth.has(monthKey)) byMonth.set(monthKey, { label, totalUnits: 0 });
+        const entry = byMonth.get(monthKey)!;
+        entry.totalUnits += orderTotalUnits;
+      }
+
+      const sortedMonths = Array.from(byMonth.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+      const totalData = sortedMonths.map(([, v]) => ({ date: v.label, total: v.totalUnits }));
+      if (totalData.length === 0) {
+        totalData.push({
+          date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          total: 0,
+        });
+      }
+      result[key] = {
+        productData: [
+          { product: 'TIM-E Bot', sales: totalTimE },
+          { product: 'BIM-E', sales: totalBime },
+        ],
+        totalData,
+      };
+    }
+
+    res.json(result);
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch sales by product.' });
   }
 });
 
@@ -1722,6 +1894,17 @@ app.patch('/api/contracts/:contractId/signed', async (req, res) => {
       await pool.query(
         `UPDATE orders SET status = 'Approved', updated_at = CURRENT_TIMESTAMP WHERE order_number = $1 AND category = 'Contract'`,
         [row.order_number]
+      );
+      // Log once when client signs via link (not when portal later sees the signed contract)
+      const signedAtResult = await pool.query(
+        `SELECT signed_at FROM contracts WHERE contract_id = $1`,
+        [contractId]
+      );
+      const signedAt = signedAtResult.rows[0]?.signed_at as string | undefined;
+      const signedDate = signedAt ? new Date(signedAt).toLocaleString() : new Date().toLocaleString();
+      await pool.query(
+        `INSERT INTO activity_logs (order_number, action, "user") VALUES ($1, $2, $3)`,
+        [row.order_number, `Client submitted signed contract on ${signedDate}`, 'Client']
       );
     }
     res.json({ success: true });

@@ -76,6 +76,8 @@ export interface UpdateOrderPayload {
   installation_appointment_time?: string | null;
   installation_employee_name?: string | null;
   site_location?: string | null;
+  /** Used for dashboard activity log (who performed the update) */
+  acting_user?: string | null;
 }
 
 export async function updateOrder(orderNumber: string, payload: UpdateOrderPayload): Promise<OrderRow> {
@@ -181,4 +183,34 @@ export async function sendInvoiceConfirmation(
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data as { error?: string }).error || 'Failed to send invoice email');
+}
+
+/** Sales by product (TIM-E Bot, BIM-E) from completed orders, per period */
+export interface SalesProductCountsPeriod {
+  productData: { product: string; sales: number }[];
+  totalData: { date: string; total: number }[];
+}
+
+export type SalesProductCounts = Record<'1month' | '3months' | '6months' | '1year', SalesProductCountsPeriod>;
+
+export async function fetchSalesProductCounts(): Promise<SalesProductCounts> {
+  const res = await fetch(`${API_BASE}/api/sales/product-counts`);
+  if (!res.ok) throw new Error('Failed to fetch sales by product');
+  const data = await res.json();
+  return data as SalesProductCounts;
+}
+
+/** Site-wide activity log entry (dashboard) */
+export interface SiteActivityEntry {
+  id: number;
+  action: string;
+  user: string;
+  created_at: string;
+}
+
+export async function fetchSiteActivity(limit = 50): Promise<SiteActivityEntry[]> {
+  const res = await fetch(`${API_BASE}/api/activity?limit=${limit}`);
+  if (!res.ok) throw new Error('Failed to fetch activity');
+  const data = await res.json();
+  return (data.entries || []) as SiteActivityEntry[];
 }

@@ -35,7 +35,7 @@ interface OrderDetailData {
   orderNumber: string;
   status: string;
   employee: string | null;
-  category: 'Contract' | 'Inventory' | 'Installation';
+  category: 'Contract' | 'Inventory' | 'Installation' | 'Completed';
   lastContactDate?: string;
   trackingNumber?: string;
   estimatedDeliveryDate?: string;
@@ -53,7 +53,7 @@ function mapApiOrderToDetail(row: OrderRow): OrderDetailData {
     orderNumber: row.order_number,
     status: row.status,
     employee: row.employee_name ?? null,
-    category: row.category as 'Contract' | 'Inventory' | 'Installation',
+    category: row.category as 'Contract' | 'Inventory' | 'Installation' | 'Completed',
     lastContactDate: row.last_contact_date ?? undefined,
     trackingNumber: row.tracking_number ?? undefined,
     estimatedDeliveryDate: row.estimated_delivery_date ?? undefined,
@@ -300,9 +300,10 @@ const OrderDetail: React.FC = () => {
     return () => { cancelled = true; };
   }, [orderData?.companyName]);
 
-  const [stage, setStage] = useState<'Contract' | 'Delivery' | 'Installation'>(
+  const [stage, setStage] = useState<'Contract' | 'Delivery' | 'Installation' | 'Completed'>(
     orderData?.category === 'Contract' ? 'Contract' :
     orderData?.category === 'Inventory' ? 'Delivery' :
+    orderData?.category === 'Completed' ? 'Completed' :
     'Installation'
   );
   const [status, setStatus] = useState(orderData?.status || 'Pending');
@@ -324,7 +325,7 @@ const OrderDetail: React.FC = () => {
 
   useEffect(() => {
     if (!orderData) return;
-    setStage(orderData.category === 'Contract' ? 'Contract' : orderData.category === 'Inventory' ? 'Delivery' : 'Installation');
+    setStage(orderData.category === 'Contract' ? 'Contract' : orderData.category === 'Inventory' ? 'Delivery' : orderData.category === 'Completed' ? 'Completed' : 'Installation');
     setStatus(orderData.status || 'Pending');
     setEmployee(orderData.employee || '');
     setLastContactDate(orderData.lastContactDate || '');
@@ -346,6 +347,20 @@ const OrderDetail: React.FC = () => {
   const [siteCountry, setSiteCountry] = useState('United States');
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
   const [isInstallationModalOpen, setIsInstallationModalOpen] = useState(false);
+  const [isConfirmInventoryModalOpen, setIsConfirmInventoryModalOpen] = useState(false);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [deliveryCardData, setDeliveryCardData] = useState<{
+    businessName: string;
+    serviceAddress: string;
+    city: string;
+    state: string;
+    zip: string;
+    locationContactName: string;
+    locationContactPhone: string;
+    locationContactEmail: string;
+  } | null>(null);
+  const [deliveryModalStep, setDeliveryModalStep] = useState<'card' | 'products'>('card');
+  const [installationProductStatuses, setInstallationProductStatuses] = useState<Record<number, string>>({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractModalFullscreen, setIsContractModalFullscreen] = useState(false);
@@ -512,9 +527,10 @@ const OrderDetail: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [filledPdfUrl, setFilledPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [editStage, setEditStage] = useState<'Contract' | 'Delivery' | 'Installation'>(
+  const [editStage, setEditStage] = useState<'Contract' | 'Delivery' | 'Installation' | 'Completed'>(
     orderData?.category === 'Contract' ? 'Contract' : 
     orderData?.category === 'Inventory' ? 'Delivery' : 
+    orderData?.category === 'Completed' ? 'Completed' : 
     'Installation'
   );
   const [editStatus, setEditStatus] = useState(orderData?.status || 'Pending');
@@ -847,26 +863,39 @@ Techforce Team`
   };
 
   // Get status options based on stage
-  const getStatusOptions = (currentStage: 'Contract' | 'Delivery' | 'Installation'): string[] => {
+  const getStatusOptions = (currentStage: 'Contract' | 'Delivery' | 'Installation' | 'Completed'): string[] => {
     switch (currentStage) {
       case 'Contract':
         return ['Pending', 'In Progress', 'Approved'];
       case 'Delivery':
         return ['Pending', 'Awaiting Invoice', 'Invoice Ready'];
       case 'Installation':
-        return ['Pending', 'Scheduled', 'In Progress', 'Completed'];
+        return ['Pending', 'Scheduled', 'In Progress'];
+      case 'Completed':
+        return ['Completed'];
       default:
         return ['Pending'];
     }
+  };
+
+  // Format installation appointment time (ISO or date string) for readable display
+  const formatInstallationAppointmentTime = (value: string): string => {
+    if (!value?.trim()) return value || '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
   useEffect(() => {
     if (orderData) {
       const initialStage = orderData.category === 'Contract' ? 'Contract' : 
                           orderData.category === 'Inventory' ? 'Delivery' : 
+                          orderData.category === 'Completed' ? 'Completed' : 
                           'Installation';
+      const validStatuses = getStatusOptions(initialStage);
+      const statusForStage = validStatuses.includes(orderData.status) ? orderData.status : validStatuses[0];
       setStage(initialStage);
-      setStatus(orderData.status);
+      setStatus(statusForStage);
       setEmployee(orderData.employee || '');
       setLastContactDate(orderData.lastContactDate || '');
       setTrackingNumber(orderData.trackingNumber || '');
@@ -929,7 +958,7 @@ Techforce Team`
         }
       }
       setEditStage(initialStage);
-      setEditStatus(orderData.status);
+      setEditStatus(statusForStage);
       setEditEmployee(orderData.employee || '');
       setEditLastContactDate(orderData.lastContactDate || '');
       setEditTrackingNumber(orderData.trackingNumber || '');
@@ -1042,6 +1071,7 @@ Techforce Team`
         installation_appointment_time: editInstallationAppointmentTime?.trim() || null,
         installation_employee_name: editInstallationEmployee?.trim() || null,
         site_location: editSiteLocation?.trim() || null,
+        acting_user: editEmployee?.trim() || (user?.username ?? undefined) || undefined,
       };
       if (editStage !== 'Delivery') {
         payload.tracking_number = editTrackingNumber?.trim() || null;
@@ -1589,11 +1619,12 @@ Techforce Team`
         if (!res.ok || cancelled) return;
         const formData = await res.json();
         const fd = (formData.form_data || {}) as Record<string, string>;
-        const serviceAddr = (fd.serviceAddress || '').trim();
-        const city = (fd.city || '').trim();
-        const state = (fd.state || '').trim();
-        const zip = (fd.zip || '').trim();
-        const cityStateZip = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+        const serviceAddr = (fd.serviceAddress ?? fd.service_address ?? '').trim();
+        const city = (fd.city ?? '').trim();
+        const state = (fd.state ?? '').trim();
+        const zip = (fd.zip ?? '').trim();
+        const cityStateZipCombined = (fd.cityStateZip ?? fd.city_state_zip ?? '').trim();
+        const cityStateZip = cityStateZipCombined || [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
         const shipping = [serviceAddr, cityStateZip].filter(Boolean).join('\n');
         const built = buildOrderProductsFromContractForm(orderNumber, fd);
         if (!cancelled) {
@@ -1626,16 +1657,7 @@ Techforce Team`
     setStatus(hasSigned ? 'Approved' : 'In Progress');
   }, [stage, orderContracts]);
 
-  const signedContractIdsLoggedRef = React.useRef<Set<number>>(new Set());
-  useEffect(() => {
-    orderContracts.forEach((c) => {
-      if (c.status === 'signed' && !signedContractIdsLoggedRef.current.has(c.id)) {
-        signedContractIdsLoggedRef.current.add(c.id);
-        const signedDate = c.signed_at ? new Date(c.signed_at).toLocaleString() : '';
-        addActivityLog(signedDate ? `Client submitted signed contract on ${signedDate}` : 'Client submitted signed contract', 'Client');
-      }
-    });
-  }, [orderContracts, addActivityLog]);
+  // "Client submitted signed contract" is logged only on the server when the client signs via the link (PATCH /api/contracts/:contractId/signed), not when the portal loads the order.
 
   const handleCopyContractLink = async (contractId: number) => {
     try {
@@ -2034,7 +2056,7 @@ Techforce Team`
                   <>
                     <div className="order-info-item">
                       <label className="order-info-label">Installation Appointment</label>
-                      <div className="order-info-value">{installationAppointmentTime || 'Not set'}</div>
+                      <div className="order-info-value">{installationAppointmentTime ? formatInstallationAppointmentTime(installationAppointmentTime) : 'Not set'}</div>
                     </div>
                     {installationEmployee && (
                       <div className="order-info-item">
@@ -2147,9 +2169,10 @@ Techforce Team`
                     onClick={async () => {
                       if (!orderNumber) return;
                       try {
-                        const updated = await updateOrder(orderNumber, { category: 'Installation' });
+                        const updated = await updateOrder(orderNumber, { category: 'Installation', status: 'Pending' });
                         setOrderData(mapApiOrderToDetail(updated));
                         setStage('Installation');
+                        setStatus('Pending');
                         addActivityLog('Order moved to Installation stage', employee || 'System');
                       } catch (err) {
                         alert((err as Error).message || 'Failed to move order to Installation stage.');
@@ -2162,63 +2185,138 @@ Techforce Team`
               </div>
             )}
 
-            {/* Installation Appointment Button - Only for Installation stage */}
+            {/* Installation stage buttons: Set Appointment + Confirm Inventory */}
             {stage === 'Installation' && (
-              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', paddingLeft: '1rem' }}>
+              <div style={{ marginTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.75rem', paddingLeft: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   type="button"
                   className="installation-appointment-button"
-                  onClick={() => {
+                  onClick={async () => {
                     setEditInstallationAppointmentTime(installationAppointmentTime);
                     setEditInstallationDate(installationDate);
                     setEditInstallationTime(installationTime);
                     setEditInstallationEmployee(installationEmployee);
-                    // Pre-fill site address from contract stage (latest signed contract) when order has no site location yet
-                    const addressToParse = siteLocation || invoiceStageShippingFromContract || '';
-                    setEditSiteLocation(addressToParse);
-                    if (addressToParse) {
-                      const addressLines = addressToParse.split('\n');
-                      if (addressLines.length > 0) {
-                        const firstLine = addressLines[0];
-                        const aptMatch = firstLine.match(/(.*?)(?:Apt|Unit|#|Suite)\s*([A-Z0-9-]+)/i);
-                        if (aptMatch) {
-                          setEditSiteStreetAddress(aptMatch[1].trim());
-                          setEditSiteAptNumber(aptMatch[2].trim());
-                        } else {
-                          setEditSiteStreetAddress(firstLine);
-                          setEditSiteAptNumber('');
-                        }
-                        if (addressLines.length > 1) {
-                          const cityStateZip = addressLines[1];
-                          const match = cityStateZip.match(/(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/);
-                          if (match) {
-                            setEditSiteCity(match[1].trim());
-                            setEditSiteState(match[2].trim());
-                            setEditSiteZipCode(match[3].trim());
+                    // Pre-fill site address: prefer latest signed contract form data (city/state/zip directly), then parsed address string
+                    const signed = orderContracts.filter((c) => c.status === 'signed').sort((a, b) => (new Date(b.signed_at || 0).getTime() - new Date(a.signed_at || 0).getTime()));
+                    const latestSigned = signed[0];
+                    let street = '';
+                    let city = '';
+                    let state = '';
+                    let zip = '';
+                    let country = 'United States';
+                    if (latestSigned) {
+                      try {
+                        const res = await fetch(`${API_BASE}/api/contracts/${latestSigned.id}/form-data`);
+                        if (res.ok) {
+                          const data = await res.json();
+                          const fd = (data.form_data || {}) as Record<string, string>;
+                          const fullStreet = (fd.serviceAddress ?? fd.service_address ?? '').trim();
+                          const aptMatch = fullStreet.match(/(.*?)(?:Apt|Unit|#|Suite)\s*([A-Z0-9-]+)/i);
+                          if (aptMatch) {
+                            street = aptMatch[1].trim();
+                            setEditSiteAptNumber(aptMatch[2].trim());
                           } else {
-                            setEditSiteCity('');
-                            setEditSiteState('');
-                            setEditSiteZipCode('');
+                            street = fullStreet;
+                            setEditSiteAptNumber('');
                           }
+                          city = (fd.city ?? '').trim();
+                          state = (fd.state ?? '').trim().toUpperCase();
+                          zip = (fd.zip ?? '').trim();
                         }
-                        if (addressLines.length > 2) {
-                          setEditSiteCountry(addressLines[2].trim());
-                        } else {
-                          setEditSiteCountry('United States');
+                      } catch {
+                        // ignore
+                      }
+                    }
+                    if (!street && !city && !state && !zip) {
+                      const addressToParse = invoiceStageShippingFromContract || siteLocation || '';
+                      setEditSiteLocation(addressToParse);
+                      if (addressToParse) {
+                        const addressLines = addressToParse.split('\n').map((l) => l.trim()).filter(Boolean);
+                        if (addressLines.length > 0) {
+                          const firstLine = addressLines[0];
+                          const aptMatch = firstLine.match(/(.*?)(?:Apt|Unit|#|Suite)\s*([A-Z0-9-]+)/i);
+                          if (aptMatch) {
+                            street = aptMatch[1].trim();
+                            setEditSiteAptNumber(aptMatch[2].trim());
+                          } else {
+                            street = firstLine;
+                            setEditSiteAptNumber('');
+                          }
+                          if (addressLines.length > 1) {
+                            const cityStateZip = addressLines[1];
+                            const matchWithZip = cityStateZip.match(/(.+?),\s*([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/);
+                            const matchStateOnly = cityStateZip.match(/(.+?),\s*([A-Za-z]{2})\s*$/);
+                            if (matchWithZip) {
+                              city = matchWithZip[1].trim();
+                              state = matchWithZip[2].trim().toUpperCase();
+                              zip = matchWithZip[3].trim();
+                            } else if (matchStateOnly) {
+                              city = matchStateOnly[1].trim();
+                              state = matchStateOnly[2].trim().toUpperCase();
+                            }
+                          }
+                          if (addressLines.length > 2) country = addressLines[2].trim();
                         }
                       }
                     } else {
+                      const addressLine2 = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+                      setEditSiteLocation([street, addressLine2, country].filter(Boolean).join('\n'));
+                    }
+                    setEditSiteStreetAddress(street);
+                    setEditSiteCity(city);
+                    setEditSiteState(state);
+                    setEditSiteZipCode(zip);
+                    setEditSiteCountry(country);
+                    if (!street && !city && !state && !zip) {
                       setEditSiteStreetAddress('');
                       setEditSiteAptNumber('');
-                      setEditSiteCity('');
-                      setEditSiteState('');
-                      setEditSiteZipCode('');
                       setEditSiteCountry('United States');
                     }
                     setIsInstallationModalOpen(true);
                   }}
                 >
-                  Setting Installation Appointment
+                  Set Installation Appointment
+                </button>
+                <button
+                  type="button"
+                  className="generate-invoice-button"
+                  onClick={() => setIsConfirmInventoryModalOpen(true)}
+                >
+                  Confirm Inventory
+                </button>
+                <button
+                  type="button"
+                  className="generate-invoice-button"
+                  onClick={async () => {
+                    const signed = orderContracts.filter((c) => c.status === 'signed').sort((a, b) => (new Date(b.signed_at || 0).getTime() - new Date(a.signed_at || 0).getTime()));
+                    const latestSigned = signed[0];
+                    if (!latestSigned) {
+                      alert('No signed contract found. Contract data is required for delivery information.');
+                      return;
+                    }
+                    try {
+                      const res = await fetch(`${API_BASE}/api/contracts/${latestSigned.id}/form-data`);
+                      if (!res.ok) throw new Error('Failed to load contract data');
+                      const data = await res.json();
+                      const fd = (data.form_data || {}) as Record<string, string>;
+                      setDeliveryCardData({
+                        businessName: (fd.businessName ?? fd.business_name ?? '').trim(),
+                        serviceAddress: (fd.serviceAddress ?? fd.service_address ?? '').trim(),
+                        city: (fd.city ?? '').trim(),
+                        state: (fd.state ?? '').trim(),
+                        zip: (fd.zip ?? '').trim(),
+                        locationContactName: (fd.locationContactName ?? fd.location_contact_name ?? '').trim(),
+                        locationContactPhone: (fd.locationContactPhone ?? fd.location_contact_phone ?? '').trim(),
+                        locationContactEmail: (fd.locationContactEmail ?? fd.location_contact_email ?? '').trim(),
+                      });
+                      setDeliveryModalStep('card');
+                      setIsDeliveryModalOpen(true);
+                    } catch (err) {
+                      alert((err as Error).message || 'Failed to load delivery information.');
+                    }
+                  }}
+                >
+                  Delivery
                 </button>
               </div>
             )}
@@ -2269,11 +2367,12 @@ Techforce Team`
                         id="editStage"
                     className="form-select"
                         value={editStage}
-                        onChange={(e) => setEditStage(e.target.value as 'Contract' | 'Delivery' | 'Installation')}
+                        onChange={(e) => setEditStage(e.target.value as 'Contract' | 'Delivery' | 'Installation' | 'Completed')}
                   >
                     <option value="Contract">Contract</option>
                     <option value="Delivery">Invoice</option>
                     <option value="Installation">Installation</option>
+                    <option value="Completed">Completed</option>
                   </select>
                 </div>
 
@@ -2853,7 +2952,7 @@ Techforce Team`
               <div className="modal-overlay" onClick={() => setIsInstallationModalOpen(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
-                    <h3 className="modal-title">Setting Installation Appointment</h3>
+                    <h3 className="modal-title">Set Installation Appointment</h3>
                     <button 
                       className="modal-close-button"
                       onClick={() => setIsInstallationModalOpen(false)}
@@ -2865,6 +2964,7 @@ Techforce Team`
                   
                   <form className="modal-form" onSubmit={async (e) => {
                     e.preventDefault();
+                    if (!orderNumber) return;
                     // Build date and time string (convert 24-hour to 12-hour format for display)
                     const time12Hour = editInstallationTime ? convertTo12Hour(editInstallationTime) : '';
                     const dateTimeString = editInstallationDate && editInstallationTime 
@@ -2886,8 +2986,10 @@ Techforce Team`
                         installation_appointment_time: dateTimeString || null,
                         installation_employee_name: editInstallationEmployee?.trim() || null,
                         site_location: fullSiteLocation.trim() || null,
+                        status: 'Scheduled',
                       });
                       setOrderData(mapApiOrderToDetail(updated));
+                      setStatus('Scheduled');
                       setInstallationAppointmentTime(dateTimeString);
                       setEditInstallationAppointmentTime(dateTimeString);
                       setInstallationDate(editInstallationDate);
@@ -3052,6 +3154,197 @@ Techforce Team`
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* Confirm Inventory Modal - Installation stage */}
+            {isConfirmInventoryModalOpen && (
+              <div className="modal-overlay" onClick={() => setIsConfirmInventoryModalOpen(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">Confirm Inventory</h3>
+                    <button
+                      className="modal-close-button"
+                      onClick={() => setIsConfirmInventoryModalOpen(false)}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="modal-form" style={{ padding: '1rem' }}>
+                    {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
+                      <div className="products-table-wrapper">
+                        <table className="products-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Serial Number</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => {
+                              const currentStatus = installationProductStatuses[product.id] ?? product.status ?? 'Pending';
+                              return (
+                                <tr key={product.id}>
+                                  <td>{product.productName}</td>
+                                  <td>{product.serialNumber || 'N/A'}</td>
+                                  <td>
+                                    <select
+                                      className="form-input"
+                                      value={currentStatus}
+                                      onChange={(e) => setInstallationProductStatuses((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                                      style={{ minWidth: '120px' }}
+                                    >
+                                      <option value="Pending">Pending</option>
+                                      <option value="Confirmed">Confirmed</option>
+                                      <option value="Delivered">Delivered</option>
+                                    </select>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="no-products">No products found for this order.</p>
+                    )}
+                    <div className="modal-actions" style={{ marginTop: '1rem' }}>
+                      <button type="button" className="save-button" onClick={() => setIsConfirmInventoryModalOpen(false)}>
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delivery Modal - contract data card then product table + Complete Order */}
+            {isDeliveryModalOpen && deliveryCardData && (
+              <div className="modal-overlay" onClick={() => { setIsDeliveryModalOpen(false); setDeliveryModalStep('card'); }}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: deliveryModalStep === 'products' ? '560px' : '480px' }}>
+                  <div className="modal-header">
+                    <h3 className="modal-title">Delivery Information</h3>
+                    <button
+                      className="modal-close-button"
+                      onClick={() => { setIsDeliveryModalOpen(false); setDeliveryModalStep('card'); }}
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="modal-form" style={{ padding: '1rem' }}>
+                    <div className="delivery-card" style={{
+                      background: 'var(--card-bg, #f8f9fa)',
+                      borderRadius: '8px',
+                      padding: '1.25rem',
+                      border: '1px solid var(--border-color, #dee2e6)',
+                    }}>
+                      <div className="delivery-card-row" style={{ marginBottom: '0.75rem' }}>
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Business Name</span>
+                        <span className="delivery-card-value">{deliveryCardData.businessName || '—'}</span>
+                      </div>
+                      <div className="delivery-card-row" style={{ marginBottom: '0.75rem' }}>
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Service Address</span>
+                        <span className="delivery-card-value" style={{ whiteSpace: 'pre-wrap' }}>{deliveryCardData.serviceAddress || '—'}</span>
+                      </div>
+                      <div className="delivery-card-row" style={{ marginBottom: '0.75rem' }}>
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>City, State, Zip</span>
+                        <span className="delivery-card-value">
+                          {[deliveryCardData.city, deliveryCardData.state, deliveryCardData.zip].filter(Boolean).join(', ') || '—'}
+                        </span>
+                      </div>
+                      <div className="delivery-card-row" style={{ marginBottom: '0.75rem' }}>
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Location Contact Name</span>
+                        <span className="delivery-card-value">{deliveryCardData.locationContactName || '—'}</span>
+                      </div>
+                      <div className="delivery-card-row" style={{ marginBottom: '0.75rem' }}>
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Phone</span>
+                        <span className="delivery-card-value">{deliveryCardData.locationContactPhone || '—'}</span>
+                      </div>
+                      <div className="delivery-card-row">
+                        <span className="delivery-card-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Location Contact Email</span>
+                        <span className="delivery-card-value">{deliveryCardData.locationContactEmail || '—'}</span>
+                      </div>
+                    </div>
+
+                    {deliveryModalStep === 'card' ? (
+                      <div className="modal-actions" style={{ marginTop: '1rem' }}>
+                        <button type="button" className="save-button" onClick={() => setDeliveryModalStep('products')}>
+                          Confirm Delivery
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h4 style={{ marginTop: '1.25rem', marginBottom: '0.5rem' }}>Product status</h4>
+                        {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
+                          <div className="products-table-wrapper">
+                            <table className="products-table">
+                              <thead>
+                                <tr>
+                                  <th>Product Name</th>
+                                  <th>Serial Number</th>
+                                  <th>Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => {
+                                  const currentStatus = installationProductStatuses[product.id] ?? product.status ?? 'Pending';
+                                  return (
+                                    <tr key={product.id}>
+                                      <td>{product.productName}</td>
+                                      <td>{product.serialNumber || 'N/A'}</td>
+                                      <td>
+                                        <select
+                                          className="form-input"
+                                          value={currentStatus}
+                                          onChange={(e) => setInstallationProductStatuses((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                                          style={{ minWidth: '120px' }}
+                                        >
+                                          <option value="Pending">Pending</option>
+                                          <option value="Confirmed">Confirmed</option>
+                                          <option value="Delivered">Delivered</option>
+                                        </select>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="no-products">No products found for this order.</p>
+                        )}
+                        <div className="modal-actions" style={{ marginTop: '1rem', gap: '0.5rem' }}>
+                          <button type="button" className="cancel-button" onClick={() => setDeliveryModalStep('card')}>
+                            Back
+                          </button>
+                          <button
+                            type="button"
+                            className="save-button"
+                            onClick={async () => {
+                              if (!orderNumber) return;
+                              try {
+                                const updated = await updateOrder(orderNumber, { status: 'Completed', category: 'Completed' });
+                                setOrderData(mapApiOrderToDetail(updated));
+                                setStatus('Completed');
+                                setStage('Completed');
+                                addActivityLog('Order completed', employee || 'System');
+                                setIsDeliveryModalOpen(false);
+                                setDeliveryModalStep('card');
+                              } catch (err) {
+                                alert((err as Error).message || 'Failed to complete order.');
+                              }
+                            }}
+                          >
+                            Complete Order
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -3884,17 +4177,20 @@ Techforce Team`
                           </tr>
                         </thead>
                         <tbody>
-                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => (
-                            <tr key={product.id}>
-                              <td>{product.productName}</td>
-                              <td>{product.serialNumber || 'N/A'}</td>
-                              <td>
-                                <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
-                                  {product.status || 'Pending'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => {
+                              const displayStatus = installationProductStatuses[product.id] ?? product.status ?? 'Pending';
+                              return (
+                                <tr key={product.id}>
+                                  <td>{product.productName}</td>
+                                  <td>{product.serialNumber || 'N/A'}</td>
+                                  <td>
+                                    <span className={`status-badge status-${(displayStatus || 'pending').toLowerCase().replace(/\s+/g, '-')}`}>
+                                      {displayStatus || 'Pending'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
                     </div>

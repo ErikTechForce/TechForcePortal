@@ -49,7 +49,7 @@ const Orders: React.FC = () => {
   const contractsOrders = orders.filter((o) => o.category === 'Contract');
   const inventoryOrders = orders.filter((o) => o.category === 'Inventory');
   const installationOrders = orders.filter((o) => o.category === 'Installation');
-  const completedOrders = orders.filter((o) => o.status === 'Completed');
+  const completedOrders = orders.filter((o) => o.category === 'Completed');
 
   const filteredContracts = contractsOrders.filter((o) => matchesOrderSearch(o, orderSearch));
   const filteredInventory = inventoryOrders.filter((o) => matchesOrderSearch(o, orderSearch));

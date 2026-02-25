@@ -7,6 +7,7 @@ import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchTasks, type TaskRow } from '../api/tasks';
+import { fetchSalesProductCounts, fetchSiteActivity, type SalesProductCounts, type SiteActivityEntry } from '../api/orderApi';
 import { useAuth } from '../context/AuthContext';
 import { leads as staticLeads } from '../data/leads';
 import { getRobotFleetStats } from '../data/inventory';
@@ -32,6 +33,8 @@ const Dashboard: React.FC = () => {
   const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
   const [useFallback, setUseFallback] = useState(false);
   const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
+  const [salesData, setSalesData] = useState<SalesProductCounts | null>(null);
+  const [siteActivity, setSiteActivity] = useState<SiteActivityEntry[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,78 +79,65 @@ const Dashboard: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [user?.id]);
-  
-  const salesProductData = {
-    '1month': [
-      { product: 'Robot A', sales: 12 },
-      { product: 'Robot B', sales: 18 },
-      { product: 'Robot C', sales: 15 },
-      { product: 'Robot D', sales: 22 },
-      { product: 'Robot E', sales: 20 }
-    ],
-    '3months': [
-      { product: 'Robot A', sales: 35 },
-      { product: 'Robot B', sales: 52 },
-      { product: 'Robot C', sales: 44 },
-      { product: 'Robot D', sales: 65 },
-      { product: 'Robot E', sales: 58 }
-    ],
-    '6months': [
-      { product: 'Robot A', sales: 72 },
-      { product: 'Robot B', sales: 108 },
-      { product: 'Robot C', sales: 90 },
-      { product: 'Robot D', sales: 132 },
-      { product: 'Robot E', sales: 120 }
-    ],
-    '1year': [
-      { product: 'Robot A', sales: 144 },
-      { product: 'Robot B', sales: 216 },
-      { product: 'Robot C', sales: 180 },
-      { product: 'Robot D', sales: 264 },
-      { product: 'Robot E', sales: 240 }
-    ]
-  };
 
-  // Calculate total sales from product sales for each period
-  const calculateTotalFromProducts = (products: typeof salesProductData['1month']) => {
-    return products.reduce((sum, p) => sum + p.sales, 0);
-  };
-
-  // Generate monthly sales data that matches product totals
-  const generateMonthlySalesData = (months: number, periodTotal: number) => {
-    const data = [];
-    const today = new Date();
-    const avgMonthly = Math.floor(periodTotal / months);
-    const remainder = periodTotal % months;
-    
-    for (let i = months - 1; i >= 0; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      // Distribute total evenly, with remainder added to first month
-      const monthlyTotal = avgMonthly + (i === months - 1 ? remainder : 0);
-      // Add slight variation for realism (±5%)
-      const variation = Math.floor(monthlyTotal * 0.05 * (Math.random() * 2 - 1));
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        total: Math.max(1, monthlyTotal + variation)
+  useEffect(() => {
+    let cancelled = false;
+    fetchSalesProductCounts()
+      .then((data) => {
+        if (!cancelled) setSalesData(data);
+      })
+      .catch(() => {
+        if (!cancelled) setSalesData(null);
       });
-    }
-    
-    // Ensure the sum matches the period total exactly
-    const currentSum = data.reduce((sum, d) => sum + d.total, 0);
-    const difference = periodTotal - currentSum;
-    if (difference !== 0) {
-      data[data.length - 1].total += difference;
-    }
-    
-    return data;
-  };
+    return () => { cancelled = true; };
+  }, []);
 
-  const salesTotalData = {
-    '1month': generateMonthlySalesData(1, calculateTotalFromProducts(salesProductData['1month'])),
-    '3months': generateMonthlySalesData(3, calculateTotalFromProducts(salesProductData['3months'])),
-    '6months': generateMonthlySalesData(6, calculateTotalFromProducts(salesProductData['6months'])),
-    '1year': generateMonthlySalesData(12, calculateTotalFromProducts(salesProductData['1year']))
+  useEffect(() => {
+    let cancelled = false;
+    fetchSiteActivity(50)
+      .then((entries) => {
+        if (!cancelled) setSiteActivity(entries);
+      })
+      .catch(() => {
+        if (!cancelled) setSiteActivity([]);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Sales chart data from completed orders (TIM-E Bot, BIM-E), or fallback zeros
+  const defaultSalesPeriod = {
+    productData: [
+      { product: 'TIM-E Bot', sales: 0 },
+      { product: 'BIM-E', sales: 0 },
+    ],
+    totalData: [{ date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), total: 0 }],
   };
+  const salesProductData = salesData
+    ? {
+        '1month': salesData['1month'].productData,
+        '3months': salesData['3months'].productData,
+        '6months': salesData['6months'].productData,
+        '1year': salesData['1year'].productData,
+      }
+    : {
+        '1month': defaultSalesPeriod.productData,
+        '3months': defaultSalesPeriod.productData,
+        '6months': defaultSalesPeriod.productData,
+        '1year': defaultSalesPeriod.productData,
+      };
+  const salesTotalData = salesData
+    ? {
+        '1month': salesData['1month'].totalData,
+        '3months': salesData['3months'].totalData,
+        '6months': salesData['6months'].totalData,
+        '1year': salesData['1year'].totalData,
+      }
+    : {
+        '1month': defaultSalesPeriod.totalData,
+        '3months': defaultSalesPeriod.totalData,
+        '6months': defaultSalesPeriod.totalData,
+        '1year': defaultSalesPeriod.totalData,
+      };
   
   const robotStats = getRobotFleetStats();
   const robotsData = [
@@ -168,15 +158,24 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const socialMediaFeed = [
-    { platform: 'Instagram', activity: 'TechForce has just posted a reel on Instagram', time: '2 hours ago' },
-    { platform: 'LinkedIn', activity: 'TechForce shared a new article about robotics innovation', time: '5 hours ago' },
-    { platform: 'Twitter', activity: 'TechForce tweeted about the latest product launch', time: '1 day ago' },
-    { platform: 'Facebook', activity: 'TechForce posted a video showcasing new features', time: '1 day ago' },
-    { platform: 'Instagram', activity: 'TechForce uploaded a new photo gallery', time: '2 days ago' },
-    { platform: 'LinkedIn', activity: 'TechForce announced a partnership with industry leaders', time: '3 days ago' }
-  ];
-  
+  const formatActivityTime = (createdAt: string) => {
+    try {
+      const d = new Date(createdAt);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours} hour(s) ago`;
+      if (diffDays < 7) return `${diffDays} day(s) ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return createdAt;
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <Header />
@@ -247,32 +246,25 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="dashboard-card">
-                <h3 className="card-title">Feed</h3>
-                <div className="card-content">
-                  {socialMediaFeed.map((item, index) => (
-                    <div key={index} className="feed-item">
-                      <div className="feed-activity">{item.activity}</div>
-                      <div className="feed-meta">
-                        <span className="feed-platform">{item.platform}</span>
-                        <span className="feed-time">{item.time}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div className="activity-log-section">
               <h3 className="activity-log-title">Activity Log</h3>
               <div className="activity-log-content">
                 <div className="activity-log-list">
-                  <div className="activity-log-item">[16:10] Lisa Anderson has completed Client onboarding process.</div>
-                  <div className="activity-log-item">[14:55] David Wilson has completed Prepare quarterly report.</div>
-                  <div className="activity-log-item">[13:20] Emily Davis has completed Follow up with Acme Corporation.</div>
-                  <div className="activity-log-item">[11:30] Michael Chen has completed Schedule team meeting.</div>
-                  <div className="activity-log-item">[10:42] Sarah Johnson has completed Update project documentation.</div>
-                  <div className="activity-log-item">[09:15] John Smith has completed Review client proposal.</div>
+                  {siteActivity.length === 0 ? (
+                    <p className="activity-log-empty">No activity recorded yet.</p>
+                  ) : (
+                    siteActivity.map((entry) => (
+                      <div key={entry.id} className="activity-log-item">
+                        <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
+                        {entry.action}
+                        {entry.user && entry.user !== 'System' && (
+                          <span className="activity-log-user"> — {entry.user}</span>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
