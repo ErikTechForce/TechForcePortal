@@ -2698,7 +2698,7 @@ Techforce Team`
                         const updated = await updateOrder(orderNumber, { status: 'Awaiting Invoice' });
                         setOrderData(mapApiOrderToDetail(updated));
                         setStatus('Awaiting Invoice');
-                        alert('Invoice confirmation has been sent to erik@techforcerobotics.com.');
+                        alert('Invoice confirmation has been sent to karl@pierpointmgmt.com.');
                         setIsGenerateInvoiceModalOpen(false);
                         setGenerateInvoiceStep('confirm');
                       } catch (err) {

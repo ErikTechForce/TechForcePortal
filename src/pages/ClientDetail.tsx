@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
+import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { getClientById } from '../data/clients';
 import { getOrdersByCompanyName } from '../data/orders';
@@ -53,6 +53,7 @@ const ClientDetail: React.FC = () => {
   const [editContactPhone, setEditContactPhone] = useState('');
   const [editBillingAddress, setEditBillingAddress] = useState('');
   const [editSiteLocationAddress, setEditSiteLocationAddress] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const ordersList = useFallback ? staticOrders : clientOrders;
 
@@ -605,6 +606,32 @@ const ClientDetail: React.FC = () => {
                 {saving ? 'Saving…' : 'Update'}
               </button>
             </div>
+
+            {/* Delete client */}
+            {clientIdNum && !useFallback && (
+              <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="cancel-button"
+                  disabled={deleting}
+                  style={{ background: 'var(--danger-color, #dc2626)', color: '#fff', border: 'none' }}
+                  onClick={async () => {
+                    if (!window.confirm('Are you sure you want to delete this client? This cannot be undone.')) return;
+                    setDeleting(true);
+                    try {
+                      await deleteClient(clientIdNum);
+                      navigate('/client');
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : 'Failed to delete client.');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                >
+                  {deleting ? 'Deleting…' : 'Delete client'}
+                </button>
+              </div>
+            )}
           </div>
         </main>
       </div>

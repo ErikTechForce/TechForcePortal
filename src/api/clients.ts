@@ -150,3 +150,9 @@ export async function updateClient(id: number, payload: UpdateClientPayload): Pr
   if (!res.ok) throw new Error(data.error || 'Failed to update client');
   return data;
 }
+
+export async function deleteClient(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/clients/${id}`, { method: 'DELETE' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || 'Failed to delete client');
+}

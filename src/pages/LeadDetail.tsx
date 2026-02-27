@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { fetchClientById } from '../api/clients';
+import { fetchClientById, deleteClient } from '../api/clients';
 import { getLeadById } from '../data/leads';
 import { products } from '../data/tasks';
 import './Page.css';
@@ -29,6 +29,7 @@ const LeadDetail: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [productInterested, setProductInterested] = useState('');
   const [notes, setNotes] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!leadIdNum) return;
@@ -235,6 +236,33 @@ const LeadDetail: React.FC = () => {
                   Update
                 </button>
               </div>
+
+              {/* Delete lead */}
+              {leadIdNum && !useFallback && apiLead && (
+                <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    className="cancel-button"
+                    disabled={deleting}
+                    style={{ background: 'var(--danger-color, #dc2626)', color: '#fff', border: 'none' }}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      if (!window.confirm('Are you sure you want to delete this lead? This cannot be undone.')) return;
+                      setDeleting(true);
+                      try {
+                        await deleteClient(leadIdNum);
+                        navigate('/client');
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Failed to delete lead.');
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    {deleting ? 'Deleting…' : 'Delete lead'}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </main>

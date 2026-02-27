@@ -16,6 +16,8 @@ const PORT = process.env.PORT || 3001;
 const BCRYPT_ROUNDS = 10;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+/** Base URL with no trailing slash, for building email/redirect links */
+const baseUrl = APP_URL.replace(/\/$/, '');
 
 // Middleware (higher limit for contract payloads with base64 PDFs)
 app.use(cors());
@@ -127,7 +129,7 @@ app.post('/api/auth/register', async (req, res) => {
       `UPDATE users SET verification_token = $1, verification_token_expires_at = $2, last_verification_email_sent_at = CURRENT_TIMESTAMP WHERE id = $3`,
       [verificationToken, expiresAt, userId]
     );
-    const verificationLink = `${APP_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
     try {
       await sendVerificationEmail(emailLower, verificationLink);
     } catch (mailErr) {
@@ -319,7 +321,7 @@ app.post('/api/auth/resend-verification', async (req, res) => {
       `UPDATE users SET verification_token = $1, verification_token_expires_at = $2, last_verification_email_sent_at = CURRENT_TIMESTAMP WHERE id = $3`,
       [verificationToken, expiresAt, user.id]
     );
-    const verificationLink = `${APP_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
     try {
       await sendVerificationEmail(emailLower, verificationLink);
     } catch (mailErr) {
@@ -969,7 +971,7 @@ app.post('/api/tasks', async (req, res) => {
       const userRow = (await pool.query('SELECT email FROM users WHERE id = $1', [uid])).rows[0] as { email?: string } | undefined;
       const assigneeEmail = userRow?.email;
       if (assigneeEmail) {
-        const taskLink = `${APP_URL}/tasks/${taskId}`;
+        const taskLink = `${baseUrl}/tasks/${taskId}`;
         sendTaskAssignedEmail(assigneeEmail, name, taskId, taskLink).catch((mailErr) => {
           console.error('Task assigned email send failed:', mailErr);
         });
@@ -1103,7 +1105,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
       const assigneeEmail = userRow?.email;
       if (assigneeEmail) {
         const taskName = String(row.name || '');
-        const taskLink = `${APP_URL}/tasks/${id}`;
+        const taskLink = `${baseUrl}/tasks/${id}`;
         sendTaskAssignedEmail(assigneeEmail, taskName, id, taskLink).catch((mailErr) => {
           console.error('Task assigned email send failed:', mailErr);
         });
@@ -1279,6 +1281,23 @@ app.patch('/api/clients/:id', async (req, res) => {
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to update client.' });
+  }
+});
+
+// DELETE /api/clients/:id — delete client or lead
+app.delete('/api/clients/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const result = await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Client not found.' });
+    res.status(200).json({ success: true });
+  } catch (err: unknown) {
+    const e = err as { code?: string; message?: string };
+    if (e.code === '23503') {
+      return res.status(400).json({ error: 'Cannot delete: this client is referenced by other records (e.g. robots).' });
+    }
+    res.status(500).json({ error: e.message || 'Failed to delete client.' });
   }
 });
 
@@ -1833,7 +1852,7 @@ app.get('/api/contracts/:id/link', async (req, res) => {
       ? fromColumns
       : (typeof row.form_data === 'object' && row.form_data !== null ? (row.form_data as Record<string, string>) : {});
     const encoded = Buffer.from(JSON.stringify(formData), 'utf8').toString('base64');
-    const link = `${APP_URL}/contract/${row.contract_id}?type=${type}#${encoded}`;
+    const link = `${baseUrl}/contract/${row.contract_id}?type=${type}#${encoded}`;
     res.json({ link });
   } catch (err: unknown) {
     const e = err as { message?: string };

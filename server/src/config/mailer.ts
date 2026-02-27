@@ -98,7 +98,7 @@ export interface InvoiceConfirmationPayload {
 }
 
 export async function sendInvoiceConfirmationEmail(payload: InvoiceConfirmationPayload): Promise<void> {
-  const to = 'erik@techforcerobotics.com';
+  const to = 'karl@pierpointmgmt.com';
   const transporter = getTransporter();
   if (!transporter) {
     console.warn('Email not sent: SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD).');
