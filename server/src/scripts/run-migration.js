@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Get migration file from command line or use default
-const migrationFile = process.argv[2] || '001_create_tables.sql';
+const migrationFile = process.argv[2] || '000_combined_001_to_017.sql';
 const migrationPath = resolve(__dirname, '..', 'migrations', migrationFile);
 
 // Database connection pool
