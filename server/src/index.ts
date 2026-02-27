@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -8,6 +10,7 @@ import { sendVerificationEmail, sendTaskAssignedEmail, sendInvoiceConfirmationEm
 
 dotenv.config();
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 const BCRYPT_ROUNDS = 10;
@@ -1927,6 +1930,15 @@ app.delete('/api/contracts/:id', async (req, res) => {
     res.status(500).json({ error: e.message || 'Failed to delete contract.' });
   }
 });
+
+// In production, serve the built React app (Heroku builds root first, then server)
+if (process.env.NODE_ENV === 'production') {
+  const buildDir = path.join(__dirname, '..', '..', 'build');
+  app.use(express.static(buildDir));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildDir, 'index.html'));
+  });
+}
 
 // Start server
 app.listen(PORT, () => {
