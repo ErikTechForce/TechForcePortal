@@ -86,7 +86,7 @@ app.get('/api/tables', async (req, res) => {
       ORDER BY table_name;
     `);
     res.json({ 
-      tables: result.rows.map(row => row.table_name),
+      tables: result.rows.map((row: { table_name: string }) => row.table_name),
       count: result.rows.length 
     });
   } catch (error) {

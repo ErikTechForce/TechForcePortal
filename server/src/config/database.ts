@@ -22,13 +22,13 @@ pool.on('connect', () => {
   console.log('✓ Connected to PostgreSQL database');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('✗ Unexpected error on idle PostgreSQL client', err);
   process.exit(-1);
 });
 
 // Test the connection
-pool.query('SELECT NOW()', (err, res) => {
+pool.query('SELECT NOW()', (err: Error | null, res?: pg.QueryResult) => {
   if (err) {
     console.error('✗ Database connection error:', err.message);
     console.error('  Please check your database configuration in .env file');

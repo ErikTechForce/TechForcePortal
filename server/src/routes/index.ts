@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import express from 'express';
 
-const router = Router();
+const router: express.IRouter = express.Router();
 
 // Placeholder for future routes
 // Example: router.use('/orders', orderRoutes);
