@@ -23,9 +23,9 @@ const __dirname = dirname(__filename);
 const migrationFile = process.argv[2] || '001_create_tables.sql';
 const migrationPath = resolve(__dirname, '..', 'migrations', migrationFile);
 
-// Database connection: use DATABASE_URL on Heroku, else DB_* env vars
+// Database connection: use DATABASE_URL on Heroku (with SSL), else DB_* env vars
 const poolConfig = process.env.DATABASE_URL
-  ? { connectionString: process.env.DATABASE_URL }
+  ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: true } }
   : {
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
