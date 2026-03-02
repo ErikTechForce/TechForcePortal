@@ -6,7 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import pool from './config/database.js';
-import { sendVerificationEmail, sendTaskAssignedEmail, sendInvoiceConfirmationEmail } from './config/mailer.js';
+import { sendVerificationEmail, sendTaskAssignedEmail, sendInvoiceConfirmationEmail, sendPasswordResetEmail } from './config/mailer.js';
 
 dotenv.config();
 
@@ -215,6 +215,72 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (error: unknown) {
     const err = error as { message?: string };
     res.status(500).json({ error: err.message || 'Login failed.' });
+  }
+});
+
+const PASSWORD_RESET_EXPIRY_HOURS = 1;
+
+// POST /api/auth/forgot-password — request password reset; send email only if user exists
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body as { email?: string };
+    const emailLower = email?.trim()?.toLowerCase();
+    if (!emailLower) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+    const result = await pool.query('SELECT id FROM users WHERE email = $1', [emailLower]);
+    const user = result.rows[0] as { id: number } | undefined;
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000);
+      await pool.query(
+        `UPDATE users SET password_reset_token = $1, password_reset_token_expires_at = $2 WHERE id = $3`,
+        [resetToken, expiresAt, user.id]
+      );
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+      try {
+        await sendPasswordResetEmail(emailLower, resetLink);
+      } catch (mailErr) {
+        console.error('Forgot password: send email failed', mailErr);
+        return res.status(500).json({ error: 'Failed to send reset email. Try again later.' });
+      }
+    }
+    res.json({ success: true, message: 'If an account exists with that email, we\'ve sent a password reset link.' });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Request failed.' });
+  }
+});
+
+// POST /api/auth/reset-password — set new password using token from email
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body as { token?: string; newPassword?: string };
+    const tokenTrim = token?.trim();
+    if (!tokenTrim || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Valid token and a new password (at least 8 characters) are required.' });
+    }
+    const result = await pool.query(
+      `SELECT id, password_reset_token_expires_at FROM users WHERE password_reset_token = $1`,
+      [tokenTrim]
+    );
+    const row = result.rows[0] as { id: number; password_reset_token_expires_at: string | null } | undefined;
+    if (!row) {
+      return res.status(400).json({ error: 'Invalid or expired reset link.' });
+    }
+    const expiresAt = row.password_reset_token_expires_at ? new Date(row.password_reset_token_expires_at) : null;
+    if (!expiresAt || expiresAt < new Date()) {
+      return res.status(400).json({ error: 'Reset link has expired. Please request a new one.' });
+    }
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await pool.query(
+      `UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_token_expires_at = NULL WHERE id = $2`,
+      [passwordHash, row.id]
+    );
+    res.json({ success: true, message: 'Password has been reset. You can sign in with your new password.' });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Reset failed.' });
   }
 });
 

@@ -46,6 +46,30 @@ export async function sendVerificationEmail(to: string, verificationLink: string
   }
 }
 
+export async function sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('Email not sent: SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD).');
+    return;
+  }
+  try {
+    await transporter.sendMail({
+      from: MAIL_FROM,
+      to,
+      subject: 'Reset your TechForce Portal password',
+      text: `You requested a password reset. Open this link in your browser to set a new password:\n\n${resetLink}\n\nThe link expires in 1 hour. If you did not request this, you can ignore this email.`,
+      html: `
+        <p>You requested a password reset. Click the link below to set a new password:</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>The link expires in 1 hour. If you did not request this, you can ignore this email.</p>
+      `,
+    });
+  } catch (err) {
+    console.error('Failed to send password reset email:', err);
+    throw err;
+  }
+}
+
 export async function sendTaskAssignedEmail(
   to: string,
   taskName: string,

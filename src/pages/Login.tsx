@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
@@ -46,11 +46,6 @@ const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleForgotPassword = () => {
-    // Forgot password logic will be implemented later
-    console.log('Forgot password clicked');
   };
 
   const handleRegister = () => {
@@ -103,15 +98,11 @@ const Login: React.FC = () => {
         </form>
         
         <div className="login-footer">
-          <button 
-            type="button" 
-            className="link-button"
-            onClick={handleForgotPassword}
-          >
+          <Link to="/forgot-password" className="link-button">
             Forgot Password?
-          </button>
-          <button 
-            type="button" 
+          </Link>
+          <button
+            type="button"
             className="link-button"
             onClick={handleRegister}
           >
