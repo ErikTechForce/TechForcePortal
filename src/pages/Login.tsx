@@ -52,6 +52,10 @@ const Login: React.FC = () => {
     navigate('/register');
   };
 
+  const handleForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -98,9 +102,9 @@ const Login: React.FC = () => {
         </form>
         
         <div className="login-footer">
-          <Link to="/forgot-password" className="link-button">
+          <button type="button" className="link-button" onClick={handleForgotPassword}>
             Forgot Password?
-          </Link>
+          </button>
           <button
             type="button"
             className="link-button"
