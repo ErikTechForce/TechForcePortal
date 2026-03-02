@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLayout } from '../context/LayoutContext';
 import './Sidebar.css';
@@ -12,10 +12,13 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const layout = useLayout();
   const isOpen = layout?.mobileMenuOpen ?? false;
+  const closeMobileMenuRef = useRef(layout?.closeMobileMenu);
+  closeMobileMenuRef.current = layout?.closeMobileMenu;
 
+  /* Close menu only when route changes (user navigated), not when context reference changes */
   useEffect(() => {
-    layout?.closeMobileMenu();
-  }, [location.pathname, layout]);
+    closeMobileMenuRef.current?.();
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!isOpen) return;

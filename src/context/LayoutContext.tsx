@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 interface LayoutContextValue {
   mobileMenuOpen: boolean;
@@ -14,10 +14,13 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
   const toggleMobileMenu = useCallback(() => setMobileMenuOpen((prev) => !prev), []);
 
+  const value = useMemo(
+    () => ({ mobileMenuOpen, setMobileMenuOpen, closeMobileMenu, toggleMobileMenu }),
+    [mobileMenuOpen, closeMobileMenu, toggleMobileMenu]
+  );
+
   return (
-    <LayoutContext.Provider
-      value={{ mobileMenuOpen, setMobileMenuOpen, closeMobileMenu, toggleMobileMenu }}
-    >
+    <LayoutContext.Provider value={value}>
       {children}
     </LayoutContext.Provider>
   );
