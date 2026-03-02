@@ -20,9 +20,7 @@ import {
 } from '../api/orderApi';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { createTask } from '../api/tasks';
-import { getOrderByOrderNumber } from '../data/orders';
-import { getProductsByOrderNumber, type OrderProduct } from '../data/orderProducts';
-import { getClientByCompanyName } from '../data/clients';
+import { type OrderProduct } from '../data/orderProducts';
 import { fetchClients, type ClientRow } from '../api/clients';
 import './Page.css';
 import './OrderDetail.css';
@@ -236,11 +234,9 @@ const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { orderNumber } = useParams<{ orderNumber: string }>();
-  const [orderData, setOrderData] = useState<OrderDetailData | null>(() =>
-    orderNumber ? (getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null : null
-  );
+  const [orderData, setOrderData] = useState<OrderDetailData | null>(null);
   const [loading, setLoading] = useState(!!orderNumber);
-  const [products, setProducts] = useState<OrderProduct[]>(() => (orderNumber ? getProductsByOrderNumber(orderNumber) : []));
+  const [products, setProducts] = useState<OrderProduct[]>([]);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
 
   useEffect(() => {
@@ -266,11 +262,11 @@ const OrderDetail: React.FC = () => {
         if (apiOrder) {
           setOrderData(mapApiOrderToDetail(apiOrder));
         } else {
-          setOrderData((getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null);
+          setOrderData(null);
         }
       })
       .catch(() => {
-        if (!cancelled) setOrderData((getOrderByOrderNumber(orderNumber) as OrderDetailData | undefined) ?? null);
+        if (!cancelled) setOrderData(null);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -278,8 +274,6 @@ const OrderDetail: React.FC = () => {
     return () => { cancelled = true; };
   }, [orderNumber]);
 
-  // Find client by company name (local fallback for contact display)
-  const client = orderData ? getClientByCompanyName(orderData.companyName) : null;
   const [apiClient, setApiClient] = useState<ClientRow | null>(null);
 
   useEffect(() => {
@@ -634,9 +628,9 @@ const OrderDetail: React.FC = () => {
     };
     const addressSource = apiClient?.site_location || siteLocation || orderData?.shippingAddress || '';
     const addr = parseAddress(addressSource);
-    const contactName = apiClient?.point_of_contact ?? client?.pointOfContact ?? '';
-    const contactEmail = apiClient?.contact_email ?? client?.contactEmail ?? '';
-    const contactPhone = apiClient?.contact_phone ?? client?.contactPhone ?? '';
+    const contactName = apiClient?.point_of_contact ?? '';
+    const contactEmail = apiClient?.contact_email ?? '';
+    const contactPhone = apiClient?.contact_phone ?? '';
     return {
       businessName: orderData?.companyName || '',
       serviceAddress: addr.street,
@@ -685,7 +679,7 @@ const OrderDetail: React.FC = () => {
       discountType: 'flat',
       discountValue: '',
     };
-  }, [orderData, client, apiClient, siteLocation]);
+  }, [orderData, apiClient, siteLocation]);
 
   // Templated messages
   const templatedMessages = [
@@ -1344,7 +1338,7 @@ Techforce Team`
   }, []);
 
   const fillPdfWithData = async (signatureImage?: string | null) => {
-    if (!orderData || !client) return null;
+    if (!orderData || !apiClient) return null;
 
     try {
       setIsGeneratingPdf(true);
@@ -1438,11 +1432,11 @@ Techforce Team`
       placeText('businessName', orderData.companyName);
       placeText('serviceAddress', serviceAddress.street);
       placeText('cityStateZip', `${serviceAddress.city}, ${serviceAddress.state} ${serviceAddress.zip}`);
-      placeText('locationContactNamePhone', `${client.pointOfContact} ${client.contactPhone || ''}`);
-      placeText('locationContactEmail', client.contactEmail || '');
-      placeText('authorizedPersonName', client.pointOfContact);
-      placeText('authorizedPersonEmail', client.contactEmail || '');
-      placeText('authorizedPersonPhone', client.contactPhone || '');
+      placeText('locationContactNamePhone', `${apiClient.point_of_contact} ${apiClient.contact_phone || ''}`);
+      placeText('locationContactEmail', apiClient.contact_email || '');
+      placeText('authorizedPersonName', apiClient.point_of_contact);
+      placeText('authorizedPersonEmail', apiClient.contact_email || '');
+      placeText('authorizedPersonPhone', apiClient.contact_phone || '');
       console.log('=== Finished Placing Text ===');
       
       // Place signature image if provided
@@ -1641,10 +1635,7 @@ Techforce Team`
     return () => { cancelled = true; };
   }, [orderNumber, stage, orderContracts]);
 
-  // Sync products when order number changes (e.g. navigating to different order)
-  useEffect(() => {
-    if (orderNumber) setProducts(getProductsByOrderNumber(orderNumber));
-  }, [orderNumber]);
+  // Order line items (products) are not loaded from static data; use contract form or leave empty
 
   // Contract stage: derive status from contracts (no contracts → Pending; has contract but none signed → In Progress; any signed → Approved)
   useEffect(() => {
@@ -1924,8 +1915,8 @@ Techforce Team`
   };
 
   const handleCompanyClick = () => {
-    if (client) {
-      navigate(`/client/${client.id}`);
+    if (apiClient) {
+      navigate(`/client/${apiClient.id}`);
     }
   };
 

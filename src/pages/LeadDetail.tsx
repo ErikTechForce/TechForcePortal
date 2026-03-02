@@ -4,7 +4,6 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClientById, deleteClient } from '../api/clients';
-import { getLeadById } from '../data/leads';
 import { products } from '../data/tasks';
 import './Page.css';
 import './LeadDetail.css';
@@ -16,11 +15,9 @@ const LeadDetail: React.FC = () => {
 
   const [apiLead, setApiLead] = useState<Awaited<ReturnType<typeof fetchClientById>>>(null);
   const [loading, setLoading] = useState(true);
-  const [useFallback, setUseFallback] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  const staticLead = leadIdNum ? getLeadById(leadIdNum) : null;
-  const leadData = useFallback ? staticLead : (apiLead?.type === 'lead' ? apiLead : null);
+  const leadData = apiLead?.type === 'lead' ? apiLead : null;
 
   const [companyName, setCompanyName] = useState('');
   const [pointOfContact, setPointOfContact] = useState('');
@@ -37,7 +34,6 @@ const LeadDetail: React.FC = () => {
     (async () => {
       setLoading(true);
       setNotFound(false);
-      setUseFallback(false);
       try {
         const c = await fetchClientById(leadIdNum);
         if (cancelled) return;
@@ -52,7 +48,7 @@ const LeadDetail: React.FC = () => {
         }
       } catch {
         if (!cancelled) {
-          setUseFallback(true);
+          setNotFound(true);
           setApiLead(null);
         }
       } finally {
@@ -64,23 +60,13 @@ const LeadDetail: React.FC = () => {
 
   useEffect(() => {
     if (!leadData) return;
-    if ('companyName' in leadData) {
-      setCompanyName(leadData.companyName);
-      setPointOfContact(leadData.pointOfContact);
-      setContactInformation(leadData.contactInformation);
-      setSource(leadData.source);
-      setPhoneNumber(leadData.phoneNumber || '');
-      setProductInterested(leadData.productInterested || '');
-      setNotes(leadData.notes || '');
-    } else {
-      setCompanyName(leadData.company);
-      setPointOfContact(leadData.point_of_contact);
-      setContactInformation(leadData.contact_email ?? '');
-      setSource(leadData.source ?? '');
-      setPhoneNumber(leadData.contact_phone ?? '');
-      setProductInterested(leadData.product ?? '');
-      setNotes(leadData.notes ?? '');
-    }
+    setCompanyName(leadData.company);
+    setPointOfContact(leadData.point_of_contact);
+    setContactInformation(leadData.contact_email ?? '');
+    setSource(leadData.source ?? '');
+    setPhoneNumber(leadData.contact_phone ?? '');
+    setProductInterested(leadData.product ?? '');
+    setNotes(leadData.notes ?? '');
   }, [leadData]);
 
   const handleUpdate = (e: React.FormEvent) => {
@@ -238,7 +224,7 @@ const LeadDetail: React.FC = () => {
               </div>
 
               {/* Delete lead */}
-              {leadIdNum && !useFallback && apiLead && (
+              {leadIdNum && apiLead && (
                 <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
                   <button
                     type="button"

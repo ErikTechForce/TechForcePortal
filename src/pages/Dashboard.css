@@ -230,6 +230,30 @@
   background: #9ca3af;
 }
 
+@media (max-width: 768px) {
+  .dashboard-main {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .dashboard-content {
+    padding: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-charts-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .feed-item {
   padding: 0.75rem 0;
   border-bottom: 1px solid #f3f4f6;

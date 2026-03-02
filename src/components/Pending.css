@@ -127,3 +127,20 @@
   color: #9ca3af;
 }
 
+@media (max-width: 768px) {
+  .pending-tab {
+    padding: 0.6rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .pending-content {
+    padding: 0.75rem;
+  }
+
+  .pending-company-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+

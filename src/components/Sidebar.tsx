@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useLayout } from '../context/LayoutContext';
 import './Sidebar.css';
 
 interface MenuItem {
@@ -9,7 +10,22 @@ interface MenuItem {
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  
+  const layout = useLayout();
+  const isOpen = layout?.mobileMenuOpen ?? false;
+
+  useEffect(() => {
+    layout?.closeMobileMenu();
+  }, [location.pathname, layout]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') layout?.closeMobileMenu();
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, layout]);
+
   const mainMenuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Orders', path: '/orders' },
@@ -26,7 +42,15 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="sidebar">
+    <>
+      {isOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={layout?.closeMobileMenu}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
       <nav className="sidebar-nav">
         <ul className="sidebar-menu">
           {mainMenuItems.map((item) => (
@@ -53,6 +77,7 @@ const Sidebar: React.FC = () => {
         </ul>
       </nav>
     </aside>
+    </>
   );
 };
 

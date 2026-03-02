@@ -6,9 +6,6 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { INDUSTRIES } from '../constants/industries';
-import { getClientById } from '../data/clients';
-import { getOrdersByCompanyName } from '../data/orders';
-import { getProductsByOrderNumber } from '../data/orderProducts';
 import './Page.css';
 import './ClientDetail.css';
 import './Orders.css';
@@ -24,12 +21,9 @@ const ClientDetail: React.FC = () => {
   const [clientInvoices, setClientInvoices] = useState<InvoiceRow[]>([]);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [useFallback, setUseFallback] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  const staticClient = clientIdNum ? getClientById(clientIdNum) : null;
-  const staticOrders = staticClient ? getOrdersByCompanyName(staticClient.company) : [];
-  const clientData = useFallback ? staticClient : apiClient;
+  const clientData = apiClient;
 
   const [company, setCompany] = useState('');
   const [employee, setEmployee] = useState('');
@@ -58,21 +52,10 @@ const ClientDetail: React.FC = () => {
   const [editIndustry, setEditIndustry] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const ordersList = useFallback ? staticOrders : clientOrders;
+  const ordersList = clientOrders;
 
-  // Get all products for all orders of this client (from static data when we have order numbers)
-  const clientProducts = useMemo(() => {
-    if (!ordersList.length) return [];
-    const allProducts: Array<{ product: ReturnType<typeof getProductsByOrderNumber>[0]; orderNumber: string }> = [];
-    ordersList.forEach((order) => {
-      const orderNumber = 'order_number' in order ? order.order_number : (order as { orderNumber: string }).orderNumber;
-      const products = getProductsByOrderNumber(orderNumber);
-      products.forEach((product) => {
-        allProducts.push({ product, orderNumber });
-      });
-    });
-    return allProducts;
-  }, [ordersList]);
+  // Order line items (products) are not exposed by the API for client orders; show empty for now
+  const clientProducts: Array<{ product: { id: number; productName: string; serialNumber?: string; status?: string }; orderNumber: string }> = useMemo(() => [], []);
 
   // Calculate relationship duration
   const calculateRelationshipDuration = (startDateStr: string): string => {
@@ -105,7 +88,6 @@ const ClientDetail: React.FC = () => {
     (async () => {
       setLoading(true);
       setNotFound(false);
-      setUseFallback(false);
       try {
         const c = await fetchClientById(clientIdNum);
         if (cancelled) return;
@@ -134,7 +116,7 @@ const ClientDetail: React.FC = () => {
         }
       } catch {
         if (!cancelled) {
-          setUseFallback(true);
+          setNotFound(true);
           setApiClient(null);
           setClientOrders([]);
           setClientContracts([]);
@@ -180,8 +162,8 @@ const ClientDetail: React.FC = () => {
       setContactPhone(phoneVal ?? '');
       setNotes(notesVal);
       setStartDate(startVal ?? '');
-      setBillingAddress(billingVal || (useFallback ? '123 Business St, Suite 100, City, State 12345' : ''));
-      setSiteLocationAddress(siteVal || (useFallback ? '456 Industrial Blvd, Building A, City, State 12345' : ''));
+      setBillingAddress(billingVal);
+      setSiteLocationAddress(siteVal);
       setIndustry(industryVal);
 
       setEditEmployee(employeeVal ?? '');
@@ -190,10 +172,10 @@ const ClientDetail: React.FC = () => {
       setEditPointOfContact(pocVal);
       setEditContactEmail(emailVal ?? '');
       setEditContactPhone(phoneVal ?? '');
-      setEditBillingAddress(billingVal || (useFallback ? '123 Business St, Suite 100, City, State 12345' : ''));
-      setEditSiteLocationAddress(siteVal || (useFallback ? '456 Industrial Blvd, Building A, City, State 12345' : ''));
+      setEditBillingAddress(billingVal);
+      setEditSiteLocationAddress(siteVal);
     }
-  }, [clientData, useFallback]);
+  }, [clientData]);
 
   useEffect(() => {
     if (!clientData || verifiedUsers.length === 0) return;
@@ -211,7 +193,7 @@ const ClientDetail: React.FC = () => {
 
   const handleClientInfoSave = async () => {
     setSaveError('');
-    if (useFallback || !clientIdNum) {
+    if (!clientIdNum) {
       setEmployee(editEmployee);
       setStartDate(editStartDate);
       setIsClientInfoModalOpen(false);
@@ -256,7 +238,7 @@ const ClientDetail: React.FC = () => {
 
   const handleContactInfoSave = async () => {
     setSaveError('');
-    if (useFallback || !clientIdNum) {
+    if (!clientIdNum) {
       setPointOfContact(editPointOfContact);
       setContactEmail(editContactEmail);
       setContactPhone(editContactPhone);
@@ -595,9 +577,9 @@ const ClientDetail: React.FC = () => {
               <button
                 type="button"
                 className="update-button"
-                disabled={saving || useFallback || !clientIdNum}
+                disabled={saving || !clientIdNum}
                 onClick={async () => {
-                  if (useFallback || !clientIdNum) { navigate('/client'); return; }
+                  if (!clientIdNum) { navigate('/client'); return; }
                   setSaveError('');
                   setSaving(true);
                   try {
@@ -624,7 +606,7 @@ const ClientDetail: React.FC = () => {
             </div>
 
             {/* Delete client */}
-            {clientIdNum && !useFallback && (
+            {clientIdNum && (
               <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   type="button"

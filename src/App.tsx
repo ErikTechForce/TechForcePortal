@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LayoutProvider } from './context/LayoutContext';
 import ProtectedLayout from './components/ProtectedLayout';
 import Dashboard from './pages/Dashboard';
 import TasksBoard from './pages/TasksBoard';
@@ -30,6 +31,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <LayoutProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -58,6 +60,7 @@ function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </LayoutProvider>
       </AuthProvider>
     </Router>
   );

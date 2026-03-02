@@ -246,3 +246,27 @@
   border-top: 1px solid #e5e7eb;
 }
 
+@media (max-width: 768px) {
+  .client-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .client-info-card {
+    padding: 1rem;
+  }
+
+  .form-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+    margin: 0.5rem;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+}
+

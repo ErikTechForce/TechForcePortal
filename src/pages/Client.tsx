@@ -5,8 +5,6 @@ import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClients, createClient, type ClientRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
-import { clients as staticClients, type Client as StaticClient } from '../data/clients';
-import { leads as staticLeads, type Lead } from '../data/leads';
 import { getInventoryProducts } from '../data/inventory';
 import './Page.css';
 import './Client.css';
@@ -17,7 +15,6 @@ const Client: React.FC = () => {
   const [apiClients, setApiClients] = useState<ClientRow[]>([]);
   const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [useFallback, setUseFallback] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -46,9 +43,7 @@ const Client: React.FC = () => {
       ]);
       setApiClients(clientsRes);
       setApiLeads(leadsRes);
-      setUseFallback(false);
     } catch {
-      setUseFallback(true);
       setApiClients([]);
       setApiLeads([]);
     }
@@ -76,34 +71,19 @@ const Client: React.FC = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const clientsList = useFallback ? staticClients : apiClients;
-  const leadsList = useFallback ? staticLeads : apiLeads;
-
   const searchLower = clientSearchQuery.trim().toLowerCase();
   const filteredClients = useMemo(() => {
-    if (!searchLower) return clientsList;
-    const list = clientsList as (StaticClient | ClientRow)[];
-    return list.filter((c: StaticClient | ClientRow) => {
-      const company = useFallback ? (c as StaticClient).company : (c as ClientRow).company;
-      const employee = useFallback ? (c as StaticClient).employee : (c as ClientRow).employee_name;
-      const poc = useFallback ? (c as StaticClient).pointOfContact : (c as ClientRow).point_of_contact;
-      const product = useFallback ? (c as StaticClient).product : (c as ClientRow).product;
-      return [company, employee, poc, product].some((v) => (v ?? '').toLowerCase().includes(searchLower));
-    });
-  }, [clientsList, searchLower, useFallback]);
+    if (!searchLower) return apiClients;
+    return apiClients.filter((c) =>
+      [c.company, c.employee_name, c.point_of_contact, c.product].some((v) => (v ?? '').toLowerCase().includes(searchLower))
+    );
+  }, [apiClients, searchLower]);
   const filteredLeads = useMemo(() => {
-    if (!searchLower) return leadsList;
-    const list = leadsList as (Lead | ClientRow)[];
-    return list.filter((l: Lead | ClientRow) => {
-      const company = useFallback ? (l as Lead).companyName : (l as ClientRow).company;
-      const poc = useFallback ? (l as Lead).pointOfContact : (l as ClientRow).point_of_contact;
-      const email = (l as ClientRow).contact_email;
-      const phone = (l as ClientRow).contact_phone;
-      const contactInfo = useFallback ? (l as Lead).contactInformation : '';
-      const source = useFallback ? (l as Lead).source : (l as ClientRow).source;
-      return [company, poc, email, phone, contactInfo, source].some((v) => (v ?? '').toLowerCase().includes(searchLower));
-    });
-  }, [leadsList, searchLower, useFallback]);
+    if (!searchLower) return apiLeads;
+    return apiLeads.filter((l) =>
+      [l.company, l.point_of_contact, l.contact_email, l.contact_phone, l.source].some((v) => (v ?? '').toLowerCase().includes(searchLower))
+    );
+  }, [apiLeads, searchLower]);
 
   const inventoryProductNames = useMemo(
     () => Array.from(new Set(getInventoryProducts().map((p) => p.name))),
@@ -183,9 +163,7 @@ const Client: React.FC = () => {
         setApiLeads((prev) => [...prev, created]);
       }
       closeAddModal();
-      if (!useFallback) {
-        await loadLists();
-      }
+      await loadLists();
       navigate(formType === 'client' ? `/client/${created.id}` : `/lead/${created.id}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to add. Try again.');
@@ -243,20 +221,16 @@ const Client: React.FC = () => {
                           onClick={() => handleClientClick(client.id)}
                           style={{ cursor: 'pointer' }}
                         >
-                          <td>{useFallback ? client.company : (client as ClientRow).company}</td>
-                          <td>
-                            {useFallback
-                              ? (client as { employee?: string | null }).employee || 'unassigned'
-                              : (client as ClientRow).employee_name || 'unassigned'}
-                          </td>
-                          <td>{useFallback ? (client as { pointOfContact: string }).pointOfContact : (client as ClientRow).point_of_contact}</td>
-                          <td>{useFallback ? (client as { product: string }).product : (client as ClientRow).product ?? ''}</td>
+                          <td>{client.company}</td>
+                          <td>{client.employee_name || 'unassigned'}</td>
+                          <td>{client.point_of_contact}</td>
+                          <td>{client.product ?? ''}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {filteredClients.length === 0 && (
-                    <p className="page-subtitle">{clientsList.length === 0 ? 'No clients yet.' : 'No clients match your search.'}</p>
+                    <p className="page-subtitle">{apiClients.length === 0 ? 'No clients yet.' : 'No clients match your search.'}</p>
                   )}
                 </div>
 
@@ -278,22 +252,16 @@ const Client: React.FC = () => {
                           onClick={() => handleLeadClick(lead.id)}
                           style={{ cursor: 'pointer' }}
                         >
-                          <td>{useFallback ? (lead as { companyName: string }).companyName : (lead as ClientRow).company}</td>
-                          <td>{useFallback ? (lead as { pointOfContact: string }).pointOfContact : (lead as ClientRow).point_of_contact}</td>
-                          <td>
-                            {useFallback
-                              ? (lead as { contactInformation: string }).contactInformation
-                              : [(lead as ClientRow).contact_email, (lead as ClientRow).contact_phone]
-                                  .filter(Boolean)
-                                  .join(' | ') || '—'}
-                          </td>
-                          <td>{useFallback ? (lead as { source: string }).source : (lead as ClientRow).source ?? '—'}</td>
+                          <td>{lead.company}</td>
+                          <td>{lead.point_of_contact}</td>
+                          <td>{[lead.contact_email, lead.contact_phone].filter(Boolean).join(' | ') || '—'}</td>
+                          <td>{lead.source ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {filteredLeads.length === 0 && (
-                    <p className="page-subtitle">{leadsList.length === 0 ? 'No leads yet.' : 'No leads match your search.'}</p>
+                    <p className="page-subtitle">{apiLeads.length === 0 ? 'No leads yet.' : 'No leads match your search.'}</p>
                   )}
                 </div>
               </>

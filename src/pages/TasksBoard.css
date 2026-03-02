@@ -293,5 +293,34 @@
   background-color: #f9fafb;
 }
 
+@media (max-width: 768px) {
+  .tasks-search-input {
+    max-width: none;
+  }
+
+  .tasks-search-results-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tasks-search-results-table {
+    min-width: 480px;
+  }
+
+  .tasks-board-cards {
+    grid-template-columns: 1fr;
+    margin: 1rem 0;
+  }
+
+  .completed-tasks-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .completed-tasks-table {
+    min-width: 480px;
+  }
+}
+
 
 
