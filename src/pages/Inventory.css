@@ -246,6 +246,47 @@
   overflow-wrap: break-word;
 }
 
+@media (max-width: 768px) {
+  .inventory-table-section .inventory-table thead,
+  .inventory-table.inventory-list-table thead {
+    display: none;
+  }
+
+  .inventory-table-section .inventory-table tbody tr,
+  .inventory-table.inventory-list-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+  }
+
+  .inventory-table-section .inventory-table tbody tr:hover,
+  .inventory-table.inventory-list-table tbody tr:hover {
+    background: #f3f4f6;
+  }
+
+  .inventory-table-section .inventory-table td,
+  .inventory-table.inventory-list-table td {
+    display: block;
+    padding: 0.35rem 0;
+    border: none;
+  }
+
+  .inventory-table-section .inventory-table td::before,
+  .inventory-table.inventory-list-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+}
+
 
 
 

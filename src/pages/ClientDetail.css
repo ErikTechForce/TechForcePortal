@@ -260,6 +260,11 @@
     padding-bottom: 1rem;
   }
 
+  /* Orders table card layout comes from Orders.css; ensure wrapper doesn't force width */
+  .orders-table-wrapper {
+    overflow: visible;
+  }
+
   .modal-content {
     max-height: 85vh;
     margin: 0.5rem;

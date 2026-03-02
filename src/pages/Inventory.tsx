@@ -173,16 +173,16 @@ const Inventory: React.FC = () => {
                         onClick={() => handleProductClick(item.id)}
                         style={{ cursor: 'pointer' }}
                       >
-                        <td>
+                        <td data-label="Product">
                           {(item.name === 'TIM-E Bot' || item.name === 'BIM-E') && (
                             <span className="inventory-product-star" aria-label="Featured">★ </span>
                           )}
                           {item.name}
                         </td>
-                        <td>{item.type}</td>
-                        <td>{item.sku || '—'}</td>
-                        <td>{availability}</td>
-                        <td>{inUse}</td>
+                        <td data-label="Type">{item.type}</td>
+                        <td data-label="SKU">{item.sku || '—'}</td>
+                        <td data-label="Availability">{availability}</td>
+                        <td data-label="In-Use">{inUse}</td>
                       </tr>
                     );
                   })}
@@ -212,10 +212,10 @@ const Inventory: React.FC = () => {
                         className="inventory-list-data-row"
                         onClick={() => openOperationsEdit(index)}
                       >
-                        <td>{row.product}</td>
-                        <td>{row.available || '—'}</td>
-                        <td>{row.replacementCostPerItem || '—'}</td>
-                        <td>{row.value || '—'}</td>
+                        <td data-label="Product">{row.product}</td>
+                        <td data-label="Available">{row.available || '—'}</td>
+                        <td data-label="Replacement Cost">{row.replacementCostPerItem || '—'}</td>
+                        <td data-label="Value">{row.value || '—'}</td>
                       </tr>
                     ))}
                     <tr className="inventory-list-total-row">

@@ -422,12 +422,12 @@ const ClientDetail: React.FC = () => {
                     <tbody>
                       {clientProducts.map(({ product, orderNumber }, index) => (
                         <tr key={`${product.id}-${index}`}>
-                          <td>
+                          <td data-label="Order Number">
                             <Link to={`/orders/${orderNumber}`} className="client-order-link">{orderNumber}</Link>
                           </td>
-                          <td>{product.productName}</td>
-                          <td>{product.serialNumber || 'N/A'}</td>
-                          <td>
+                          <td data-label="Product">{product.productName}</td>
+                          <td data-label="Serial Number">{product.serialNumber || 'N/A'}</td>
+                          <td data-label="Status">
                             <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
                               {product.status || 'Pending'}
                             </span>
@@ -462,16 +462,16 @@ const ClientDetail: React.FC = () => {
                         const emp = 'employee_name' in order ? (order as OrderRow).employee_name : (order as { employee?: string }).employee;
                         return (
                           <tr key={order.id}>
-                            <td>
+                            <td data-label="Order Number">
                               <Link to={`/orders/${orderNumber}`} className="client-order-link">{orderNumber}</Link>
                             </td>
-                            <td>{category}</td>
-                            <td>
+                            <td data-label="Stage">{category}</td>
+                            <td data-label="Status">
                               <span className={`status-badge status-${String(status).toLowerCase().replace(/\s+/g, '-')}`}>
                                 {status}
                               </span>
                             </td>
-                            <td>{emp || 'unassigned'}</td>
+                            <td data-label="Employee">{emp || 'unassigned'}</td>
                           </tr>
                         );
                       })}
@@ -499,17 +499,17 @@ const ClientDetail: React.FC = () => {
                     <tbody>
                       {clientContracts.map((c) => (
                         <tr key={c.id}>
-                          <td>
+                          <td data-label="Order Number">
                             <Link to={`/orders/${c.order_number}`} className="client-order-link">{c.order_number}</Link>
                           </td>
-                          <td>{c.contract_type ?? '—'}</td>
-                          <td>
+                          <td data-label="Type">{c.contract_type ?? '—'}</td>
+                          <td data-label="Status">
                             <span className={`status-badge status-${String(c.status).toLowerCase().replace(/\s+/g, '-')}`}>
                               {c.status}
                             </span>
                           </td>
-                          <td>{c.generated_at ? new Date(c.generated_at).toLocaleDateString() : '—'}</td>
-                          <td>{c.signed_at ? new Date(c.signed_at).toLocaleDateString() : '—'}</td>
+                          <td data-label="Generated">{c.generated_at ? new Date(c.generated_at).toLocaleDateString() : '—'}</td>
+                          <td data-label="Signed">{c.signed_at ? new Date(c.signed_at).toLocaleDateString() : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -535,16 +535,16 @@ const ClientDetail: React.FC = () => {
                     <tbody>
                       {clientInvoices.map((inv) => (
                         <tr key={inv.id}>
-                          <td>
+                          <td data-label="Order Number">
                             <Link to={`/orders/${inv.order_number}`} className="client-order-link">{inv.order_number}</Link>
                           </td>
-                          <td>{inv.invoice_number ?? '—'}</td>
-                          <td>
+                          <td data-label="Invoice Number">{inv.invoice_number ?? '—'}</td>
+                          <td data-label="Status">
                             <span className={`status-badge status-${String(inv.status).toLowerCase().replace(/\s+/g, '-')}`}>
                               {inv.status}
                             </span>
                           </td>
-                          <td>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</td>
+                          <td data-label="Date">{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</td>
                         </tr>
                       ))}
                     </tbody>

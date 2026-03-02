@@ -225,6 +225,7 @@
   color: #065f46;
 }
 
+/* Responsive: card layout on mobile */
 @media (max-width: 768px) {
   .orders-page-header {
     flex-direction: column;
@@ -240,17 +241,43 @@
     gap: 1.5rem;
   }
 
-  .orders-table-section {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+  .orders-table thead {
+    display: none;
   }
 
-  .orders-table-wrapper {
-    min-width: 520px;
+  .orders-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+  }
+
+  .orders-table tbody tr:hover {
+    background: #f3f4f6;
+  }
+
+  .orders-table td {
+    display: block;
+    padding: 0.35rem 0;
+    border: none;
+  }
+
+  .orders-table td.orders-table-empty {
+    text-align: center;
+    padding: 1.5rem !important;
+  }
+
+  .orders-table td:not(.orders-table-empty)::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.15rem;
   }
 }
 

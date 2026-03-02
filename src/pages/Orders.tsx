@@ -79,7 +79,7 @@ const Orders: React.FC = () => {
         <tbody>
           {list.length === 0 ? (
             <tr>
-              <td colSpan={4} className="orders-table-empty">
+              <td colSpan={4} className="orders-table-empty" data-label="">
                 {emptyMessage}
               </td>
             </tr>
@@ -92,8 +92,8 @@ const Orders: React.FC = () => {
                 onClick={() => handleOrderClick(order.order_number)}
                 style={{ cursor: 'pointer' }}
               >
-                <td>{order.order_number}</td>
-                <td onClick={(e) => e.stopPropagation()}>
+                <td data-label="Order Number">{order.order_number}</td>
+                <td data-label="Company" onClick={(e) => e.stopPropagation()}>
                   {clientId != null ? (
                     <Link to={`/client/${clientId}`} className="orders-company-link">
                       {order.company_name}
@@ -102,12 +102,12 @@ const Orders: React.FC = () => {
                     order.company_name
                   )}
                 </td>
-                <td>
+                <td data-label="Status">
                   <span className={`status-badge status-${String(order.status).toLowerCase().replace(/\s+/g, '-')}`}>
                     {order.status}
                   </span>
                 </td>
-                <td>{order.employee_name || 'unassigned'}</td>
+                <td data-label="Employee">{order.employee_name || 'unassigned'}</td>
               </tr>
             );
             })

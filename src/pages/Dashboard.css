@@ -234,10 +234,14 @@
   .dashboard-main {
     margin-left: 0;
     padding: 1rem;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   .dashboard-content {
     padding: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .dashboard-title {

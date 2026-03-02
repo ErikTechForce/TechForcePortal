@@ -245,7 +245,7 @@ const TasksBoard: React.FC = () => {
                       <tbody>
                         {searchResults.length === 0 ? (
                           <tr>
-                            <td colSpan={5}>No tasks match your search</td>
+                            <td colSpan={5} data-label="">No tasks match your search</td>
                           </tr>
                         ) : (
                           searchResults.map(({ task, section }) => (
@@ -254,11 +254,11 @@ const TasksBoard: React.FC = () => {
                               onClick={() => handleTaskClick(task.id)}
                               className="tasks-search-result-row"
                             >
-                              <td>#{task.id}</td>
-                              <td>{task.name}</td>
-                              <td>{section}</td>
-                              <td>{task.status}</td>
-                              <td>{task.priority ?? '—'}</td>
+                              <td data-label="Task #">#{task.id}</td>
+                              <td data-label="Task Name">{task.name}</td>
+                              <td data-label="Section">{section}</td>
+                              <td data-label="Status">{task.status}</td>
+                              <td data-label="Priority">{task.priority ?? '—'}</td>
                             </tr>
                           ))
                         )}
@@ -320,7 +320,7 @@ const TasksBoard: React.FC = () => {
                     <tbody>
                       {assignedCompanies.length === 0 ? (
                         <tr>
-                          <td colSpan={4}>No clients assigned to you</td>
+                          <td colSpan={4} data-label="">No clients assigned to you</td>
                         </tr>
                       ) : (
                         assignedCompanies.map((client) => (
@@ -329,10 +329,10 @@ const TasksBoard: React.FC = () => {
                             onClick={() => handleClientClick(client.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            <td>{client.company}</td>
-                            <td>{client.employee_name ?? '—'}</td>
-                            <td>{client.point_of_contact}</td>
-                            <td>{client.product ?? '—'}</td>
+                            <td data-label="Company">{client.company}</td>
+                            <td data-label="Employee">{client.employee_name ?? '—'}</td>
+                            <td data-label="Point of Contact">{client.point_of_contact}</td>
+                            <td data-label="Product">{client.product ?? '—'}</td>
                           </tr>
                         ))
                       )}
@@ -356,7 +356,7 @@ const TasksBoard: React.FC = () => {
                     <tbody>
                       {completed.length === 0 ? (
                         <tr>
-                          <td colSpan={3}>No completed tasks</td>
+                          <td colSpan={3} data-label="">No completed tasks</td>
                         </tr>
                       ) : (
                         completed.map((task) => (
@@ -365,9 +365,9 @@ const TasksBoard: React.FC = () => {
                             onClick={() => handleTaskClick(task.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            <td>#{task.id}</td>
-                            <td>{task.name}</td>
-                            <td>{task.priority ?? '—'}</td>
+                            <td data-label="Task #">#{task.id}</td>
+                            <td data-label="Task Name">{task.name}</td>
+                            <td data-label="Priority">{task.priority ?? '—'}</td>
                           </tr>
                         ))
                       )}

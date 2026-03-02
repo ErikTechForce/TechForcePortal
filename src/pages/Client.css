@@ -27,9 +27,46 @@
   margin: 2rem 0;
 }
 
-.clients-section .clients-table,
-.leads-section .leads-table {
-  min-width: 560px;
+/* Responsive: card layout on mobile so no horizontal scroll */
+@media (max-width: 768px) {
+  .clients-table thead,
+  .leads-table thead {
+    display: none;
+  }
+
+  .clients-table tbody tr,
+  .leads-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+  }
+
+  .clients-table tbody tr:hover,
+  .leads-table tbody tr:hover {
+    background: #f3f4f6;
+  }
+
+  .clients-table td,
+  .leads-table td {
+    display: block;
+    padding: 0.35rem 0;
+    border: none;
+  }
+
+  .clients-table td::before,
+  .leads-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
 }
 
 .clients-title {
@@ -203,12 +240,6 @@
   .clients-section,
   .leads-section {
     margin: 1.5rem 0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
   }
 
   .client-button-row {

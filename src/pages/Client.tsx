@@ -221,10 +221,10 @@ const Client: React.FC = () => {
                           onClick={() => handleClientClick(client.id)}
                           style={{ cursor: 'pointer' }}
                         >
-                          <td>{client.company}</td>
-                          <td>{client.employee_name || 'unassigned'}</td>
-                          <td>{client.point_of_contact}</td>
-                          <td>{client.product ?? ''}</td>
+                          <td data-label="Company">{client.company}</td>
+                          <td data-label="Employee">{client.employee_name || 'unassigned'}</td>
+                          <td data-label="Point of Contact">{client.point_of_contact}</td>
+                          <td data-label="Product">{client.product ?? ''}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -252,10 +252,10 @@ const Client: React.FC = () => {
                           onClick={() => handleLeadClick(lead.id)}
                           style={{ cursor: 'pointer' }}
                         >
-                          <td>{lead.company}</td>
-                          <td>{lead.point_of_contact}</td>
-                          <td>{[lead.contact_email, lead.contact_phone].filter(Boolean).join(' | ') || '—'}</td>
-                          <td>{lead.source ?? '—'}</td>
+                          <td data-label="Company">{lead.company}</td>
+                          <td data-label="Point of Contact">{lead.point_of_contact}</td>
+                          <td data-label="Contact">{[lead.contact_email, lead.contact_phone].filter(Boolean).join(' | ') || '—'}</td>
+                          <td data-label="Source">{lead.source ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>

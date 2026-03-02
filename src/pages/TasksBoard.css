@@ -293,32 +293,66 @@
   background-color: #f9fafb;
 }
 
+/* Responsive: card layout on mobile so no horizontal scroll */
 @media (max-width: 768px) {
   .tasks-search-input {
     max-width: none;
   }
 
-  .tasks-search-results-section {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .tasks-search-results-table thead,
+  .assigned-companies-table thead,
+  .completed-tasks-table thead {
+    display: none;
   }
 
-  .tasks-search-results-table {
-    min-width: 480px;
+  .tasks-search-results-table tbody tr,
+  .assigned-companies-table tbody tr,
+  .completed-tasks-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+  }
+
+  .tasks-search-results-table tbody tr:hover,
+  .assigned-companies-table tbody tr:hover,
+  .completed-tasks-table tbody tr:hover {
+    background: #f3f4f6;
+  }
+
+  .tasks-search-results-table td,
+  .assigned-companies-table td,
+  .completed-tasks-table td {
+    display: block;
+    padding: 0.35rem 0;
+    border: none;
+  }
+
+  .tasks-search-results-table td[data-label=""],
+  .assigned-companies-table td[data-label=""],
+  .completed-tasks-table td[data-label=""] {
+    text-align: center;
+    padding: 1rem !important;
+  }
+
+  .tasks-search-results-table td:not([data-label=""])::before,
+  .assigned-companies-table td:not([data-label=""])::before,
+  .completed-tasks-table td:not([data-label=""])::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 0.15rem;
   }
 
   .tasks-board-cards {
     grid-template-columns: 1fr;
     margin: 1rem 0;
-  }
-
-  .completed-tasks-section {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .completed-tasks-table {
-    min-width: 480px;
   }
 }
 
