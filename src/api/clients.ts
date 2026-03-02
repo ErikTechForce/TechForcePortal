@@ -19,6 +19,7 @@ export interface ClientRow {
   site_location: string | null;
   type: 'client' | 'lead';
   source: string | null;
+  industry: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +114,7 @@ export interface CreateClientPayload {
   billing_address?: string;
   site_location?: string;
   source?: string;
+  industry?: string;
   employee_name?: string;
   user_id?: number;
 }
@@ -138,6 +140,7 @@ export interface UpdateClientPayload {
   billing_address?: string | null;
   site_location?: string | null;
   notes?: string | null;
+  industry?: string | null;
 }
 
 export async function updateClient(id: number, payload: UpdateClientPayload): Promise<ClientRow> {

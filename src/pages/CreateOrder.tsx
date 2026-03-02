@@ -6,6 +6,7 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClients, createClient, type ClientRow } from '../api/clients';
 import { createOrder } from '../api/orderApi';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
+import { INDUSTRIES } from '../constants/industries';
 import './Page.css';
 import './Orders.css';
 import './ClientDetail.css';
@@ -23,6 +24,7 @@ const CreateOrder: React.FC = () => {
   const [siteCity, setSiteCity] = useState('');
   const [siteState, setSiteState] = useState('');
   const [siteZip, setSiteZip] = useState('');
+  const [industry, setIndustry] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [employeeName, setEmployeeName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -91,6 +93,7 @@ const CreateOrder: React.FC = () => {
             contact_email: contactEmail.trim() || undefined,
             contact_phone: contactPhone.trim() || undefined,
             site_location: siteLocation,
+            industry: industry.trim() || undefined,
             ...(selectedUserId != null ? { user_id: selectedUserId } : { employee_name: employeeName.trim() || undefined }),
           });
         } catch (clientErr: unknown) {
@@ -197,6 +200,15 @@ const CreateOrder: React.FC = () => {
                         value={contactPhone}
                         onChange={(e) => setContactPhone(e.target.value)}
                         placeholder="+1 (555) 000-0000"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="create-order-industry" className="form-label">Industry</label>
+                      <SearchableDropdown
+                        options={INDUSTRIES}
+                        value={industry}
+                        onChange={setIndustry}
+                        placeholder="Type to search or enter industry..."
                       />
                     </div>
                     <div className="form-group">

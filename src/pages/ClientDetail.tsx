@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
+import { INDUSTRIES } from '../constants/industries';
 import { getClientById } from '../data/clients';
 import { getOrdersByCompanyName } from '../data/orders';
 import { getProductsByOrderNumber } from '../data/orderProducts';
@@ -39,6 +40,7 @@ const ClientDetail: React.FC = () => {
   const [siteLocationAddress, setSiteLocationAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [industry, setIndustry] = useState('');
 
   // Edit modal states
   const [isClientInfoModalOpen, setIsClientInfoModalOpen] = useState(false);
@@ -53,6 +55,7 @@ const ClientDetail: React.FC = () => {
   const [editContactPhone, setEditContactPhone] = useState('');
   const [editBillingAddress, setEditBillingAddress] = useState('');
   const [editSiteLocationAddress, setEditSiteLocationAddress] = useState('');
+  const [editIndustry, setEditIndustry] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   const ordersList = useFallback ? staticOrders : clientOrders;
@@ -168,6 +171,7 @@ const ClientDetail: React.FC = () => {
       const startVal = 'start_date' in clientData ? (clientData as ClientRow).start_date : (clientData as { startDate?: string }).startDate;
       const billingVal = 'billing_address' in clientData ? (clientData as ClientRow).billing_address ?? '' : '';
       const siteVal = 'site_location' in clientData ? (clientData as ClientRow).site_location ?? '' : '';
+      const industryVal = 'industry' in clientData ? (clientData as ClientRow).industry ?? '' : '';
 
       setCompany(companyVal);
       setEmployee(employeeVal ?? '');
@@ -178,9 +182,11 @@ const ClientDetail: React.FC = () => {
       setStartDate(startVal ?? '');
       setBillingAddress(billingVal || (useFallback ? '123 Business St, Suite 100, City, State 12345' : ''));
       setSiteLocationAddress(siteVal || (useFallback ? '456 Industrial Blvd, Building A, City, State 12345' : ''));
+      setIndustry(industryVal);
 
       setEditEmployee(employeeVal ?? '');
       setEditStartDate(startVal ?? '');
+      setEditIndustry(industryVal);
       setEditPointOfContact(pocVal);
       setEditContactEmail(emailVal ?? '');
       setEditContactPhone(phoneVal ?? '');
@@ -199,6 +205,7 @@ const ClientDetail: React.FC = () => {
 
   const handleClientInfoEditClick = () => {
     setSaveError('');
+    setEditIndustry(industry);
     setIsClientInfoModalOpen(true);
   };
 
@@ -212,8 +219,9 @@ const ClientDetail: React.FC = () => {
     }
     setSaving(true);
     try {
-      const payload: { user_id?: number | null; employee_name?: string | null; start_date?: string | null } = {
+      const payload: { user_id?: number | null; employee_name?: string | null; start_date?: string | null; industry?: string | null } = {
         start_date: editStartDate.trim() || null,
+        industry: editIndustry.trim() || null,
       };
       if (editSelectedUserId != null) payload.user_id = editSelectedUserId;
       else if (editEmployee.trim()) payload.employee_name = editEmployee.trim();
@@ -222,8 +230,10 @@ const ClientDetail: React.FC = () => {
       setApiClient(updated);
       setEmployee(updated.employee_name ?? '');
       setStartDate(updated.start_date ?? '');
+      setIndustry(updated.industry ?? '');
       setEditEmployee(updated.employee_name ?? '');
       setEditStartDate(updated.start_date ?? '');
+      setEditIndustry(updated.industry ?? '');
       setIsClientInfoModalOpen(false);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to update client.');
@@ -235,6 +245,7 @@ const ClientDetail: React.FC = () => {
   const handleClientInfoCancel = () => {
     setEditEmployee(employee);
     setEditStartDate(startDate);
+    setEditIndustry(industry);
     setIsClientInfoModalOpen(false);
   };
 
@@ -362,6 +373,11 @@ const ClientDetail: React.FC = () => {
                 <div className="client-info-item">
                   <label className="client-info-label">Relationship Duration</label>
                   <div className="client-info-value">{calculateRelationshipDuration(startDate)}</div>
+                </div>
+
+                <div className="client-info-item">
+                  <label className="client-info-label">Industry</label>
+                  <div className="client-info-value">{industry || '—'}</div>
                 </div>
               </div>
             </div>
@@ -679,6 +695,16 @@ const ClientDetail: React.FC = () => {
                   className="form-input"
                   value={editStartDate}
                   onChange={(e) => setEditStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit-industry" className="form-label">Industry</label>
+                <SearchableDropdown
+                  options={INDUSTRIES}
+                  value={editIndustry}
+                  onChange={setEditIndustry}
+                  placeholder="Type to search or enter industry..."
                 />
               </div>
 

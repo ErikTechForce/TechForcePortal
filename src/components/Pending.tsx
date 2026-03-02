@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchOrders, type OrderRow } from '../api/orderApi';
-import { contractsOrders, inventoryOrders, installationOrders } from '../data/orders';
 import './Pending.css';
 
 type TabType = 'Contracts' | 'Inventory' | 'Installation';
@@ -24,36 +23,25 @@ const Pending: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('Contracts');
   const [apiOrders, setApiOrders] = useState<OrderRow[]>([]);
-  const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     fetchOrders()
       .then((orders) => {
-        if (!cancelled) {
-          setApiOrders(orders);
-          setUseFallback(false);
-        }
+        if (!cancelled) setApiOrders(orders);
       })
       .catch(() => {
-        if (!cancelled) setUseFallback(true);
+        if (!cancelled) setApiOrders([]);
       });
     return () => { cancelled = true; };
   }, []);
 
   const ordersByTab = useMemo(() => {
-    if (useFallback) {
-      return {
-        Contracts: contractsOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
-        Inventory: inventoryOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
-        Installation: installationOrders.map((o) => ({ id: o.id, orderNumber: o.orderNumber, companyName: o.companyName, employee: o.employee })),
-      };
-    }
     const contract = apiOrders.filter((o) => o.category === 'Contract').map(mapApiOrderToPending);
     const inventory = apiOrders.filter((o) => o.category === 'Inventory').map(mapApiOrderToPending);
     const installation = apiOrders.filter((o) => o.category === 'Installation').map(mapApiOrderToPending);
     return { Contracts: contract, Inventory: inventory, Installation: installation };
-  }, [apiOrders, useFallback]);
+  }, [apiOrders]);
 
   const getCompaniesForTab = (tab: TabType): PendingOrderItem[] => {
     return ordersByTab[tab] ?? [];

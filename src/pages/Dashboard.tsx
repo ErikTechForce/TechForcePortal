@@ -9,7 +9,6 @@ import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchTasks, type TaskRow } from '../api/tasks';
 import { fetchSalesProductCounts, fetchSiteActivity, type SalesProductCounts, type SiteActivityEntry } from '../api/orderApi';
 import { useAuth } from '../context/AuthContext';
-import { leads as staticLeads } from '../data/leads';
 import { getRobotFleetStats } from '../data/inventory';
 import './Dashboard.css';
 
@@ -31,7 +30,6 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
-  const [useFallback, setUseFallback] = useState(false);
   const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
   const [salesData, setSalesData] = useState<SalesProductCounts | null>(null);
   const [siteActivity, setSiteActivity] = useState<SiteActivityEntry[]>([]);
@@ -40,21 +38,13 @@ const Dashboard: React.FC = () => {
     let cancelled = false;
     fetchClients('lead')
       .then((leads) => {
-        if (!cancelled) {
-          setApiLeads(leads);
-          setUseFallback(false);
-        }
+        if (!cancelled) setApiLeads(leads);
       })
       .catch(() => {
-        if (!cancelled) {
-          setApiLeads([]);
-          setUseFallback(true);
-        }
+        if (!cancelled) setApiLeads([]);
       });
     return () => { cancelled = true; };
   }, []);
-
-  const leadsList = useFallback ? staticLeads : apiLeads;
 
   const handleTaskClick = (taskId: number) => {
     navigate(`/tasks/${taskId}`);
@@ -205,15 +195,19 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
-                  {leadsList.map((lead) => (
-                    <div 
-                      key={lead.id} 
-                      className="clickable-item" 
-                      onClick={() => handleLeadClick(lead.id)}
-                    >
-                      {useFallback ? (lead as { companyName: string }).companyName : (lead as ClientRow).company}
-                    </div>
-                  ))}
+                  {apiLeads.length === 0 ? (
+                    <p className="page-subtitle" style={{ margin: 0 }}>No leads</p>
+                  ) : (
+                    apiLeads.map((lead) => (
+                      <div
+                        key={lead.id}
+                        className="clickable-item"
+                        onClick={() => handleLeadClick(lead.id)}
+                      >
+                        {lead.company}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               <div className="dashboard-card">

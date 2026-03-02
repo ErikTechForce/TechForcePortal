@@ -413,7 +413,7 @@ app.get('/api/clients', async (req, res) => {
     let query = `
       SELECT c.id, c.company, c.employee_id, c.point_of_contact, c.contact_email, c.contact_phone,
              c.product, c.notes, c.start_date, c.billing_address, c.site_location, c.type, c.source,
-             c.created_at, c.updated_at,
+             c.industry, c.created_at, c.updated_at,
              e.name AS employee_name
       FROM clients c
       LEFT JOIN employees e ON e.id = c.employee_id
@@ -446,6 +446,7 @@ app.get('/api/clients', async (req, res) => {
       site_location: r.site_location,
       type: r.type || 'client',
       source: r.source,
+      industry: r.industry,
       created_at: r.created_at,
       updated_at: r.updated_at,
     }));
@@ -488,6 +489,7 @@ app.post('/api/clients', async (req, res) => {
       billing_address?: string;
       site_location?: string;
       source?: string;
+      industry?: string;
       employee_name?: string;
       user_id?: number;
     };
@@ -513,10 +515,10 @@ app.post('/api/clients', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO clients (
         company, employee_id, point_of_contact, contact_email, contact_phone,
-        product, notes, start_date, billing_address, site_location, type, source
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        product, notes, start_date, billing_address, site_location, type, source, industry
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id, company, employee_id, point_of_contact, contact_email, contact_phone,
-                product, notes, start_date, billing_address, site_location, type, source,
+                product, notes, start_date, billing_address, site_location, type, source, industry,
                 created_at, updated_at`,
       [
         company,
@@ -531,6 +533,7 @@ app.post('/api/clients', async (req, res) => {
         body.site_location?.trim() || null,
         type,
         type === 'lead' ? (body.source?.trim() || null) : null,
+        body.industry?.trim() || null,
       ]
     );
     const row = result.rows[0] as Record<string, unknown>;
@@ -548,6 +551,7 @@ app.post('/api/clients', async (req, res) => {
       site_location: row.site_location,
       type: row.type,
       source: row.source,
+      industry: row.industry,
       created_at: row.created_at,
       updated_at: row.updated_at,
     });
@@ -1223,7 +1227,7 @@ app.get('/api/clients/:id', async (req, res) => {
     const result = await pool.query(
       `SELECT c.id, c.company, c.employee_id, c.point_of_contact, c.contact_email, c.contact_phone,
               c.product, c.notes, c.start_date, c.billing_address, c.site_location, c.type, c.source,
-              c.created_at, c.updated_at,
+              c.industry, c.created_at, c.updated_at,
               e.name AS employee_name
        FROM clients c
        LEFT JOIN employees e ON e.id = c.employee_id
@@ -1247,6 +1251,7 @@ app.get('/api/clients/:id', async (req, res) => {
       site_location: r.site_location,
       type: r.type || 'client',
       source: r.source,
+      industry: r.industry,
       created_at: r.created_at,
       updated_at: r.updated_at,
     });
@@ -1271,6 +1276,7 @@ app.patch('/api/clients/:id', async (req, res) => {
       billing_address?: string | null;
       site_location?: string | null;
       notes?: string | null;
+      industry?: string | null;
     };
     const existing = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
     if (existing.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
@@ -1325,6 +1331,10 @@ app.patch('/api/clients/:id', async (req, res) => {
       updates.push(`notes = $${paramIndex++}`);
       values.push(body.notes?.trim() || null);
     }
+    if (body.industry !== undefined) {
+      updates.push(`industry = $${paramIndex++}`);
+      values.push(body.industry?.trim() || null);
+    }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update.' });
     values.push(id);
@@ -1335,7 +1345,7 @@ app.patch('/api/clients/:id', async (req, res) => {
     const result = await pool.query(
       `SELECT c.id, c.company, c.employee_id, c.point_of_contact, c.contact_email, c.contact_phone,
               c.product, c.notes, c.start_date, c.billing_address, c.site_location, c.type, c.source,
-              c.created_at, c.updated_at,
+              c.industry, c.created_at, c.updated_at,
               e.name AS employee_name
        FROM clients c
        LEFT JOIN employees e ON e.id = c.employee_id
