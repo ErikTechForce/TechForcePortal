@@ -193,6 +193,133 @@
   margin-top: 2.5rem;
 }
 
+.inventory-ffe-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 2.5rem;
+}
+
+.inventory-ffe-header .inventory-section-title {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.inventory-add-ffe-button {
+  flex-shrink: 0;
+}
+
+/* FF&E modal: receipts & warranties section */
+.ffe-documents-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.ffe-documents-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.35rem 0;
+}
+
+.ffe-documents-hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+}
+
+.ffe-doc-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ffe-doc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ffe-upload-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.ffe-documents-table-wrapper {
+  overflow-x: auto;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.ffe-documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ffe-documents-table thead {
+  background: #f9fafb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ffe-documents-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ffe-documents-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.ffe-documents-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ffe-docs-empty {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem !important;
+}
+
+.ffe-doc-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.ffe-doc-link:hover {
+  text-decoration: underline;
+}
+
+.ffe-doc-remove {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+.ffe-doc-remove:hover {
+  text-decoration: underline;
+}
+
 .inventory-list-table-wrapper {
   width: 100%;
   overflow: visible;

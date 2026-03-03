@@ -56,8 +56,8 @@ export function setTimEPartsInventory(rows: TimEInventoryRow[]): void {
   localStorage.setItem(STORAGE_TIM_E_PARTS, JSON.stringify(rows));
 }
 
-/** Operations Inventory: 3d Printers and below. Shown on main Inventory page. */
-/** Operations table row (reduced columns; editable, persisted in localStorage). */
+/** Furniture, Fixtures, and Equipment (FF&E) Inventory. Shown on main Inventory page. */
+/** FF&E table row (reduced columns; editable, persisted in localStorage). */
 export interface OperationsInventoryRow {
   product: string;
   available: string;

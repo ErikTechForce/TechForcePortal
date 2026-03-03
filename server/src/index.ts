@@ -2026,6 +2026,69 @@ app.delete('/api/contracts/:id', async (req, res) => {
   }
 });
 
+// ----- FF&E documents (receipts & warranties) -----
+app.get('/api/ffe-documents', async (req, res) => {
+  try {
+    const itemIndex = req.query.item_index != null ? parseInt(String(req.query.item_index), 10) : null;
+    if (itemIndex === null || Number.isNaN(itemIndex) || itemIndex < 0) {
+      return res.status(400).json({ error: 'Valid item_index query is required.' });
+    }
+    const result = await pool.query(
+      'SELECT id, item_index AS "itemIndex", file_name AS "fileName", type, file_data AS "dataUrl", created_at AS "createdAt" FROM ffe_documents WHERE item_index = $1 ORDER BY created_at ASC',
+      [itemIndex]
+    );
+    const rows = result.rows.map((r: { id: number; itemIndex: number; fileName: string; type: string; dataUrl: string; createdAt: string }) => ({
+      id: String(r.id),
+      fileName: r.fileName,
+      type: r.type as 'receipt' | 'warranty',
+      dataUrl: r.dataUrl,
+    }));
+    res.json({ documents: rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string; code?: string };
+    if (e.code === '42P01') return res.json({ documents: [] });
+    res.status(500).json({ error: e.message || 'Failed to fetch FF&E documents.' });
+  }
+});
+
+app.post('/api/ffe-documents', async (req, res) => {
+  try {
+    const { item_index: itemIndex, file_name: fileName, type: docType, file_data: fileData } = req.body;
+    if (itemIndex == null || typeof fileName !== 'string' || !fileName.trim() || (docType !== 'receipt' && docType !== 'warranty') || typeof fileData !== 'string') {
+      return res.status(400).json({ error: 'Body must include item_index (number), file_name (string), type (receipt|warranty), file_data (base64 string).' });
+    }
+    const index = parseInt(String(itemIndex), 10);
+    if (Number.isNaN(index) || index < 0) return res.status(400).json({ error: 'Invalid item_index.' });
+    const result = await pool.query(
+      'INSERT INTO ffe_documents (item_index, file_name, type, file_data) VALUES ($1, $2, $3, $4) RETURNING id, file_name AS "fileName", type, file_data AS "dataUrl"',
+      [index, fileName.trim(), docType, fileData]
+    );
+    const row = result.rows[0];
+    res.status(201).json({
+      id: String(row.id),
+      fileName: row.fileName,
+      type: row.type,
+      dataUrl: row.dataUrl,
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to save FF&E document.' });
+  }
+});
+
+app.delete('/api/ffe-documents/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid document id.' });
+    const result = await pool.query('DELETE FROM ffe_documents WHERE id = $1 RETURNING id', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Document not found.' });
+    res.json({ success: true });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to delete FF&E document.' });
+  }
+});
+
 // In production, serve the built React app (Heroku builds root first, then server)
 if (process.env.NODE_ENV === 'production') {
   const buildDir = path.join(__dirname, '..', '..', 'build');

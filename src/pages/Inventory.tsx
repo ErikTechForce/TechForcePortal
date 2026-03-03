@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -17,6 +17,8 @@ import {
 } from '../data/timEInventoryList';
 import './Page.css';
 import './Inventory.css';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function parseValue(s: string): number {
   const cleaned = String(s).replace(/[$,]/g, '').trim();
@@ -45,6 +47,27 @@ const Inventory: React.FC = () => {
   const [editReplacementCost, setEditReplacementCost] = useState('');
   const [editValue, setEditValue] = useState('');
   const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+
+  type FfeDoc = { id: string; fileName: string; type: 'receipt' | 'warranty'; dataUrl: string };
+  /** FF&E documents for the currently open modal (item at operationsEditIndex). Loaded from API. */
+  const [ffeDocumentsForEdit, setFfeDocumentsForEdit] = useState<FfeDoc[]>([]);
+
+  useEffect(() => {
+    if (operationsEditIndex === null) {
+      setFfeDocumentsForEdit([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`${API_BASE}/api/ffe-documents?item_index=${operationsEditIndex}`)
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed to load documents')))
+      .then((data: { documents?: FfeDoc[] }) => {
+        if (!cancelled && Array.isArray(data?.documents)) setFfeDocumentsForEdit(data.documents);
+      })
+      .catch(() => {
+        if (!cancelled) setFfeDocumentsForEdit([]);
+      });
+    return () => { cancelled = true; };
+  }, [operationsEditIndex]);
 
   const refreshProducts = useCallback(() => {
     setProducts(getInventoryProducts());
@@ -113,6 +136,69 @@ const Inventory: React.FC = () => {
     setOperationsRows(next);
     setOperationsInventory(next);
     closeOperationsEdit();
+  };
+
+  const handleAddFfeItem = () => {
+    const newRow: OperationsInventoryRow = { product: '', available: '', replacementCostPerItem: '', value: '' };
+    const next = [...operationsRows, newRow];
+    setOperationsRows(next);
+    setOperationsInventory(next);
+    setOperationsEditIndex(next.length - 1);
+    setEditProduct('');
+    setEditAvailable('');
+    setEditReplacementCost('');
+    setEditValue('');
+  };
+
+  const ffeDocUploadTypeRef = React.useRef<'receipt' | 'warranty'>('receipt');
+  const ffeDocInputRef = React.useRef<HTMLInputElement>(null);
+  const MAX_FFE_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+  const handleFfeDocUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || operationsEditIndex === null) return;
+    if (file.size > MAX_FFE_FILE_SIZE) {
+      alert('File is too large. Maximum size is 2 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      try {
+        const res = await fetch(`${API_BASE}/api/ffe-documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            item_index: operationsEditIndex,
+            file_name: file.name,
+            type: ffeDocUploadTypeRef.current,
+            file_data: dataUrl,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.json().then((d: { error?: string }) => d.error).catch(() => 'Upload failed'));
+        const doc: FfeDoc = await res.json();
+        setFfeDocumentsForEdit((prev) => [...prev, doc]);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Failed to upload document.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeFfeDoc = async (docId: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/ffe-documents/${docId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      setFfeDocumentsForEdit((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      alert('Failed to remove document.');
+    }
+  };
+
+  const openFfeDocUpload = (type: 'receipt' | 'warranty') => {
+    ffeDocUploadTypeRef.current = type;
+    ffeDocInputRef.current?.click();
   };
 
   const operationsTotalValue = operationsRows.reduce((sum, r) => sum + parseValue(r.value), 0);
@@ -194,7 +280,12 @@ const Inventory: React.FC = () => {
             </div>
 
             <div className="inventory-table-section">
-              <h3 className="inventory-section-title">Operations Inventory</h3>
+              <div className="inventory-ffe-header">
+                <h3 className="inventory-section-title">Furniture, Fixtures, and Equipment Inventory</h3>
+                <button type="button" className="inventory-add-product-button inventory-add-ffe-button" onClick={handleAddFfeItem}>
+                  Add FF&E Item
+                </button>
+              </div>
               <div className="inventory-table-wrapper inventory-list-table-wrapper">
                 <table className="inventory-table inventory-list-table inventory-table-fit">
                   <thead>
@@ -358,9 +449,9 @@ const Inventory: React.FC = () => {
 
       {operationsEditIndex !== null && (
         <div className="modal-overlay" onClick={closeOperationsEdit}>
-          <div className="modal-content inventory-add-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content inventory-add-modal inventory-ffe-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">Edit Operations Row</h3>
+              <h3 className="modal-title">FF&E Item — {operationsRows[operationsEditIndex]?.product || 'New item'}</h3>
               <button type="button" className="modal-close-button" onClick={closeOperationsEdit} aria-label="Close">×</button>
             </div>
             <form onSubmit={handleSaveOperationsEdit} className="modal-body">
@@ -401,6 +492,58 @@ const Inventory: React.FC = () => {
                   onChange={(e) => setEditValue(e.target.value)}
                 />
               </div>
+
+              <div className="ffe-documents-section">
+                <h4 className="ffe-documents-title">Receipts &amp; Warranties</h4>
+                <p className="ffe-documents-hint">Keep copies of receipts and warranty documents for this item.</p>
+                <input
+                  ref={ffeDocInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+                  className="ffe-doc-input-hidden"
+                  onChange={handleFfeDocUpload}
+                  aria-hidden
+                />
+                <div className="ffe-doc-actions">
+                  <button type="button" className="inventory-add-product-button ffe-upload-btn" onClick={() => openFfeDocUpload('receipt')}>
+                    Upload receipt
+                  </button>
+                  <button type="button" className="inventory-add-product-button ffe-upload-btn" onClick={() => openFfeDocUpload('warranty')}>
+                    Upload warranty
+                  </button>
+                </div>
+                <div className="ffe-documents-table-wrapper">
+                  <table className="ffe-documents-table">
+                    <thead>
+                      <tr>
+                        <th>File name</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ffeDocumentsForEdit.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="ffe-docs-empty">No documents yet. Use the buttons above to upload.</td>
+                        </tr>
+                      ) : (
+                        ffeDocumentsForEdit.map((doc) => (
+                          <tr key={doc.id}>
+                            <td data-label="File name">{doc.fileName}</td>
+                            <td data-label="Type">{doc.type === 'receipt' ? 'Receipt' : 'Warranty'}</td>
+                            <td data-label="Actions">
+                              <a href={doc.dataUrl} download={doc.fileName} className="ffe-doc-link">Download</a>
+                              {' · '}
+                              <button type="button" className="ffe-doc-remove" onClick={() => removeFfeDoc(doc.id)}>Remove</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button type="button" className="cancel-button" onClick={closeOperationsEdit}>Cancel</button>
                 <button type="submit" className="save-button">Save</button>
