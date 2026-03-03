@@ -48,6 +48,31 @@
   margin: 0 0 1.5rem 0;
 }
 
+.robot-current-location {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #15803d;
+  padding: 0.75rem 0;
+}
+
+.robot-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.robot-location-history-desc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+}
+
+.robot-location-history-empty {
+  color: #6b7280;
+  font-style: italic;
+  padding: 1.5rem !important;
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }

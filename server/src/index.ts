@@ -2089,6 +2089,60 @@ app.delete('/api/ffe-documents/:id', async (req, res) => {
   }
 });
 
+// ----- Robot location history (TIM-E/BIM-E) -----
+app.get('/api/robot-location-history', async (req, res) => {
+  try {
+    const productId = req.query.productId != null ? String(req.query.productId).trim() : '';
+    const serialNumber = req.query.serialNumber != null ? String(req.query.serialNumber).trim() : '';
+    if (!productId || !serialNumber) {
+      return res.status(400).json({ error: 'Query params productId and serialNumber are required.' });
+    }
+    const result = await pool.query(
+      `SELECT location, first_seen_at AS "firstSeenAt" FROM robot_location_history
+       WHERE serial_number = $1 AND product_id = $2 ORDER BY first_seen_at ASC`,
+      [serialNumber, productId]
+    );
+    const rows = result.rows.map((r: { location: string; firstSeenAt: string }) => ({
+      location: r.location,
+      firstSeenAt: r.firstSeenAt,
+    }));
+    res.json({ history: rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string; code?: string };
+    if (e.code === '42P01') return res.json({ history: [] });
+    res.status(500).json({ error: e.message || 'Failed to fetch robot location history.' });
+  }
+});
+
+app.post('/api/robot-location-history', async (req, res) => {
+  try {
+    const { productId, serialNumber, location: loc } = req.body;
+    if (!productId || typeof productId !== 'string' || !serialNumber || typeof serialNumber !== 'string' || loc == null || typeof loc !== 'string') {
+      return res.status(400).json({ error: 'Body must include productId, serialNumber, and location (strings).' });
+    }
+    const locationTrimmed = loc.trim();
+    if (!locationTrimmed) return res.status(400).json({ error: 'Location cannot be empty.' });
+    await pool.query(
+      `INSERT INTO robot_location_history (serial_number, product_id, location) VALUES ($1, $2, $3)
+       ON CONFLICT (serial_number, product_id, location) DO NOTHING`,
+      [serialNumber.trim(), productId.trim(), locationTrimmed]
+    );
+    const result = await pool.query(
+      `SELECT location, first_seen_at AS "firstSeenAt" FROM robot_location_history
+       WHERE serial_number = $1 AND product_id = $2 AND location = $3`,
+      [serialNumber.trim(), productId.trim(), locationTrimmed]
+    );
+    const row = result.rows[0];
+    res.status(201).json({
+      location: row?.location ?? locationTrimmed,
+      firstSeenAt: row?.firstSeenAt ?? new Date().toISOString(),
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to record robot location.' });
+  }
+});
+
 // In production, serve the built React app (Heroku builds root first, then server)
 if (process.env.NODE_ENV === 'production') {
   const buildDir = path.join(__dirname, '..', '..', 'build');

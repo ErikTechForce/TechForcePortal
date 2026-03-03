@@ -333,7 +333,17 @@ const ProductDetail: React.FC = () => {
                     </thead>
                     <tbody>
                       {units.map((u) => (
-                        <tr key={u.id} className="product-inventory-row-clickable" onClick={() => openEditModal(u)}>
+                        <tr
+                          key={u.id}
+                          className="product-inventory-row-clickable"
+                          onClick={() => {
+                            if (isFullInventoryProduct && productId) {
+                              navigate(`/inventory/product/${productId}/robot/${encodeURIComponent(u.serialNumber || u.id)}`);
+                            } else {
+                              openEditModal(u);
+                            }
+                          }}
+                        >
                           {isFullInventoryProduct ? (
                             <>
                               <td>{u.location || '—'}</td>
@@ -349,8 +359,17 @@ const ProductDetail: React.FC = () => {
                             </>
                           )}
                           <td className="product-table-actions-cell" onClick={(e) => e.stopPropagation()}>
-                            <button type="button" className="product-inventory-edit-btn" onClick={() => openEditModal(u)}>Edit</button>
-                            <button type="button" className="product-inventory-delete-btn" onClick={(e) => handleDeleteUnit(e, u)}>Delete</button>
+                            {isFullInventoryProduct && productId ? (
+                              <>
+                                <button type="button" className="product-inventory-edit-btn" onClick={() => navigate(`/inventory/product/${productId}/robot/${encodeURIComponent(u.serialNumber || u.id)}`)}>Edit</button>
+                                <button type="button" className="product-inventory-delete-btn" onClick={(e) => handleDeleteUnit(e, u)}>Delete</button>
+                              </>
+                            ) : (
+                              <>
+                                <button type="button" className="product-inventory-edit-btn" onClick={() => openEditModal(u)}>Edit</button>
+                                <button type="button" className="product-inventory-delete-btn" onClick={(e) => handleDeleteUnit(e, u)}>Delete</button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}
