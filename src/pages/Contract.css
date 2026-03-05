@@ -1,12 +1,17 @@
 .page-container {
-  padding-top: 5rem;
   display: flex;
   flex-direction: column;
   background: #FAF7F2;
 }
 
 .contract-page {
-  padding: 1rem 5rem;
+  padding: 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.page-content-container {
   display: flex;
   flex-direction: row;
   gap: 5rem;
@@ -17,8 +22,14 @@
   margin-bottom: 2rem;
 }
 
+.contract-branding-logo {
+  width: 25rem;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
 .contract-title {
-  color: #1A293F;
+  color: #2F6F44;
   margin: 0 0 0.5rem 0;
 }
 
@@ -314,9 +325,17 @@
 
 @media (max-width: 1500px) {
   .contract-page {
+    padding: 3rem;
+  }
+
+  .page-content-container {
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .contract-container {
+    width: 90%;
   }
 
   .contract-title {

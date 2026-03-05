@@ -541,20 +541,23 @@ const Contract: React.FC = () => {
 
   const displayPdfUrl = signedPdfUrl || filledPdfUrl || pdfUrl;
   const contractTitle = contractType === 'service'
-    ? 'TechForce Robotics - Robot Service Agreement'
-    : 'TechForce Robotics - Robot TRIAL Agreement';
+    ? 'Robot Service Agreement'
+    : 'Robot TRIAL Agreement';
 
   const isSubmitted = contractStatus === 'signed';
 
   return (
     <div className="page-container">
 
-      <div className="contract-header">
-        <h2 className="contract-title">{contractTitle}</h2>
-        <p className="contract-subtitle">Please review the contract below and sign to proceed</p>
-      </div>
-
       <div className="contract-page">
+
+
+        <div className="contract-header">
+          <img src="/images/branding-logo.svg" alt="TechForce Robotics" className="contract-branding-logo" />
+          <h2 className="contract-title">{contractTitle}</h2>
+          <p className="contract-subtitle">Please review the contract below and sign to proceed</p>
+        </div>
+      
         {contractStatusLoading ? (
           <div className="contract-thanks-section">
             <p className="contract-thanks-loading">Loading…</p>
@@ -566,248 +569,250 @@ const Contract: React.FC = () => {
           </div>
         ) : (
           <>
+            <div className="page-content-container">
 
-          <div className = "contract-container">
+              <div className="contract-container">
 
-          {/* PDF Viewer Section */}
-          <div className="pdf-viewer-section">
-            {fillError && (
-              <div className="contract-fill-error" role="alert">
-                {fillError}
+                {/* PDF Viewer Section */}
+                <div className="pdf-viewer-section">
+                {fillError && (
+                  <div className="contract-fill-error" role="alert">
+                    {fillError}
+                  </div>
+                )}
+                {window.location.hash && !formData && !fillError && (
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                    Loading contract…
+                  </p>
+                )}
+                {isGeneratingPdf && (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                    <p>Generating PDF with your signature...</p>
+                  </div>
+                )}
+                {!isGeneratingPdf && !fillError && (formData || !window.location.hash) && (
+                  <>
+                    <div className="pdf-container">
+                      <iframe
+                        src={displayPdfUrl}
+                        className="pdf-iframe"
+                        title="Contract PDF"
+                        onError={(e) => {
+                          console.error('PDF load error:', e);
+                          setPdfError(true);
+                        }}
+                      />
+                      {pdfError && (
+                        <div className="pdf-fallback">
+                          <p>Unable to display PDF inline. Please use the link below to view the contract.</p>
+                          <a 
+                            href={displayPdfUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="pdf-download-link"
+                          >
+                            Open PDF in new tab
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pdf-alternative-link">
+                      {signedPdfUrl && (
+                        <>
+                          <a 
+                            href={signedPdfUrl} 
+                            download={`Signed-Contract-${contractId}.pdf`}
+                            className="pdf-download-link"
+                            style={{ marginRight: '0.5rem' }}
+                          >
+                            📥 Download Signed PDF
+                          </a>
+                          <a 
+                            href={signedPdfUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="pdf-download-link"
+                          >
+                            📄 View Signed PDF
+                          </a>
+                        </>
+                      )}
+                      {!signedPdfUrl && (
+                        <a 
+                          href={displayPdfUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="pdf-download-link"
+                        >
+                          📄 Open PDF in new tab
+                        </a>
+                      )}
+                      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
+                        {signedPdfUrl 
+                          ? 'Your signature has been added to the PDF. Download or view the signed version above.'
+                          : 'If the PDF doesn\'t display above, click the link to view it in a new tab'}
+                      </p>
+                    </div>
+                  </>
+                )}
+                </div>
+
               </div>
-            )}
-            {window.location.hash && !formData && !fillError && (
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                Loading contract…
-              </p>
-            )}
-            {isGeneratingPdf && (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                <p>Generating PDF with your signature...</p>
+              {/* end of contract section */}
+
+            {/* Start of Billing Section */}
+            <div className="contract-billing-container">
+
+              {/* Billing Information (collected from client, placed on PDF on submit) */}
+              <div className="contract-billing-section">
+                <h2 className="contract-billing-title">Billing Information</h2>
+                <p className="contract-billing-description">Please provide billing details. This information will appear on the contract PDF when you submit.</p>
+                <div className="contract-billing-grid">
+                  <div className="contract-form-group">
+                    <label className="form-label">Billing Entity</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingEntity}
+                      onChange={(e) => setBillingEntity(e.target.value)}
+                      placeholder="Company or entity name"
+                    />
+                  </div>
+                  <div className="contract-form-group contract-form-group-full">
+                    <label className="form-label">Billing Address</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingAddress}
+                      onChange={(e) => setBillingAddress(e.target.value)}
+                      placeholder="Street address"
+                    />
+                  </div>
+                  <div className="contract-form-group">
+                    <label className="form-label">City</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingCity}
+                      onChange={(e) => setBillingCity(e.target.value)}
+                      placeholder="City"
+                    />
+                  </div>
+                  <div className="contract-form-group">
+                    <label className="form-label">State</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingState}
+                      onChange={(e) => setBillingState(e.target.value)}
+                      placeholder="State"
+                    />
+                  </div>
+                  <div className="contract-form-group">
+                    <label className="form-label">Zip</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingZip}
+                      onChange={(e) => setBillingZip(e.target.value)}
+                      placeholder="Zip"
+                    />
+                  </div>
+                  <div className="contract-form-group">
+                    <label className="form-label">Billing Contact Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={billingContactName}
+                      onChange={(e) => setBillingContactName(e.target.value)}
+                      placeholder="Name"
+                    />
+                  </div>
+                  <div className="contract-form-group">
+                    <label className="form-label">Billing Contact Phone</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      value={billingContactPhone}
+                      onChange={(e) => setBillingContactPhone(e.target.value.replace(/[^\d\s\-().+]/g, ''))}
+                      placeholder="Phone number"
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  </div>
+                  <div className="contract-form-group contract-form-group-full">
+                    <label className="form-label">Billing Contact Email</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={billingContactEmail}
+                      onChange={(e) => setBillingContactEmail(e.target.value)}
+                      placeholder="Email"
+                    />
+                  </div>
+                </div>
               </div>
-            )}
-            {!isGeneratingPdf && !fillError && (formData || !window.location.hash) && (
-              <>
-                <div className="pdf-container">
-                  <iframe
-                    src={displayPdfUrl}
-                    className="pdf-iframe"
-                    title="Contract PDF"
-                    onError={(e) => {
-                      console.error('PDF load error:', e);
-                      setPdfError(true);
-                    }}
+
+              {/* Signature Section */}
+              <div className="signature-section">
+                <h2 className="signature-section-title">Sign Contract</h2>
+                <div className="signature-pad-container">
+                  <canvas
+                    ref={signatureCanvasRef}
+                    className="signature-canvas"
+                    width={600}
+                    height={200}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
                   />
-                  {pdfError && (
-                    <div className="pdf-fallback">
-                      <p>Unable to display PDF inline. Please use the link below to view the contract.</p>
-                      <a 
-                        href={displayPdfUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="pdf-download-link"
-                      >
-                        Open PDF in new tab
-                      </a>
+                  <div className="signature-actions">
+                    <button
+                      type="button"
+                      className="clear-signature-button"
+                      onClick={clearSignature}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="save-signature-button"
+                      onClick={saveSignature}
+                    >
+                      Save Signature
+                    </button>
+                  </div>
+                  {signature && (
+                    <div className="signature-preview">
+                      <p className="signature-saved-message">✓ Signature saved</p>
+                      <img src={signature} alt="Saved signature" className="signature-image" />
                     </div>
                   )}
                 </div>
-                <div className="pdf-alternative-link">
-                  {signedPdfUrl && (
-                    <>
-                      <a 
-                        href={signedPdfUrl} 
-                        download={`Signed-Contract-${contractId}.pdf`}
-                        className="pdf-download-link"
-                        style={{ marginRight: '0.5rem' }}
-                      >
-                        📥 Download Signed PDF
-                      </a>
-                      <a 
-                        href={signedPdfUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="pdf-download-link"
-                      >
-                        📄 View Signed PDF
-                      </a>
-                    </>
-                  )}
-                  {!signedPdfUrl && (
-                    <a 
-                      href={displayPdfUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="pdf-download-link"
-                    >
-                      📄 Open PDF in new tab
-                    </a>
-                  )}
-                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
-                    {signedPdfUrl 
-                      ? 'Your signature has been added to the PDF. Download or view the signed version above.'
-                      : 'If the PDF doesn\'t display above, click the link to view it in a new tab'}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
 
-        </div>
-        {/* end of contract section */}
-
-        {/* Start of Billing Section */}
-        <div className="contract-billing-container">
-
-          {/* Billing Information (collected from client, placed on PDF on submit) */}
-          <div className="contract-billing-section">
-            <h2 className="contract-billing-title">Billing Information</h2>
-            <p className="contract-billing-description">Please provide billing details. This information will appear on the contract PDF when you submit.</p>
-            <div className="contract-billing-grid">
-              <div className="contract-form-group">
-                <label className="form-label">Billing Entity</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingEntity}
-                  onChange={(e) => setBillingEntity(e.target.value)}
-                  placeholder="Company or entity name"
-                />
-              </div>
-              <div className="contract-form-group contract-form-group-full">
-                <label className="form-label">Billing Address</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingAddress}
-                  onChange={(e) => setBillingAddress(e.target.value)}
-                  placeholder="Street address"
-                />
-              </div>
-              <div className="contract-form-group">
-                <label className="form-label">City</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingCity}
-                  onChange={(e) => setBillingCity(e.target.value)}
-                  placeholder="City"
-                />
-              </div>
-              <div className="contract-form-group">
-                <label className="form-label">State</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingState}
-                  onChange={(e) => setBillingState(e.target.value)}
-                  placeholder="State"
-                />
-              </div>
-              <div className="contract-form-group">
-                <label className="form-label">Zip</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingZip}
-                  onChange={(e) => setBillingZip(e.target.value)}
-                  placeholder="Zip"
-                />
-              </div>
-              <div className="contract-form-group">
-                <label className="form-label">Billing Contact Name</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={billingContactName}
-                  onChange={(e) => setBillingContactName(e.target.value)}
-                  placeholder="Name"
-                />
-              </div>
-              <div className="contract-form-group">
-                <label className="form-label">Billing Contact Phone</label>
-                <input
-                  type="tel"
-                  className="form-input"
-                  value={billingContactPhone}
-                  onChange={(e) => setBillingContactPhone(e.target.value.replace(/[^\d\s\-().+]/g, ''))}
-                  placeholder="Phone number"
-                  inputMode="tel"
-                  autoComplete="tel"
-                />
-              </div>
-              <div className="contract-form-group contract-form-group-full">
-                <label className="form-label">Billing Contact Email</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  value={billingContactEmail}
-                  onChange={(e) => setBillingContactEmail(e.target.value)}
-                  placeholder="Email"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Signature Section */}
-          <div className="signature-section">
-            <h2 className="signature-section-title">Sign Contract</h2>
-            <div className="signature-pad-container">
-              <canvas
-                ref={signatureCanvasRef}
-                className="signature-canvas"
-                width={600}
-                height={200}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
-              <div className="signature-actions">
+              {/* Submit Section */}
+              <div className="contract-submit-section">
                 <button
                   type="button"
-                  className="clear-signature-button"
-                  onClick={clearSignature}
+                  className="submit-contract-button"
+                  onClick={handleSubmit}
+                  disabled={!signature || isSubmitting}
                 >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  className="save-signature-button"
-                  onClick={saveSignature}
-                >
-                  Save Signature
+                  {isSubmitting ? 'Submitting…' : 'Submit Signed Contract'}
                 </button>
               </div>
-              {signature && (
-                <div className="signature-preview">
-                  <p className="signature-saved-message">✓ Signature saved</p>
-                  <img src={signature} alt="Saved signature" className="signature-image" />
-                </div>
-              )}
+
             </div>
+            {/* end of billing information section */}
+
           </div>
-
-          {/* Submit Section */}
-          <div className="contract-submit-section">
-            <button
-              type="button"
-              className="submit-contract-button"
-              onClick={handleSubmit}
-              disabled={!signature || isSubmitting}
-            >
-              {isSubmitting ? 'Submitting…' : 'Submit Signed Contract'}
-            </button>
-          </div>
-
-        </div>
-        {/* end of billing information section */}
-
         </>
-        )}
+      )}
       </div>
     </div>
   );
