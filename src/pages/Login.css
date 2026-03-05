@@ -36,8 +36,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FAF7F2;
-  /* background: linear-gradient(135deg,#73BF43 -20%, #FAF7F2 100%); */
+  /* background: #FAF7F2; */
+  background: radial-gradient(circle, #FAF7F2 0%, rgb(115, 191, 67, 0.2) 100%);
   padding: 20px;
   gap: 3rem;
   overflow: hidden;
@@ -87,7 +87,7 @@
 }
 
 .login-error {
-  color: #B91C1C;
+  color: #DC2626;
   font-weight: 500;
   margin-bottom: 12px;
   text-align: center;

@@ -23,8 +23,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FAF7F2;
-  /* background: linear-gradient(135deg,#73BF43 -20%, #FAF7F2 100%); */
+  /* background: #FAF7F2; */
+  background: radial-gradient(circle, #FAF7F2 0%, rgb(115, 191, 67, 0.2) 100%);
   padding: 20px;
   gap: 3rem;
   overflow: hidden;
@@ -97,22 +97,22 @@
 }
 
 .form-group input.error {
-  border-color: #b91c1c;
+  border-color: #DC2626;
 }
 
 .form-group input.error:focus {
-  border-color: #b91c1c;
+  border-color: #DC2626;
   box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
 }
 
 .error-message {
-  color: #b91c1c;
+  color: #DC2626;
   margin-top: -4px;
 }
 
 .register-error {
   font-size: 14px;
-  color: #b91c1c;
+  color: #DC2626;
   text-align: center;
   margin-bottom: 12px;
 }
