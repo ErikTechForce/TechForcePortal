@@ -67,7 +67,7 @@ const ResetPassword: React.FC = () => {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <h1>Invalid link</h1>
+            <h2>Invalid link</h2>
             <p>This password reset link is invalid or missing. Please request a new one.</p>
           </div>
           {error && <div className="login-error">{error}</div>}

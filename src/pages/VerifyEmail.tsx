@@ -53,7 +53,7 @@ const VerifyEmail: React.FC = () => {
     <div className="verify-email-container">
       <div className="verify-email-card">
         <div className="verify-email-header">
-          <h1>Email verification</h1>
+          <h2>Email verification</h2>
           <p>
             {status === 'loading' && 'Verifying your email...'}
             {status === 'success' && message}

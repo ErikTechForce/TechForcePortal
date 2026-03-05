@@ -81,15 +81,19 @@
 
 .login-success {
   color: #15803d;
-  font-weight: 500;
-  margin-bottom: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400; /* Regular */
+  margin: 0 0 12px 0;
   text-align: center;
 }
 
 .login-error {
   color: #DC2626;
-  font-weight: 500;
-  margin-bottom: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400; /* Regular */
+  margin: 0 0 12px 0;
   text-align: center;
 }
 

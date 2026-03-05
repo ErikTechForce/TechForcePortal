@@ -12,7 +12,7 @@
   --fs-body: 1rem;   /* 16px */
 }
 
-h1, h2, h3, h4, button, label, link {
+h1, h2, h3, h4, button, a, label, link {
   font-family: var(--font-main);
 }
 
@@ -42,7 +42,7 @@ p, input, textarea {
   font-weight: 400; /* Regular */
 }
 
-button, link {
+button, a, link {
   font-size: var(--fs-h4);
   font-weight: 500; /* Regular */
 }
