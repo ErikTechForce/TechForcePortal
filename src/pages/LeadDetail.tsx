@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClientById, deleteClient } from '../api/clients';
@@ -80,7 +79,6 @@ const LeadDetail: React.FC = () => {
   if (loading && !leadData) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -97,7 +95,6 @@ const LeadDetail: React.FC = () => {
   if (notFound || !leadData) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -113,7 +110,6 @@ const LeadDetail: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

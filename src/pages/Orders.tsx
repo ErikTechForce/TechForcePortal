@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { fetchOrders, type OrderRow } from '../api/orderApi';
 import { fetchClients } from '../api/clients';
@@ -119,7 +118,6 @@ const Orders: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

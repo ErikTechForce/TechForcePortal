@@ -1,9 +1,3 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  background: #FAF7F2;
-}
-
 .contract-page {
   padding: 5rem;
   display: flex;

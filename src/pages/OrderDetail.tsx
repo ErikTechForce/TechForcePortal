@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PDFDocument, rgb, StandardFonts, PDFImage } from 'pdf-lib';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import {
@@ -1923,7 +1922,6 @@ Techforce Team`
   if (loading && !orderData) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -1940,7 +1938,6 @@ Techforce Team`
   if (!orderData) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -1956,7 +1953,6 @@ Techforce Team`
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

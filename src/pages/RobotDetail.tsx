@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import {
   getInventoryProducts,
@@ -176,7 +175,6 @@ const RobotDetail: React.FC = () => {
   if (!productId || !product) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -195,7 +193,6 @@ const RobotDetail: React.FC = () => {
   if (!unit) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -216,7 +213,6 @@ const RobotDetail: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

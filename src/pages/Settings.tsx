@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { updateMyRoles, SELF_ASSIGNABLE_ROLES } from '../api/users';
@@ -76,7 +75,6 @@ const Settings: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

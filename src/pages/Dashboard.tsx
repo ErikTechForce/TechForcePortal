@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
@@ -168,7 +167,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <Header />
       <div className="dashboard-layout">
         <Sidebar />
         <main className="dashboard-main">

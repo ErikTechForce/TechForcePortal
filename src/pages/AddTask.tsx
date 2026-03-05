@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { useAuth } from '../context/AuthContext';
@@ -111,7 +110,6 @@ const AddTask: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">

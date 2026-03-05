@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useLayout } from '../context/LayoutContext';
 import './Sidebar.css';
 
@@ -10,8 +11,15 @@ interface MenuItem {
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const layout = useLayout();
   const isOpen = layout?.mobileMenuOpen ?? false;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   const closeMobileMenuRef = useRef(layout?.closeMobileMenu);
   closeMobileMenuRef.current = layout?.closeMobileMenu;
 
@@ -46,6 +54,18 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
+      <div className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-topbar-toggle"
+          onClick={layout?.toggleMobileMenu}
+          aria-label="Open menu"
+          aria-expanded={isOpen}
+        >
+          ☰
+        </button>
+      </div>
+
       {isOpen && (
         <div
           className="sidebar-overlay"
@@ -54,32 +74,40 @@ const Sidebar: React.FC = () => {
         />
       )}
       <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
-      <nav className="sidebar-nav">
-        <ul className="sidebar-menu">
-          {mainMenuItems.map((item) => (
-            <li key={item.path} className="sidebar-menu-item">
+        <div className="sidebar-brand">
+          <h1 className="sidebar-brand-text">TechForce Robotics Portal</h1>
+        </div>
+        <nav className="sidebar-nav">
+          <ul className="sidebar-menu">
+            {mainMenuItems.map((item) => (
+              <li key={item.path} className="sidebar-menu-item">
+                <Link
+                  to={item.path}
+                  className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <ul className="sidebar-menu sidebar-menu-bottom">
+            <li className="sidebar-menu-item">
               <Link
-                to={item.path}
-                className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                to={settingsMenuItem.path}
+                className={`sidebar-link ${isActive(settingsMenuItem.path) ? 'active' : ''}`}
               >
-                {item.label}
+                {settingsMenuItem.label}
               </Link>
             </li>
-          ))}
-        </ul>
-        
-        <ul className="sidebar-menu sidebar-menu-bottom">
-          <li className="sidebar-menu-item">
-            <Link
-              to={settingsMenuItem.path}
-              className={`sidebar-link ${isActive(settingsMenuItem.path) ? 'active' : ''}`}
-            >
-              {settingsMenuItem.label}
-            </Link>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+            <li className="sidebar-menu-item">
+              <button type="button" className="sidebar-logout" onClick={handleLogout}>
+                Log out
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </aside>
     </>
   );
 };

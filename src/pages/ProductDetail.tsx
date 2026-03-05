@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { getInventoryProducts, getUnitsByProductId, addInventoryUnit, updateInventoryUnit, deleteInventoryUnit, type InventoryUnit, type InventoryUnitStatus, type InventoryUnitCondition } from '../data/inventory';
 import {
@@ -260,7 +259,6 @@ const ProductDetail: React.FC = () => {
   if (!productId || !product) {
     return (
       <div className="page-container">
-        <Header />
         <div className="page-layout">
           <Sidebar />
           <main className="page-main">
@@ -280,7 +278,6 @@ const ProductDetail: React.FC = () => {
 
   return (
     <div className="page-container">
-      <Header />
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
