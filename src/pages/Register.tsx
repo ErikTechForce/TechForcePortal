@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
 
@@ -15,6 +15,12 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -96,11 +102,13 @@ const Register: React.FC = () => {
   };
 
   const handleBackToLogin = () => {
-    navigate('/login');
+    setIsExiting(true);
+    setTimeout(() => navigate('/login'), 320);
   };
 
   return (
-    <div className="register-container">
+    <div className={`register-container${isExiting ? ' exiting' : ''}`}>
+
       <div className="register-card">
         <div className="register-header">
           <h1>Create Account</h1>
@@ -119,7 +127,7 @@ const Register: React.FC = () => {
               placeholder="Enter your full name"
               className={errors.name ? 'error' : ''}
             />
-            {errors.name && <span className="error-message">{errors.name}</span>}
+            {errors.name && <p className="error-message">{errors.name}</p>}
           </div>
           
           <div className="form-group">
@@ -133,7 +141,7 @@ const Register: React.FC = () => {
               placeholder="you@techforcerobotics.com"
               className={errors.email ? 'error' : ''}
             />
-            {errors.email && <span className="error-message">{errors.email}</span>}
+            {errors.email && <p className="error-message">{errors.email}</p>}
           </div>
           
           <div className="form-group">
@@ -147,7 +155,7 @@ const Register: React.FC = () => {
               placeholder="Enter your password"
               className={errors.password ? 'error' : ''}
             />
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            {errors.password && <p className="error-message">{errors.password}</p>}
           </div>
           
           <div className="form-group">
@@ -161,7 +169,7 @@ const Register: React.FC = () => {
               placeholder="Confirm your password"
               className={errors.confirmPassword ? 'error' : ''}
             />
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
           </div>
 
           {submitError && <div className="register-error">{submitError}</div>}
@@ -182,6 +190,11 @@ const Register: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <div className="register-robot-image-div">
+        <img src="/images/robot-logo.svg" alt="Robot" className="register-robot-image" />
+      </div>
+      
     </div>
   );
 };

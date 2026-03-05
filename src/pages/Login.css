@@ -1,31 +1,68 @@
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-100px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(100px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-100px); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(100px); }
+}
+
+.login-container.exiting .login-card {
+  animation: slideOutLeft 0.3s ease-in forwards;
+}
+
+.login-container.exiting .login-robot-image {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
 .login-container {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #15803d 0%, #14532d 100%);
+  background: #FAF7F2;
+  /* background: linear-gradient(135deg,#73BF43 -20%, #FAF7F2 100%); */
   padding: 20px;
+  gap: 3rem;
+  overflow: hidden;
 }
 
-.login-card {
-  background: white;
+.login-robot-image {
+  width: clamp(10rem, 30vw, 30rem);
+  height: auto;
+  object-fit: contain;
+  
+  animation: slideLeft 0.3s ease-out;
+}
+
+.login-card, .forgot-password-card {
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 50%, rgba(233, 236, 239, 1) 100%);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(27, 28, 30, 0.25);
   padding: 40px;
   width: 100%;
   max-width: 420px;
-  animation: slideIn 0.3s ease-out;
+  animation: slideRight 0.3s ease-out;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.forgot-password-card {
+  animation: slideDown 0.3s ease-out;
 }
 
 .login-header {
@@ -33,30 +70,27 @@
   margin-bottom: 32px;
 }
 
+.login-header h1 {
+  color: #1A293F;
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  color: #5A708D;
+}
+
 .login-success {
   color: #15803d;
-  font-size: 14px;
+  font-weight: 500;
   margin-bottom: 12px;
   text-align: center;
 }
 
 .login-error {
-  color: #b91c1c;
-  font-size: 14px;
+  color: #B91C1C;
+  font-weight: 500;
   margin-bottom: 12px;
   text-align: center;
-}
-
-.login-header h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a202c;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  font-size: 14px;
-  color: #718096;
 }
 
 .login-form {
@@ -71,46 +105,29 @@
   gap: 8px;
 }
 
-.form-group label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.form-group input {
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  outline: none;
-}
-
 .form-group input:focus {
-  border-color: #15803d;
+  border-color: #73BF43;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
 .form-group input::placeholder {
-  color: #a0aec0;
+  color: #8A8F93;
 }
 
 .login-button {
   margin-top: 8px;
   padding: 14px 24px;
-  background-color: #15803d;
+  background-color: #73BF43;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 
 .login-button:hover {
-  background-color: #14532d;
+  background-color: #3CA233;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4);
 }
@@ -131,8 +148,9 @@
   background: none;
   border: none;
   color: #15803d;
-  font-size: 14px;
-  font-weight: 500;
+  font-family: var(--font-main);
+  font-size: var(--fs-h4);
+  font-weight: 500; /* Regular */
   cursor: pointer;
   padding: 8px 0;
   transition: color 0.2s ease;
@@ -152,14 +170,16 @@
 
 /* Responsive design */
 @media (max-width: 480px) {
+
+  .login-robot-image,
+  .login-robot-image-div {
+    display: none;
+  }
+
   .login-card {
     padding: 32px 24px;
   }
-  
-  .login-header h1 {
-    font-size: 24px;
-  }
-  
+
   .login-footer {
     flex-direction: column;
     gap: 12px;

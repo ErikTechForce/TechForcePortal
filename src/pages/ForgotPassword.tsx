@@ -43,10 +43,10 @@ const ForgotPassword: React.FC = () => {
 
   return (
     <div className="login-container">
-      <div className="login-card">
+      <div className="forgot-password-card">
         <div className="login-header">
-          <h1>Forgot password</h1>
-          <p>Enter your email and we&apos;ll send you a link to reset your password</p>
+          <h1>Forgot password?</h1>
+          <p>Enter your email and we&apos;ll send a link to reset your password</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
