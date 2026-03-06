@@ -5,10 +5,10 @@
 .inventory-search-bar {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 6px;
   font-size: 1rem;
-  color: #374151;
+  color: #1B1C1E;
   background-color: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -20,7 +20,7 @@
 }
 
 .inventory-search-bar::placeholder {
-  color: #9ca3af;
+  color: #8A8F93;
 }
 
 .inventory-table-section {
@@ -38,26 +38,26 @@
 }
 
 .inventory-table-section .inventory-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .inventory-table-section .inventory-table th {
   padding: 0.6rem 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 .inventory-table-section .inventory-table td {
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
   font-size: 0.875rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -68,12 +68,12 @@
 }
 
 .inventory-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .table-empty {
   text-align: center;
-  color: #9ca3af;
+  color: #8A8F93;
   font-style: italic;
   padding: 2rem !important;
 }
@@ -115,7 +115,7 @@
 
 .inventory-add-prompt {
   margin: 0 0 0.5rem;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.9375rem;
 }
 
@@ -145,14 +145,14 @@
   display: block;
   margin-bottom: 0.25rem;
   font-weight: 500;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
 }
 
 .inventory-add-form .form-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 6px;
   font-size: 0.9375rem;
 }
@@ -162,12 +162,12 @@
   gap: 0.75rem;
   margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #8A8F93;
 }
 
 .inventory-modal-back {
   padding: 0 1.5rem 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #8A8F93;
   padding-top: 0.75rem;
   margin-top: 0.5rem;
 }
@@ -188,7 +188,7 @@
 .inventory-section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin-bottom: 1rem;
   margin-top: 2.5rem;
 }
@@ -216,19 +216,19 @@
 .ffe-documents-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #8A8F93;
 }
 
 .ffe-documents-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 0.35rem 0;
 }
 
 .ffe-documents-hint {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0 0 1rem 0;
 }
 
@@ -256,7 +256,7 @@
   overflow-x: auto;
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 6px;
 }
 
@@ -267,7 +267,7 @@
 }
 
 .ffe-documents-table thead {
-  background: #f9fafb;
+  background: #E9ECEF;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -277,14 +277,14 @@
   padding: 0.5rem 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+  color: #1B1C1E;
+  border-bottom: 1px solid #8A8F93;
 }
 
 .ffe-documents-table td {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid #f3f4f6;
-  color: #374151;
+  color: #1B1C1E;
 }
 
 .ffe-documents-table tbody tr:last-child td {
@@ -292,7 +292,7 @@
 }
 
 .ffe-docs-empty {
-  color: #9ca3af;
+  color: #8A8F93;
   font-style: italic;
   text-align: center;
   padding: 1rem !important;
@@ -348,8 +348,8 @@
 
 .inventory-list-total-row {
   font-weight: 600;
-  background-color: #f9fafb;
-  border-top: 2px solid #e5e7eb;
+  background-color: #E9ECEF;
+  border-top: 2px solid #8A8F93;
   cursor: default;
 }
 
@@ -384,9 +384,9 @@
     display: block;
     margin-bottom: 1rem;
     padding: 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #8A8F93;
     border-radius: 8px;
-    background: #f9fafb;
+    background: #E9ECEF;
   }
 
   .inventory-table-section .inventory-table tbody tr:hover,
@@ -406,7 +406,7 @@
     content: attr(data-label);
     font-weight: 600;
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #5A708D;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: block;

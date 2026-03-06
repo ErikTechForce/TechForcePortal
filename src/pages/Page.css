@@ -49,14 +49,74 @@
 .page-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin-bottom: 0.5rem;
 }
 
 .page-subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0;
+}
+
+/* ---- Shared page toolbar: search bar left, action button right ---- */
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-toolbar-search {
+  flex: 1;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  background: white;
+  color: #1B1C1E;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-toolbar-search::placeholder {
+  color: #9ca3af;
+}
+
+.page-toolbar-search:focus {
+  border-color: #2F6F44;
+  box-shadow: 0 0 0 2px rgba(59, 107, 53, 0.15);
+}
+
+.page-toolbar-btn {
+  flex-shrink: 0;
+  width: 10rem;
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background-color: #2F6F44;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.page-toolbar-btn:hover {
+  background-color: #1F4B31;
+}
+
+@media (max-width: 600px) {
+  .page-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-toolbar-btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 

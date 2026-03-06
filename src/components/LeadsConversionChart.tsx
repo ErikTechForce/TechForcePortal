@@ -73,7 +73,7 @@ const LeadsConversionChart: React.FC<LeadsConversionChartProps> = ({ data }) => 
           <path
             d={bgPath}
             fill="none"
-            stroke="#e5e7eb"
+            stroke="#8A8F93"
             strokeWidth="20"
             strokeLinecap="round"
           />

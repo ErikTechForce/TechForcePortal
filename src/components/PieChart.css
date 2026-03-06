@@ -6,17 +6,18 @@
 }
 
 .pie-chart-empty {
-  color: #9ca3af;
+  color: #8A8F93;
   font-size: 0.875rem;
   text-align: center;
 }
 
 .pie-chart-tooltip {
   position: fixed;
-  background-color: #1f2937;
+  background-color: #1B1C1E;
   color: white;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   pointer-events: none;
   z-index: 1000;
@@ -32,7 +33,7 @@
 
 .tooltip-value {
   font-size: 0.75rem;
-  color: #d1d5db;
+  color: #E9ECEF;
 }
 
 

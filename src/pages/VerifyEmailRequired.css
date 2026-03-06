@@ -60,12 +60,12 @@
 .verify-required-form .form-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: #1B1C1E;
 }
 
 .verify-required-form .form-group input {
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   font-size: 14px;
 }
@@ -78,7 +78,7 @@
 
 .verify-required-form .form-group input:disabled {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #5A708D;
 }
 
 .verify-required-message {

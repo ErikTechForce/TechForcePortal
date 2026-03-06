@@ -7,7 +7,7 @@
   max-width: 400px;
   padding: 0.6rem 0.75rem;
   font-size: 0.95rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E9ECEF;
   border-radius: 6px;
 }
 
@@ -31,24 +31,24 @@
 }
 
 .tasks-search-results-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .tasks-search-results-table th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
 }
 
 .tasks-search-results-table td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
 }
 
 .tasks-search-results-table tbody tr:last-child td {
@@ -60,7 +60,7 @@
 }
 
 .tasks-search-result-row:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .tasks-board-cards {
@@ -72,7 +72,7 @@
 
 .tasks-board-card {
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -86,7 +86,7 @@
 .tasks-card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -97,7 +97,7 @@
 }
 
 .tasks-empty-hint {
-  color: #6b7280;
+  color: #5A708D;
   font-size: 0.9rem;
   margin: 0;
 }
@@ -114,14 +114,14 @@
 }
 
 .tasks-item-id {
-  color: #6b7280;
+  color: #5A708D;
   font-weight: 400;
   font-size: 0.85em;
 }
 
 .tasks-board-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: #8A8F93;
   margin: 0.75rem 0;
 }
 
@@ -141,12 +141,12 @@
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
-  color: #1f2937;
+  color: #1B1C1E;
 }
 
 .clickable-item {
   font-size: 0.95rem;
-  color: #374151;
+  color: #1B1C1E;
   padding: 0.5rem 0;
   border-bottom: 1px solid #f3f4f6;
   cursor: pointer;
@@ -158,7 +158,7 @@
 }
 
 .clickable-item:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
   padding-left: 0.5rem;
 }
 
@@ -195,7 +195,7 @@
 .assigned-companies-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -209,24 +209,24 @@
 }
 
 .assigned-companies-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .assigned-companies-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
 }
 
 .assigned-companies-table td {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
 }
 
 .assigned-companies-table tbody tr:last-child td {
@@ -234,12 +234,12 @@
 }
 
 .assigned-companies-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .table-empty {
   text-align: center;
-  color: #9ca3af;
+  color: #E9ECEF;
   font-style: italic;
   padding: 2rem !important;
 }
@@ -251,7 +251,7 @@
 .completed-tasks-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -265,24 +265,24 @@
 }
 
 .completed-tasks-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .completed-tasks-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
 }
 
 .completed-tasks-table td {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
 }
 
 .completed-tasks-table tbody tr:last-child td {
@@ -290,7 +290,7 @@
 }
 
 .completed-tasks-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 /* Responsive: card layout on mobile so no horizontal scroll */
@@ -311,9 +311,9 @@
     display: block;
     margin-bottom: 1rem;
     padding: 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #8A8F93;
     border-radius: 8px;
-    background: #f9fafb;
+    background: #E9ECEF;
   }
 
   .tasks-search-results-table tbody tr:hover,
@@ -343,7 +343,7 @@
     content: attr(data-label);
     font-weight: 600;
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #5A708D;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: block;

@@ -581,12 +581,12 @@ const Contract: React.FC = () => {
                   </div>
                 )}
                 {window.location.hash && !formData && !fillError && (
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: '0.875rem', color: '#5A708D', marginBottom: '0.5rem' }}>
                     Loading contract…
                   </p>
                 )}
                 {isGeneratingPdf && (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#5A708D' }}>
                     <p>Generating PDF with your signature...</p>
                   </div>
                 )}
@@ -647,7 +647,7 @@ const Contract: React.FC = () => {
                           📄 Open PDF in new tab
                         </a>
                       )}
-                      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
+                      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#5A708D', textAlign: 'center' }}>
                         {signedPdfUrl 
                           ? 'Your signature has been added to the PDF. Download or view the signed version above.'
                           : 'If the PDF doesn\'t display above, click the link to view it in a new tab'}

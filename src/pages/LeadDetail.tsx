@@ -221,7 +221,7 @@ const LeadDetail: React.FC = () => {
 
               {/* Delete lead */}
               {leadIdNum && apiLead && (
-                <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
+                <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #8A8F93)', display: 'flex', justifyContent: 'flex-end' }}>
                   <button
                     type="button"
                     className="cancel-button"

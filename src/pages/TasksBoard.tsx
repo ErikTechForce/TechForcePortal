@@ -160,7 +160,7 @@ const TasksBoard: React.FC = () => {
                   <span
                     key={tag}
                     className="tasks-tag-pill"
-                    style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                    style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#8A8F93' }}
                   >
                     {tag.replace(/_/g, ' ')}
                   </span>
@@ -221,15 +221,18 @@ const TasksBoard: React.FC = () => {
               <p className="page-subtitle">Loading tasks…</p>
             ) : (
               <>
-                <div className="tasks-search-row">
+                <div className="page-toolbar">
                   <input
                     type="text"
-                    className="tasks-search-input"
+                    className="page-toolbar-search"
                     placeholder="Search by task name or task number (#123)..."
                     value={taskSearch}
                     onChange={(e) => setTaskSearch(e.target.value)}
                     aria-label="Search tasks"
                   />
+                  <button type="button" className="page-toolbar-btn" onClick={handleAddTask}>
+                    +&nbsp; Add Task
+                  </button>
                 </div>
                 {searchActive && (
                   <div className="tasks-search-results-section">
@@ -296,12 +299,6 @@ const TasksBoard: React.FC = () => {
                     <h3 className="tasks-card-title">Unassigned Tasks:</h3>
                     {renderTaskList(unassigned)}
                   </div>
-                </div>
-
-                <div className="tasks-board-button-row">
-                  <button type="button" className="add-task-button" onClick={handleAddTask}>
-                    + Add New Task
-                  </button>
                 </div>
 
                 <div className="assigned-companies-section">

@@ -1,6 +1,6 @@
 .pending-component {
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -18,8 +18,8 @@
 
 .pending-tabs {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f9fafb;
+  border-bottom: 1px solid #E9ECEF;
+  background-color: #E9ECEF;
 }
 
 .pending-tab {
@@ -30,7 +30,7 @@
   border-bottom: 2px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #5A708D;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -41,7 +41,7 @@
 
 .pending-tab:hover {
   background-color: #f3f4f6;
-  color: #374151;
+  color: #1B1C1E;
 }
 
 .pending-tab.active {
@@ -74,7 +74,7 @@
 .pending-title-count {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #5A708D;
 }
 
 .pending-content {
@@ -84,7 +84,7 @@
 .pending-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 0.75rem 0;
   display: flex;
   align-items: center;
@@ -110,62 +110,54 @@
 }
 
 .pending-companies-list::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #E9ECEF;
   border-radius: 3px;
 }
 
 .pending-companies-list::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #E9ECEF;
 }
 
-.pending-company-item {
+.dash-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1B1C1E;
   padding: 0.5rem 0.75rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background-color: #E9ECEF;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.pending-company-item:hover {
+.dash-list-item:hover {
   background-color: #f3f4f6;
-  border-color: #d1d5db;
   transform: translateX(4px);
 }
 
-.company-name {
+.dash-list-item-primary {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: #1B1C1E;
 }
 
-.company-employee {
+.dash-list-item-secondary {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #5A708D;
 }
 
-.company-employee.unassigned {
+.dash-list-item-secondary.unassigned {
   font-style: italic;
-  color: #9ca3af;
+  color: #8A8F93;
 }
 
 @media (max-width: 768px) {
   .pending-tab {
     padding: 0.6rem 0.25rem;
     font-size: 0.8rem;
-  }
-
-  .pending-content {
-    padding: 0.75rem;
-  }
-
-  .pending-company-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
   }
 }
 

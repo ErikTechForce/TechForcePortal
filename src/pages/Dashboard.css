@@ -23,6 +23,7 @@
 
 .dashboard-content {
   background-color: white;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -32,13 +33,13 @@
 .dashboard-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin-bottom: 0.5rem;
 }
 
 .dashboard-subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0 0 2rem 0;
 }
 
@@ -67,7 +68,7 @@
   grid-row-start: 4;
   /* card styles live here so overflow: hidden doesn't clip the border/shadow */
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
@@ -78,7 +79,7 @@
 }
 
 .dash-pending:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
 }
 
 .dash-sales {
@@ -99,7 +100,7 @@
   grid-row-start: 1;
   /* card styles on the cell so overflow doesn't clip the border/shadow */
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
@@ -110,7 +111,7 @@
 }
 
 .dash-activity:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
 }
 
 .dash-activity .activity-log-title {
@@ -198,7 +199,7 @@
 
 .dashboard-chart-card {
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
@@ -206,15 +207,44 @@
 }
 
 .dashboard-chart-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
+}
+
+.robots-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #E9ECEF;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.robots-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.robots-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.robots-legend-label {
+  font-size: 0.875rem;
+  color: #5A708D;
+  white-space: nowrap;
 }
 
 .robots-chart-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
   padding: 1rem;
-  padding-top: 0;
 }
 
 .dashboard-chart-card .chart-title {
@@ -229,7 +259,7 @@
 
 .dashboard-card {
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -237,50 +267,57 @@
 }
 
 .dashboard-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
 }
 
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
 .card-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.clickable-item {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 400;
-  color: #374151;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f3f4f6;
-  cursor: pointer;
-  transition: background-color 0.2s ease, padding-left 0.2s ease;
-}
-
-.clickable-item:last-child {
-  border-bottom: none;
-}
-
-.clickable-item:hover {
-  background-color: #f9fafb;
-  padding-left: 0.5rem;
-}
-
-.dashboard-task-item {
+/* Unified list item — shared by pending order items, task items, and lead items */
+.dash-list-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1B1C1E;
+  padding: 0.5rem 0.75rem;
+  background-color: #E9ECEF;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.dashboard-task-name {
+.dash-list-item:hover {
+  background-color: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.dash-list-item-primary {
+  font-size: 0.875rem;
   font-weight: 500;
+  color: #1B1C1E;
+}
+
+.dash-list-item-secondary {
+  font-size: 0.75rem;
+  color: #5A708D;
+}
+
+.dash-list-item-secondary.unassigned {
+  font-style: italic;
+  color: #8A8F93;
 }
 
 .dashboard-task-pills {
@@ -294,12 +331,67 @@
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
-  color: #1f2937;
+  color: #1B1C1E;
+}
+
+/* Tasks priority filter bar — mirrors the pending-tabs style */
+.dash-tasks-filter-bar {
+  display: flex;
+  border-bottom: 1px solid #E9ECEF;
+  background-color: #E9ECEF;
+  flex-shrink: 0;
+}
+
+.dash-tasks-filter-btn {
+  flex: 1;
+  padding: 0.75rem 0.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #5A708D;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.dash-tasks-filter-btn:hover {
+  background-color: #f3f4f6;
+  color: #1B1C1E;
+}
+
+.dash-tasks-filter-btn.active {
+  color: #15803d;
+  border-bottom-color: #15803d;
+  background-color: white;
+}
+
+.dash-tasks-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 9999px;
+  background-color: #F4AC6A;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dash-tasks-filter-btn.active .dash-tasks-filter-count {
+  background-color: #E48B52;
 }
 
 .activity-log-section {
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E9ECEF;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -308,7 +400,7 @@
 .activity-log-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -329,10 +421,10 @@
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 400;
-  color: #374151;
+  color: #1B1C1E;
   padding: 0.5rem 0;
   margin: 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #E9ECEF;
   width: 100%;
 }
 
@@ -341,18 +433,18 @@
 }
 
 .activity-log-empty {
-  color: #9ca3af;
+  color: #8A8F93;
   font-size: 0.95rem;
   margin: 0;
 }
 
 .activity-log-time {
-  color: #6b7280;
+  color: #5A708D;
   font-size: 0.9em;
 }
 
 .activity-log-user {
-  color: #6b7280;
+  color: #5A708D;
   font-size: 0.9em;
 }
 
@@ -360,6 +452,11 @@
   max-height: 300px;
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+.dash-leads.dashboard-card .card-content {
+  padding: 1rem;
+  max-height: none;
 }
 
 .dashboard-card .card-content::-webkit-scrollbar {
@@ -372,23 +469,16 @@
 }
 
 .dashboard-card .card-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #E9ECEF;
   border-radius: 3px;
 }
 
 .dashboard-card .card-content::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #8A8F93;
 }
 
-@media (max-width: 768px) {
-  .dashboard-main {
-    margin-left: 0;
-    padding: 1rem;
-    padding-top: calc(3.5rem + 1rem);
-    overflow-x: hidden;
-    max-width: 100%;
-  }
-
+/* Grid collapses to single column at 1330px */
+@media (max-width: 1460px) {
   .dashboard-content {
     padding: 1rem;
     max-width: 100%;
@@ -415,30 +505,79 @@
     grid-row: auto;
     grid-column-start: unset;
     grid-row-start: unset;
-    height: auto;
-    min-height: 200px;
-    overflow: visible;
+    height: 350px;
+    overflow: hidden;
   }
 
-  .dash-pending .pending-component,
+  .dash-pending  { order: 3; }
+  .dash-sales    { order: 1; }
+  .dash-robots   { order: 2; }
+  .dash-leads    { order: 4; }
+  .dash-tasks    { order: 5; }
+  .dash-activity { order: 6; }
+
+  /* pending: let the flex layout fill the fixed height and scroll */
+  .dash-pending .pending-component {
+    height: 100%;
+  }
+
   .dash-pending .pending-content {
-    height: auto;
+    flex: 1;
+    min-height: 0;
   }
 
+  /* leads & tasks: fill the fixed card height */
   .dash-leads.dashboard-card,
   .dash-tasks.dashboard-card {
-    height: auto;
+    height: 350px;
   }
 
   .dash-leads .card-content,
   .dash-tasks .card-content {
-    max-height: 200px;
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* all list items wrap to column at this breakpoint */
+  .dash-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  /* task pills fill full width when item is in column mode */
+  .dash-list-item .dashboard-task-pills {
+    width: 100%;
+  }
+
+  /* pending order tabs — tighter at collapsed width */
+  .pending-tab {
+    padding: 0.6rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  /* task priority filter buttons — match pending tabs */
+  .dash-tasks-filter-btn {
+    padding: 0.6rem 0.1rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Sidebar hides and main loses its left margin at 768px */
+@media (max-width: 768px) {
+  .dashboard-main {
+    margin-left: 0;
+    padding: 1rem;
+    padding-top: calc(3.5rem + 1rem);
+    overflow-x: hidden;
+    max-width: 100%;
   }
 }
 
 .feed-item {
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #E9ECEF;
 }
 
 .feed-item:last-child {
@@ -447,7 +586,7 @@
 
 .feed-activity {
   font-size: 0.95rem;
-  color: #374151;
+  color: #1B1C1E;
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
@@ -460,14 +599,14 @@
 }
 
 .feed-platform {
-  color: #6b7280;
+  color: #5A708D;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .feed-time {
-  color: #9ca3af;
+  color: #8A8F93;
 }
 
 

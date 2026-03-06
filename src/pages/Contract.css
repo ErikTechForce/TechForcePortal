@@ -49,10 +49,10 @@
 }
 
 .pdf-container {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -61,7 +61,7 @@
   height: 67rem;
   border: none;
   display: block;
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .pdf-alternative-link {
@@ -72,8 +72,8 @@
 .pdf-fallback {
   padding: 2rem;
   text-align: center;
-  color: #6b7280;
-  background-color: #f9fafb;
+  color: #5A708D;
+  background-color: #E9ECEF;
   border-radius: 6px;
 }
 
@@ -105,20 +105,20 @@
 .contract-thanks-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
 .contract-thanks-message {
   font-size: 1.125rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0;
   line-height: 1.6;
 }
 
 .contract-thanks-loading {
   font-size: 1rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0;
 }
 
@@ -132,19 +132,19 @@
   background: linear-gradient(135deg,rgba(255, 255, 255, 1) 50%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
 }
 
 .contract-billing-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 0.5rem 0;
 }
 
 .contract-billing-description {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #5A708D;
   margin: 0 0 1.5rem 0;
 }
 
@@ -162,7 +162,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: #1B1C1E;
   margin-bottom: 0.35rem;
 }
 
@@ -170,9 +170,9 @@
   width: 100%;
   padding: 0.5rem 0.75rem;
   font-size: 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E9ECEF;
   border-radius: 6px;
-  color: #1f2937;
+  color: #1B1C1E;
   background-color: white;
 }
 
@@ -194,13 +194,13 @@
   background: linear-gradient(135deg,rgba(255, 255, 255, 1) 50%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
 }
 
 .signature-section-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1.5rem 0;
 }
 
@@ -211,7 +211,7 @@
 }
 
 .signature-canvas {
-  border: 2px solid #d1d5db;
+  border: 2px solid #E9ECEF;
   border-radius: 6px;
   cursor: crosshair;
   background-color: white;
@@ -231,16 +231,16 @@
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: #374151;
+  color: #1B1C1E;
   background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .clear-signature-button:hover {
-  background-color: #e5e7eb;
+  background-color: #8A8F93;
 }
 
 .save-signature-button {
@@ -280,7 +280,7 @@
 .signature-image {
   max-width: 300px;
   max-height: 100px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E9ECEF;
   border-radius: 4px;
   background-color: white;
 }
@@ -308,7 +308,7 @@
 }
 
 .submit-contract-button:disabled {
-  background-color: #8A8F93;
+  background-color: #E9ECEF;
   cursor: not-allowed;
   opacity: 0.6;
 }

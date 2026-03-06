@@ -55,7 +55,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
   const currentProductData = productData[timePeriod];
   const currentTotalData = totalData[timePeriod];
   
-  const chartHeight = 150;
+  const chartHeight = 200;
   const chartPadding = 30;
   const labelBottomPadding = 20; // Extra space for two-line labels
   
@@ -171,7 +171,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y1={tickY}
                 x2={svgWidth}
                 y2={tickY}
-                stroke="#e5e7eb"
+                stroke="#8A8F93"
                 strokeWidth={1}
               />
               <text
@@ -179,7 +179,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y={tickY + 4}
                 textAnchor="end"
                 fontSize="10"
-                fill="#9ca3af"
+                fill="#8A8F93"
               >
                 {formatTickLabel(tick)}
               </text>
@@ -214,7 +214,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y={chartHeight - 5}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#6b7280"
+                fill="#5A708D"
                 className="bar-label"
               >
                 {item.product}
@@ -243,7 +243,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y1={tickY}
                 x2={totalChartWidth - chartPaddingRight}
                 y2={tickY}
-                stroke="#e5e7eb"
+                stroke="#8A8F93"
                 strokeWidth={1}
               />
               <text
@@ -251,7 +251,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y={tickY + 4}
                 textAnchor="end"
                 fontSize="10"
-                fill="#9ca3af"
+                fill="#8A8F93"
               >
                 {formatTickLabel(tick)}
               </text>
@@ -333,7 +333,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y={chartHeight - 12}
                 textAnchor="middle"
                 fontSize="11"
-                fill="#6b7280"
+                fill="#5A708D"
                 className="bar-label"
               >
                 {month}
@@ -343,7 +343,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
                 y={chartHeight - 1}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#9ca3af"
+                fill="#8A8F93"
                 className="bar-label"
               >
                 {year}

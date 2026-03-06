@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import PieChart from '../components/PieChart';
@@ -7,6 +7,7 @@ import './Page.css';
 import './Robots.css';
 
 const Robots: React.FC = () => {
+  const [robotSearch, setRobotSearch] = useState('');
   const robotStats = getRobotFleetStats();
 
   const total = robotStats.deployed + robotStats.inStorage + robotStats.needsMaintenance;
@@ -20,7 +21,7 @@ const Robots: React.FC = () => {
     {
       label: 'In Storage',
       value: robotStats.inStorage,
-      color: '#6b7280'
+      color: '#5A708D'
     },
     {
       label: 'In Need of Maintenance',
@@ -44,7 +45,18 @@ const Robots: React.FC = () => {
           </div>
 
           <div className="page-content">
-            
+
+            <div className="page-toolbar">
+              <input
+                type="text"
+                className="page-toolbar-search"
+                placeholder="Search robots..."
+                value={robotSearch}
+                onChange={(e) => setRobotSearch(e.target.value)}
+                aria-label="Search robots"
+              />
+            </div>
+
             <div className="robots-stats-row">
               <div className="pie-chart-wrapper">
                 <PieChart data={pieChartData} size={250} />

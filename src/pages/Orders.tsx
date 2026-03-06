@@ -129,24 +129,24 @@ const Orders: React.FC = () => {
 
           <div className="page-content">
 
-            <button type="button" className="orders-create-button" onClick={handleCreateOrder}>
-              + Create New Order
-            </button>
+            <div className="page-toolbar">
+              <input
+                type="text"
+                className="page-toolbar-search"
+                placeholder="Search by order number or company name..."
+                value={orderSearch}
+                onChange={(e) => setOrderSearch(e.target.value)}
+                aria-label="Search orders"
+              />
+              <button type="button" className="page-toolbar-btn" onClick={handleCreateOrder}>
+                +&nbsp; Add Order
+              </button>
+            </div>
 
             {loading ? (
               <p className="page-subtitle">Loading orders...</p>
             ) : (
               <>
-                <div className="orders-search-row">
-                  <input
-                    type="text"
-                    className="orders-search-input"
-                    placeholder="Search by order number or company name..."
-                    value={orderSearch}
-                    onChange={(e) => setOrderSearch(e.target.value)}
-                    aria-label="Search orders"
-                  />
-                </div>
                 <div className="orders-tables-container">
                   <div className="orders-table-section">
                     <h3 className="orders-table-title">Contracts</h3>

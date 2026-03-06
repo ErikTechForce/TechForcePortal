@@ -223,19 +223,18 @@ const Inventory: React.FC = () => {
 
           <div className="page-content">
               
-            <button type="button" className="inventory-add-product-button" onClick={openAddModal}>
-              Add Product
-            </button>
-
-            <div className="inventory-search-row">
+            <div className="page-toolbar">
               <input
                 type="text"
-                className="inventory-search-bar"
+                className="page-toolbar-search"
                 placeholder="Search inventory..."
                 value={inventorySearchQuery}
                 onChange={(e) => setInventorySearchQuery(e.target.value)}
                 aria-label="Search inventory"
               />
+              <button type="button" className="page-toolbar-btn" onClick={openAddModal}>
+                +&nbsp; Add Product
+              </button>
             </div>
 
             <div className="inventory-table-section">

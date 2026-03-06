@@ -12,8 +12,11 @@ import { useAuth } from '../context/AuthContext';
 import { getRobotFleetStats } from '../data/inventory';
 import './Dashboard.css';
 
+const STATUS_FILTER_ORDER = ['To-Do', 'In Progress'] as const;
+type StatusFilter = typeof STATUS_FILTER_ORDER[number];
+
 const STATUS_PILL_COLORS: Record<string, string> = {
-  Unassigned: '#e5e7eb',
+  Unassigned: '#8A8F93',
   'To-Do': '#bfdbfe',
   'In Progress': '#fde68a',
   Completed: '#bbf7d0',
@@ -33,6 +36,7 @@ const Dashboard: React.FC = () => {
   const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
   const [salesData, setSalesData] = useState<SalesProductCounts | null>(null);
   const [siteActivity, setSiteActivity] = useState<SiteActivityEntry[]>([]);
+  const [taskStatusFilter, setTaskStatusFilter] = useState<StatusFilter>('To-Do');
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +152,13 @@ const Dashboard: React.FC = () => {
     }
   ];
 
+  const taskCountByStatus = STATUS_FILTER_ORDER.reduce<Record<string, number>>((acc, s) => {
+    acc[s] = dashboardTasks.filter((t) => t.status === s).length;
+    return acc;
+  }, {});
+
+  const filteredTasks = dashboardTasks.filter((t) => t.status === taskStatusFilter);
+
   const formatActivityTime = (createdAt: string) => {
     try {
       const d = new Date(createdAt);
@@ -194,9 +205,17 @@ const Dashboard: React.FC = () => {
 
               {/* div3 — Robots Online pie chart */}
               <div className="dash-robots dashboard-chart-card">
-                <h3 className="chart-title">Robots Online</h3>
+                <h3 className="chart-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/robots')}>Robots Online</h3>
+                <div className="robots-legend">
+                  {robotsData.map((item) => (
+                    <div key={item.label} className="robots-legend-item">
+                      <span className="robots-legend-dot" style={{ backgroundColor: item.color }} />
+                      <span className="robots-legend-label">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
                 <div className="robots-chart-wrapper">
-                  <PieChart data={robotsData} size={150} />
+                  <PieChart data={robotsData} size={200} />
                 </div>
               </div>
 
@@ -230,8 +249,9 @@ const Dashboard: React.FC = () => {
                     <p className="page-subtitle" style={{ margin: 0 }}>No leads</p>
                   ) : (
                     apiLeads.map((lead) => (
-                      <div key={lead.id} className="clickable-item" onClick={() => handleLeadClick(lead.id)}>
-                        {lead.company}
+                      <div key={lead.id} className="dash-list-item" onClick={() => handleLeadClick(lead.id)}>
+                        <span className="dash-list-item-primary">{lead.company}</span>
+                        <span className="dash-list-item-secondary">{lead.point_of_contact}</span>
                       </div>
                     ))
                   )}
@@ -241,29 +261,36 @@ const Dashboard: React.FC = () => {
               {/* div6 — Tasks */}
               <div className="dash-tasks dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Tasks</h3>
+                <div className="dash-tasks-filter-bar">
+                  {STATUS_FILTER_ORDER.map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      className={`dash-tasks-filter-btn ${taskStatusFilter === status ? 'active' : ''}`}
+                      onClick={() => setTaskStatusFilter(status)}
+                    >
+                      {status}
+                      <span className="dash-tasks-filter-count">{taskCountByStatus[status]}</span>
+                    </button>
+                  ))}
+                </div>
                 <div className="card-content">
-                  {dashboardTasks.length === 0 ? (
-                    <p className="page-subtitle" style={{ margin: 0 }}>No tasks assigned to you</p>
+                  {filteredTasks.length === 0 ? (
+                    <p className="page-subtitle" style={{ margin: 0 }}>No {taskStatusFilter.toLowerCase()} tasks</p>
                   ) : (
-                    dashboardTasks.map((task) => (
-                      <div key={task.id} className="clickable-item dashboard-task-item" onClick={() => handleTaskClick(task.id)}>
-                        <span className="dashboard-task-name">{task.name}</span>
-                        <div className="dashboard-task-pills">
-                          <span
-                            className="dashboard-pill"
-                            style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
-                          >
-                            {task.status}
-                          </span>
-                          {task.priority && (
+                    filteredTasks.map((task) => (
+                      <div key={task.id} className="dash-list-item" onClick={() => handleTaskClick(task.id)}>
+                        <span className="dash-list-item-primary">{task.name}</span>
+                        {task.priority && (
+                          <div className="dashboard-task-pills">
                             <span
                               className="dashboard-pill"
                               style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
                             >
                               {task.priority}
                             </span>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}

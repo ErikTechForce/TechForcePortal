@@ -5,10 +5,10 @@
 .client-search-bar {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 6px;
   font-size: 1rem;
-  color: #374151;
+  color: #1B1C1E;
   background-color: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -20,7 +20,7 @@
 }
 
 .client-search-bar::placeholder {
-  color: #9ca3af;
+  color: #8A8F93;
 }
 
 .clients-section {
@@ -39,9 +39,9 @@
     display: block;
     margin-bottom: 1rem;
     padding: 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #8A8F93;
     border-radius: 8px;
-    background: #f9fafb;
+    background: #E9ECEF;
   }
 
   .clients-table tbody tr:hover,
@@ -61,7 +61,7 @@
     content: attr(data-label);
     font-weight: 600;
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #5A708D;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: block;
@@ -72,7 +72,7 @@
 .clients-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -86,24 +86,24 @@
 }
 
 .clients-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .clients-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
 }
 
 .clients-table td {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
 }
 
 .clients-table tbody tr:last-child td {
@@ -111,7 +111,7 @@
 }
 
 .clients-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .client-button-row {
@@ -152,7 +152,7 @@
 .leads-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -166,24 +166,24 @@
 }
 
 .leads-table thead {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .leads-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #8A8F93;
 }
 
 .leads-table td {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
 }
 
 .leads-table tbody tr:last-child td {
@@ -191,12 +191,12 @@
 }
 
 .leads-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #E9ECEF;
 }
 
 .table-empty {
   text-align: center;
-  color: #9ca3af;
+  color: #8A8F93;
   font-style: italic;
   padding: 2rem !important;
 }
@@ -212,7 +212,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 1rem;
-  color: #374151;
+  color: #1B1C1E;
   cursor: pointer;
 }
 

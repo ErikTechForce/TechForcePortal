@@ -49,7 +49,13 @@ const Sidebar: React.FC = () => {
   const settingsMenuItem: MenuItem = { label: 'Settings', path: '/settings' };
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/';
+    }
+    if (path === '/client') {
+      return location.pathname.startsWith('/client') || location.pathname.startsWith('/lead');
+    }
+    return location.pathname.startsWith(path);
   };
 
   return (
@@ -75,7 +81,7 @@ const Sidebar: React.FC = () => {
       )}
       <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
         <div className="sidebar-brand">
-          <h1 className="sidebar-brand-text">TechForce Robotics Portal</h1>
+          <img src="/images/TechForceLogo-KO+Green-Horizontal.svg" alt="TechForce Robotics" className="sidebar-brand-logo" />
         </div>
         <nav className="sidebar-nav">
           <ul className="sidebar-menu">

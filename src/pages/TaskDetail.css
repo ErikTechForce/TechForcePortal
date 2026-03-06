@@ -12,7 +12,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: #1B1C1E;
   margin-bottom: 0.5rem;
 }
 
@@ -21,10 +21,10 @@
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E9ECEF;
   border-radius: 6px;
   font-size: 0.95rem;
-  color: #1f2937;
+  color: #1B1C1E;
   background-color: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
@@ -39,10 +39,10 @@
 }
 
 .form-input:disabled {
-  background-color: #f9fafb;
-  color: #6b7280;
+  background-color: #E9ECEF;
+  color: #5A708D;
   cursor: not-allowed;
-  border-color: #e5e7eb;
+  border-color: #8A8F93;
 }
 
 .form-textarea {
@@ -56,7 +56,7 @@
   justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #8A8F93;
 }
 
 .cancel-button,
@@ -72,11 +72,11 @@
 
 .cancel-button {
   background-color: #f3f4f6;
-  color: #374151;
+  color: #1B1C1E;
 }
 
 .cancel-button:hover {
-  background-color: #e5e7eb;
+  background-color: #8A8F93;
 }
 
 .update-button {
@@ -99,7 +99,7 @@
 
 .task-detail-card {
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   border-radius: 8px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
@@ -132,7 +132,7 @@
   margin-top: 2rem;
   margin-bottom: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #8A8F93;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -149,7 +149,7 @@
 .task-info-section {
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #8A8F93;
 }
 
 .task-info-section:last-of-type {
@@ -161,7 +161,7 @@
 .task-info-section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 1rem 0;
 }
 
@@ -179,7 +179,7 @@
 .task-info-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #5A708D;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -187,7 +187,7 @@
 
 .task-info-value {
   font-size: 1rem;
-  color: #1f2937;
+  color: #1B1C1E;
 }
 
 .task-info-value .form-input,
@@ -203,7 +203,7 @@
 .task-info-card .form-actions {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #8A8F93;
 }
 
 .task-detail-notes-section {
@@ -214,7 +214,7 @@
 .task-detail-notes-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #1B1C1E;
   margin: 0 0 0.75rem 0;
 }
 

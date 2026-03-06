@@ -58,7 +58,7 @@ const Pending: React.FC = () => {
 
   return (
     <div className="pending-component">
-      <h3 className="pending-header-title">Pending Orders</h3>
+      <h3 className="pending-header-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/orders')}>Pending Orders</h3>
       <div className="pending-tabs">
         <button
           className={`pending-tab ${activeTab === 'Contracts' ? 'active' : ''}`}
@@ -83,18 +83,15 @@ const Pending: React.FC = () => {
         </button>
       </div>
       <div className="pending-content">
-        <h3 className="pending-title">
-          Pending <span className="pending-title-count">({getCountForTab(activeTab)})</span>
-        </h3>
         <div className="pending-companies-list">
           {currentCompanies.map((order) => (
             <div
               key={order.id}
-              className="pending-company-item"
+              className="dash-list-item"
               onClick={() => handleCompanyClick(order.orderNumber)}
             >
-              <span className="company-name">{order.companyName}</span>
-              <span className={`company-employee ${!order.employee ? 'unassigned' : ''}`}>
+              <span className="dash-list-item-primary">{order.companyName}</span>
+              <span className={`dash-list-item-secondary ${!order.employee ? 'unassigned' : ''}`}>
                 {order.employee || 'unassigned'}
               </span>
             </div>

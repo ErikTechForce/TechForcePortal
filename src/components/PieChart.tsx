@@ -106,7 +106,9 @@ const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
           }}
         >
           <div className="tooltip-label">{data[hoveredSlice].label}</div>
-          <div className="tooltip-value">{data[hoveredSlice].value} robots</div>
+          <div className="tooltip-value">
+            {Math.round((data[hoveredSlice].value / total) * 100)}% ({data[hoveredSlice].value} robots)
+          </div>
         </div>
       )}
     </div>

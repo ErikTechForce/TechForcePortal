@@ -184,20 +184,17 @@ const Client: React.FC = () => {
 
           <div className="page-content">
 
-            <div className="client-search-row">
+            <div className="page-toolbar">
               <input
                 type="text"
-                className="client-search-bar"
-                placeholder="Search clients..."
+                className="page-toolbar-search"
+                placeholder="Search clients and leads..."
                 value={clientSearchQuery}
                 onChange={(e) => setClientSearchQuery(e.target.value)}
                 aria-label="Search clients and leads"
               />
-            </div>
-
-            <div className="client-button-row client-button-row--top">
-              <button type="button" className="add-client-button" onClick={openAddModal}>
-                + Add Client
+              <button type="button" className="page-toolbar-btn" onClick={openAddModal}>
+                +&nbsp; Add Client
               </button>
             </div>
 
