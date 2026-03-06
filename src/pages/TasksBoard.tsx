@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import { useAuth } from '../context/AuthContext';
 import { fetchTasks, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
@@ -206,10 +207,12 @@ const TasksBoard: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
-          <div className="page-content">
-            <h2 className="page-title">Tasks Board</h2>
-            <p className="page-subtitle">Manage and track your tasks</p>
 
+          <div>
+            <PageHeader title="Tasks Board" subtitle="Manage and track your tasks" />
+          </div>
+          
+          <div className="page-content">
             {!user ? (
               <p className="page-subtitle">Log in to view and manage tasks.</p>
             ) : error ? (

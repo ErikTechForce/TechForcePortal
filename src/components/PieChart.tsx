@@ -21,7 +21,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
   if (total === 0) {
     return (
       <div className="pie-chart-container" style={{ width: size, height: size }}>
-        <div className="pie-chart-empty">No data</div>
+        <p className="pie-chart-empty">No data</p>
       </div>
     );
   }

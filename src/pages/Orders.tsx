@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import { fetchOrders, type OrderRow } from '../api/orderApi';
 import { fetchClients } from '../api/clients';
 import './Page.css';
@@ -121,16 +122,16 @@ const Orders: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+
+          <div>
+            <PageHeader title="Orders" subtitle="Manage and track all orders" />
+          </div>
+
           <div className="page-content">
-            <div className="orders-page-header">
-              <div>
-                <h2 className="page-title">Orders</h2>
-                <p className="page-subtitle">Manage and track all orders</p>
-              </div>
-              <button type="button" className="orders-create-button" onClick={handleCreateOrder}>
-                Create New Order
-              </button>
-            </div>
+
+            <button type="button" className="orders-create-button" onClick={handleCreateOrder}>
+              + Create New Order
+            </button>
 
             {loading ? (
               <p className="page-subtitle">Loading orders...</p>

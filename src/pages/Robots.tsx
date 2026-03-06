@@ -1,5 +1,6 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import PieChart from '../components/PieChart';
 import { getRobotFleetStats } from '../data/inventory';
 import './Page.css';
@@ -37,9 +38,12 @@ const Robots: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          
+          <div>
+            <PageHeader title="Robots" subtitle="Manage robot fleet and configurations" />
+          </div>
+
           <div className="page-content">
-            <h2 className="page-title">Robots</h2>
-            <p className="page-subtitle">Manage robot fleet and configurations</p>
             
             <div className="robots-stats-row">
               <div className="pie-chart-wrapper">

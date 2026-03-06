@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClients, createClient, type ClientRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
@@ -176,9 +177,12 @@ const Client: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          
+          <div>
+            <PageHeader title="Client" subtitle="Manage client information and relationships" />
+          </div>
+
           <div className="page-content">
-            <h2 className="page-title">Client</h2>
-            <p className="page-subtitle">Manage client information and relationships</p>
 
             <div className="client-search-row">
               <input

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
@@ -133,17 +134,17 @@ const Dashboard: React.FC = () => {
     {
       label: 'Deployed',
       value: robotStats.deployed,
-      color: '#4ade80'
+      color: '#73BF43'
     },
     {
       label: 'In Storage',
       value: robotStats.inStorage,
-      color: '#6b7280'
+      color: '#8A8F93'
     },
     {
       label: 'In Need of Maintenance',
       value: robotStats.needsMaintenance,
-      color: '#dc2626'
+      color: '#E48B52'
     }
   ];
 
@@ -170,45 +171,75 @@ const Dashboard: React.FC = () => {
       <div className="dashboard-layout">
         <Sidebar />
         <main className="dashboard-main">
+
+          <div>
+            <PageHeader
+              title={`Hello, ${user?.username ?? 'there'}!`}
+              subtitle="Welcome to TechForce Robotics Company Portal"
+            />
+          </div>
+
           <div className="dashboard-content">
-            <h2 className="dashboard-title">Dashboard</h2>
-            <p className="dashboard-subtitle">Welcome to TechForce Robotics Company Portal</p>
-            
-            <div className="dashboard-charts-row">
-              <div className="dashboard-chart-card">
+            <div className="dashboard-grid">
+
+              {/* div1 — Pending chart */}
+              <div className="dash-pending">
                 <Pending />
               </div>
-              <div className="dashboard-chart-card">
+
+              {/* div2 — Sales chart */}
+              <div className="dash-sales dashboard-chart-card">
                 <SalesChart productData={salesProductData} totalData={salesTotalData} />
               </div>
-              <div className="dashboard-chart-card">
+
+              {/* div3 — Robots Online pie chart */}
+              <div className="dash-robots dashboard-chart-card">
                 <h3 className="chart-title">Robots Online</h3>
                 <div className="robots-chart-wrapper">
                   <PieChart data={robotsData} size={150} />
                 </div>
               </div>
-            </div>
-            
-            <div className="dashboard-cards">
-              <div className="dashboard-card">
+
+              {/* div4 — Activity Log */}
+              <div className="dash-activity">
+                <h3 className="activity-log-title">Activity Log</h3>
+                <div className="activity-log-content">
+                  <div className="activity-log-list">
+                    {siteActivity.length === 0 ? (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    ) : (
+                      siteActivity.map((entry) => (
+                        <div key={entry.id} className="activity-log-item">
+                          <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
+                          {entry.action}
+                          {entry.user && entry.user !== 'System' && (
+                            <span className="activity-log-user"> — {entry.user}</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* div5 — Leads */}
+              <div className="dash-leads dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
                   {apiLeads.length === 0 ? (
                     <p className="page-subtitle" style={{ margin: 0 }}>No leads</p>
                   ) : (
                     apiLeads.map((lead) => (
-                      <div
-                        key={lead.id}
-                        className="clickable-item"
-                        onClick={() => handleLeadClick(lead.id)}
-                      >
+                      <div key={lead.id} className="clickable-item" onClick={() => handleLeadClick(lead.id)}>
                         {lead.company}
                       </div>
                     ))
                   )}
                 </div>
               </div>
-              <div className="dashboard-card">
+
+              {/* div6 — Tasks */}
+              <div className="dash-tasks dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Tasks</h3>
                 <div className="card-content">
                   {dashboardTasks.length === 0 ? (
@@ -238,27 +269,7 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className="activity-log-section">
-              <h3 className="activity-log-title">Activity Log</h3>
-              <div className="activity-log-content">
-                <div className="activity-log-list">
-                  {siteActivity.length === 0 ? (
-                    <p className="activity-log-empty">No activity recorded yet.</p>
-                  ) : (
-                    siteActivity.map((entry) => (
-                      <div key={entry.id} className="activity-log-item">
-                        <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
-                        {entry.action}
-                        {entry.user && entry.user !== 'System' && (
-                          <span className="activity-log-user"> — {entry.user}</span>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </main>

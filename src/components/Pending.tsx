@@ -58,27 +58,28 @@ const Pending: React.FC = () => {
 
   return (
     <div className="pending-component">
+      <h3 className="pending-header-title">Pending Orders</h3>
       <div className="pending-tabs">
         <button
           className={`pending-tab ${activeTab === 'Contracts' ? 'active' : ''}`}
           onClick={() => setActiveTab('Contracts')}
         >
           Contracts
-          <span className="pending-count">({getCountForTab('Contracts')})</span>
+          <span className="pending-count">{getCountForTab('Contracts')}</span>
         </button>
         <button
           className={`pending-tab ${activeTab === 'Inventory' ? 'active' : ''}`}
           onClick={() => setActiveTab('Inventory')}
         >
           Invoice
-          <span className="pending-count">({getCountForTab('Inventory')})</span>
+          <span className="pending-count">{getCountForTab('Inventory')}</span>
         </button>
         <button
           className={`pending-tab ${activeTab === 'Installation' ? 'active' : ''}`}
           onClick={() => setActiveTab('Installation')}
         >
           Installation
-          <span className="pending-count">({getCountForTab('Installation')})</span>
+          <span className="pending-count">{getCountForTab('Installation')}</span>
         </button>
       </div>
       <div className="pending-content">

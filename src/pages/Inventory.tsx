@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import {
   getInventoryProducts,
   getProductAvailabilityAndInUse,
@@ -215,16 +216,16 @@ const Inventory: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+
+          <div>
+            <PageHeader title="Inventory" subtitle="Track and manage inventory items" />
+          </div>
+
           <div className="page-content">
-            <div className="inventory-header-row">
-              <div>
-                <h2 className="page-title">Inventory</h2>
-                <p className="page-subtitle">Track and manage inventory items</p>
-              </div>
-              <button type="button" className="inventory-add-product-button" onClick={openAddModal}>
-                Add Product
-              </button>
-            </div>
+              
+            <button type="button" className="inventory-add-product-button" onClick={openAddModal}>
+              Add Product
+            </button>
 
             <div className="inventory-search-row">
               <input

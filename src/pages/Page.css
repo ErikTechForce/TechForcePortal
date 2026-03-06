@@ -1,7 +1,9 @@
 .page-container {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   background: #FAF7F2;
+  overflow-x: hidden;
 }
 
 .page-layout {
@@ -14,7 +16,8 @@
   flex: 1;
   margin-left: 250px;
   padding: 2rem;
-  min-height: 100vh;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 .page-content {
@@ -22,6 +25,7 @@
   border-radius: 8px;
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
@@ -29,14 +33,12 @@
     margin-left: 0;
     padding: 1rem;
     padding-top: calc(3.5rem + 1rem);
-    overflow-x: hidden;
     max-width: 100%;
   }
 
   .page-content {
     padding: 1rem;
     max-width: 100%;
-    overflow-x: hidden;
   }
 
   .page-title {

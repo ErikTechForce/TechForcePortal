@@ -1,28 +1,28 @@
 .sales-chart {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   height: 100%;
 }
 
-.sales-chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.sales-chart .chart-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #2A425F;
+  margin: 0;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
 }
 
 .sales-chart-toggles {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .view-toggle {
@@ -99,7 +99,8 @@
   margin-top: 0.5rem;
   overflow: visible;
   width: 100%;
-  padding: 0 0.25rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .bar-label {

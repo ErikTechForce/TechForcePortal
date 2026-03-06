@@ -36,7 +36,7 @@ h4, label {
   font-weight: 500; /* Medium */
 }
 
-p, input, textarea {
+p, span, input, text, textarea {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 400; /* Regular */
@@ -48,8 +48,14 @@ button, a, link {
 }
 
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
