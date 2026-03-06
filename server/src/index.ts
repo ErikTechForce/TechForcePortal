@@ -1453,6 +1453,63 @@ app.get('/api/clients/:id/invoices', async (req, res) => {
   }
 });
 
+// GET /api/clients/:id/notes — notes table for client (user, date/time, note)
+app.get('/api/clients/:id/notes', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const result = await pool.query(
+      `SELECT n.id, n.client_id, n.user_id, n.note, n.created_at,
+              u.username AS submitted_by
+       FROM client_notes n
+       LEFT JOIN users u ON u.id = n.user_id
+       WHERE n.client_id = $1
+       ORDER BY n.created_at DESC`,
+      [id]
+    );
+    res.json({ notes: result.rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch notes.' });
+  }
+});
+
+// POST /api/clients/:id/notes — add a note (body: { note: string, user_id: number })
+app.post('/api/clients/:id/notes', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const body = req.body as { note?: string; user_id?: number };
+    const note = typeof body.note === 'string' ? body.note.trim() : '';
+    if (!note) return res.status(400).json({ error: 'note is required.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const user_id = body.user_id != null && Number.isInteger(body.user_id) && body.user_id > 0 ? body.user_id : null;
+    const insert = await pool.query(
+      `INSERT INTO client_notes (client_id, user_id, note) VALUES ($1, $2, $3)
+       RETURNING id, client_id, user_id, note, created_at`,
+      [id, user_id, note]
+    );
+    const row = insert.rows[0] as { id: number; user_id: number | null; created_at: string };
+    const username = user_id
+      ? (await pool.query('SELECT username FROM users WHERE id = $1', [user_id]).then(r => (r.rows[0] as { username?: string } | undefined)?.username ?? null))
+      : null;
+    res.status(201).json({
+      id: row.id,
+      client_id: id,
+      user_id: row.user_id,
+      submitted_by: username,
+      note,
+      created_at: row.created_at,
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to add note.' });
+  }
+});
+
 // GET /api/orders/:orderNumber/activity-log — activity log for this order (one log per order, persisted)
 app.get('/api/orders/:orderNumber/activity-log', async (req, res) => {
   try {

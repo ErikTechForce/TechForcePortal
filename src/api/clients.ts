@@ -63,6 +63,15 @@ export interface InvoiceRow {
   updated_at: string;
 }
 
+export interface ClientNoteRow {
+  id: number;
+  client_id: number;
+  user_id: number | null;
+  submitted_by: string | null;
+  note: string;
+  created_at: string;
+}
+
 export async function fetchClients(type?: 'client' | 'lead', assignedToUserId?: number): Promise<ClientRow[]> {
   const params = new URLSearchParams();
   if (type) params.set('type', type);
@@ -100,6 +109,24 @@ export async function fetchClientInvoices(clientId: number): Promise<InvoiceRow[
   if (!res.ok) throw new Error('Failed to fetch invoices');
   const data = await res.json();
   return data.invoices || [];
+}
+
+export async function fetchClientNotes(clientId: number): Promise<ClientNoteRow[]> {
+  const res = await fetch(`${API_BASE}/api/clients/${clientId}/notes`);
+  if (!res.ok) throw new Error('Failed to fetch notes');
+  const data = await res.json();
+  return data.notes || [];
+}
+
+export async function createClientNote(clientId: number, note: string, userId: number): Promise<ClientNoteRow> {
+  const res = await fetch(`${API_BASE}/api/clients/${clientId}/notes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note, user_id: userId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to add note');
+  return data;
 }
 
 export interface CreateClientPayload {

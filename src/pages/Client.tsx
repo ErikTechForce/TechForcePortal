@@ -436,7 +436,7 @@ const Client: React.FC = () => {
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   rows={3}
-                  placeholder="Additional notes..."
+                  placeholder="Notes..."
                 />
               </div>
 

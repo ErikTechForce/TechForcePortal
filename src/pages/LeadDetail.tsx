@@ -200,7 +200,7 @@ const LeadDetail: React.FC = () => {
               </div>
 
               <div className="form-section">
-                <h3 className="section-title">Additional Notes</h3>
+                <h3 className="section-title">Notes</h3>
                 <div className="form-group">
                   <label htmlFor="notes" className="form-label">Notes</label>
                   <textarea
@@ -209,7 +209,7 @@ const LeadDetail: React.FC = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
-                    placeholder="Enter any additional notes or comments about this lead..."
+                    placeholder="Enter any notes or comments about this lead..."
                   />
                 </div>
               </div>

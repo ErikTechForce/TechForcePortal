@@ -48,9 +48,25 @@ interface ContractFormData {
   totalMonthlyCost?: string;
   implementationCostDue?: string;
   techForceSignature?: string;
+  scopeText?: string;
+  qtyBinsTrial?: string;
+  qtyBasesTrial?: string;
 }
 
 type Placement = { x: number; y: number; fontSize?: number; width?: number; height?: number; pageIndex?: number };
+
+/** Convert number to spelled-out word for contract (0–99). */
+function numberToWords(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 99) return '';
+  const ones = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  if (n < 20) return ones[n];
+  const t = Math.floor(n / 10);
+  const o = n % 10;
+  return tens[t] + (o ? '-' + ones[o] : '');
+}
+
+const SPELLED_OUT_OFFSET = 15;
 
 // Page 1 height = 792 pt (letter). Y from bottom: higher = higher on page. Right column for all fill-in values.
 // Line spacing ~16pt. Effective date top-right; then client block; then financial; then Qty numbers in same column.
@@ -103,9 +119,30 @@ const TEXT_PLACEMENTS: Record<string, Placement> = {
   implementationCostPage2: { x: 281, y: 429, fontSize: 10, pageIndex: 1 },
   totalMonthlyCost: { x: 281, y: 391, fontSize: 10, pageIndex: 1 },
   implementationCostDue: { x: 281, y: 314, fontSize: 10, pageIndex: 1 },
-  techforceSignature: { x: 100, y: 105, width: 180, height: 54, pageIndex: 1 },
-  /** Client signature on last page, right side */
-  clientSignatureLastPage: { x: 340, y: 105, width: 180, height: 54, pageIndex: 1 },
+  techforceSignature: { x: 100, y: 105, width: 180, height: 54, pageIndex: 4 },
+  /** Client signature on page 5, right side */
+  clientSignatureLastPage: { x: 340, y: 105, width: 180, height: 54, pageIndex: 4 },
+};
+
+/** Trial agreement: same coordinates as OrderDetail (generated contract) so client-signed PDF matches. */
+const TRIAL_TEXT_PLACEMENTS: Record<string, Placement> = {
+  effectiveDate: { x: 498, y: 615, fontSize: 10 },
+  businessName: { x: 213, y: 560, fontSize: 10 },
+  serviceAddress: { x: 213, y: 527, fontSize: 10 },
+  cityStateZip: { x: 213, y: 502, fontSize: 10 },
+  locationContactNamePhone: { x: 213, y: 472, fontSize: 10 },
+  locationContactEmail: { x: 213, y: 441, fontSize: 10 },
+  authorizedPersonName: { x: 213, y: 407, fontSize: 10 },
+  authorizedPersonTitle: { x: 213, y: 378, fontSize: 10 },
+  authorizedPersonEmail: { x: 213, y: 350, fontSize: 10 },
+  authorizedPersonPhone: { x: 213, y: 305, fontSize: 10 },
+  qtyTimEBot: { x: 317, y: 681, fontSize: 10, pageIndex: 1 },
+  qtyBinsTrial: { x: 480, y: 681, fontSize: 10, pageIndex: 1 },
+  qtyBasesTrial: { x: 135, y: 666, fontSize: 10, pageIndex: 1 },
+  qtyBIME: { x: 404, y: 666, fontSize: 10, pageIndex: 1 },
+  scopeText: { x: 100, y: 580, fontSize: 9, pageIndex: 1 },
+  techforceSignature: { x: 110, y: 360, width: 180, height: 54, pageIndex: 5 },
+  clientSignatureLastPage: { x: 340, y: 360, width: 180, height: 54, pageIndex: 5 },
 };
 
 const Contract: React.FC = () => {
@@ -183,11 +220,12 @@ const Contract: React.FC = () => {
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
         const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const placements = contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS;
 
-        const placeText = (key: keyof typeof TEXT_PLACEMENTS, value: string | undefined) => {
-          const placement = TEXT_PLACEMENTS[key];
+        const placeText = (key: string, value: string | undefined) => {
+          const placement = placements[key];
           if (!placement || !('fontSize' in placement)) return;
-          const text = String(value ?? '');
+          const text = String(value ?? '').trim();
           if (!text) return;
           const pageIndex = placement.pageIndex ?? 0;
           const page = pages[pageIndex] ?? firstPage;
@@ -200,60 +238,122 @@ const Contract: React.FC = () => {
           });
         };
 
-        placeText('effectiveDate', formData.effectiveDate);
-        placeText('businessName', formData.businessName);
-        placeText('serviceAddress', formData.serviceAddress);
-        placeText('cityStateZip', formData.cityStateZip);
-        placeText('locationContactNamePhone', formData.locationContactNamePhone);
-        placeText('locationContactEmail', formData.locationContactEmail);
-        placeText('authorizedPersonName', formData.authorizedPersonName);
-        placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
-        placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
-        placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
-        placeText('termStartDate', formData.termStartDate);
-        placeText('implementationCost', formData.implementationCost);
-        placeText('shippingFee', formData.shippingFee);
-        placeText('qtyTimEBot', formData.qtyTimEBot);
-        placeText('qtyTimECharger', formData.qtyTimECharger);
-        placeText('qtyBaseMetalMonthly', formData.qtyBaseMetalMonthly);
-        placeText('qtyInsulatedFoodTransportMonthly', formData.qtyInsulatedFoodTransportMonthly);
-        placeText('qtyWheeledBinMonthly', formData.qtyWheeledBinMonthly);
-        placeText('qtyUniversalPlatformMonthly', formData.qtyUniversalPlatformMonthly);
-        placeText('qtyDoorOpenersMonthly', formData.qtyDoorOpenersMonthly);
-        placeText('qtyNeuralTechBrainMonthly', formData.qtyNeuralTechBrainMonthly);
-        placeText('qtyElevatorHardwareMonthly', formData.qtyElevatorHardwareMonthly);
-        placeText('qtyLuggageCartMonthly', formData.qtyLuggageCartMonthly);
-        placeText('qtyConcessionBinTall', formData.qtyConcessionBinTall);
-        placeText('qtyStackingChairCart', formData.qtyStackingChairCart);
-        placeText('qtyCargoCart', formData.qtyCargoCart);
-        placeText('qtyHousekeepingCart', formData.qtyHousekeepingCart);
-        placeText('qtyBIME', formData.qtyBIME);
-        placeText('qtyMobileBIME', formData.qtyMobileBIME);
-        placeText('monthlyRoboticServiceCost', formData.monthlyRoboticServiceCost);
-        placeText('qtyBaseMetalOneTime', formData.qtyBaseMetalOneTime);
-        placeText('qtyInsulatedFoodTransportOneTime', formData.qtyInsulatedFoodTransportOneTime);
-        placeText('qtyWheeledBinOneTime', formData.qtyWheeledBinOneTime);
-        placeText('qtyUniversalPlatformOneTime', formData.qtyUniversalPlatformOneTime);
-        placeText('qtyPlasticBags', formData.qtyPlasticBags);
-        placeText('qtyDoorOpenerHardwareOneTime', formData.qtyDoorOpenerHardwareOneTime);
-        placeText('qtyHandheldTablet', formData.qtyHandheldTablet);
-        placeText('additionalAccessoriesCost', formData.additionalAccessoriesCost);
-        placeText('implementationCostPage2', formData.implementationCost);
-        placeText('totalMonthlyCost', formData.totalMonthlyCost);
-        placeText('implementationCostDue', formData.implementationCostDue);
+        const placeQuantityWithSpelledOut = (key: string, value: string | undefined) => {
+          const placement = placements[key];
+          if (!placement || !('fontSize' in placement)) return;
+          const text = String(value ?? '').trim();
+          if (!text) return;
+          const pageIndex = placement.pageIndex ?? 0;
+          const page = pages[pageIndex] ?? firstPage;
+          page.drawText(text, {
+            x: placement.x,
+            y: placement.y,
+            size: placement.fontSize ?? 10,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+          const num = parseInt(text, 10);
+          if (!Number.isNaN(num)) {
+            const word = numberToWords(num);
+            if (word) {
+              page.drawText(word, {
+                x: placement.x + SPELLED_OUT_OFFSET,
+                y: placement.y,
+                size: placement.fontSize ?? 10,
+                font: helveticaFont,
+                color: rgb(0, 0, 0),
+              });
+            }
+          }
+        };
+
+        if (contractType === 'trial') {
+          placeText('effectiveDate', formData.effectiveDate);
+          placeText('businessName', formData.businessName);
+          placeText('serviceAddress', formData.serviceAddress);
+          placeText('cityStateZip', formData.cityStateZip);
+          placeText('locationContactNamePhone', formData.locationContactNamePhone);
+          placeText('locationContactEmail', formData.locationContactEmail);
+          placeText('authorizedPersonName', formData.authorizedPersonName);
+          placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
+          placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
+          placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
+          placeQuantityWithSpelledOut('qtyTimEBot', formData.qtyTimEBot);
+          placeQuantityWithSpelledOut('qtyBinsTrial', formData.qtyBinsTrial);
+          placeQuantityWithSpelledOut('qtyBasesTrial', formData.qtyBasesTrial);
+          placeQuantityWithSpelledOut('qtyBIME', formData.qtyBIME);
+          if (formData.scopeText) {
+            const scopePlacement = TRIAL_TEXT_PLACEMENTS.scopeText;
+            if (scopePlacement && scopePlacement.fontSize) {
+              const lines = formData.scopeText.split(/\r?\n/).filter(Boolean);
+              const lineHeight = (scopePlacement.fontSize ?? 9) + 2;
+              const page = pages[scopePlacement.pageIndex ?? 0] ?? firstPage;
+              let y = scopePlacement.y;
+              for (const line of lines.slice(0, 20)) {
+                if (y < 50) break;
+                page.drawText(line.slice(0, 80), {
+                  x: scopePlacement.x,
+                  y,
+                  size: scopePlacement.fontSize ?? 9,
+                  font: helveticaFont,
+                  color: rgb(0, 0, 0),
+                });
+                y -= lineHeight;
+              }
+            }
+          }
+        } else {
+          placeText('effectiveDate', formData.effectiveDate);
+          placeText('businessName', formData.businessName);
+          placeText('serviceAddress', formData.serviceAddress);
+          placeText('cityStateZip', formData.cityStateZip);
+          placeText('locationContactNamePhone', formData.locationContactNamePhone);
+          placeText('locationContactEmail', formData.locationContactEmail);
+          placeText('authorizedPersonName', formData.authorizedPersonName);
+          placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
+          placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
+          placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
+          placeText('termStartDate', formData.termStartDate);
+          placeText('implementationCost', formData.implementationCost);
+          placeText('shippingFee', formData.shippingFee);
+          placeText('qtyTimEBot', formData.qtyTimEBot);
+          placeText('qtyTimECharger', formData.qtyTimECharger);
+          placeText('qtyBaseMetalMonthly', formData.qtyBaseMetalMonthly);
+          placeText('qtyInsulatedFoodTransportMonthly', formData.qtyInsulatedFoodTransportMonthly);
+          placeText('qtyWheeledBinMonthly', formData.qtyWheeledBinMonthly);
+          placeText('qtyUniversalPlatformMonthly', formData.qtyUniversalPlatformMonthly);
+          placeText('qtyDoorOpenersMonthly', formData.qtyDoorOpenersMonthly);
+          placeText('qtyNeuralTechBrainMonthly', formData.qtyNeuralTechBrainMonthly);
+          placeText('qtyElevatorHardwareMonthly', formData.qtyElevatorHardwareMonthly);
+          placeText('qtyLuggageCartMonthly', formData.qtyLuggageCartMonthly);
+          placeText('qtyConcessionBinTall', formData.qtyConcessionBinTall);
+          placeText('qtyStackingChairCart', formData.qtyStackingChairCart);
+          placeText('qtyCargoCart', formData.qtyCargoCart);
+          placeText('qtyHousekeepingCart', formData.qtyHousekeepingCart);
+          placeText('qtyBIME', formData.qtyBIME);
+          placeText('qtyMobileBIME', formData.qtyMobileBIME);
+          placeText('monthlyRoboticServiceCost', formData.monthlyRoboticServiceCost);
+          placeText('qtyBaseMetalOneTime', formData.qtyBaseMetalOneTime);
+          placeText('qtyInsulatedFoodTransportOneTime', formData.qtyInsulatedFoodTransportOneTime);
+          placeText('qtyWheeledBinOneTime', formData.qtyWheeledBinOneTime);
+          placeText('qtyUniversalPlatformOneTime', formData.qtyUniversalPlatformOneTime);
+          placeText('qtyPlasticBags', formData.qtyPlasticBags);
+          placeText('qtyDoorOpenerHardwareOneTime', formData.qtyDoorOpenerHardwareOneTime);
+          placeText('qtyHandheldTablet', formData.qtyHandheldTablet);
+          placeText('additionalAccessoriesCost', formData.additionalAccessoriesCost);
+          placeText('implementationCostPage2', formData.implementationCost);
+          placeText('totalMonthlyCost', formData.totalMonthlyCost);
+          placeText('implementationCostDue', formData.implementationCostDue);
+        }
 
         if (formData.techForceSignature) {
           const lastPage = pages[pages.length - 1];
-          const placement = TEXT_PLACEMENTS.techforceSignature as { x: number; y: number; width?: number; height?: number } | undefined;
+          const placement = (contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS).techforceSignature as { x: number; y: number; width?: number; height?: number; pageIndex?: number } | undefined;
           if (lastPage && placement && placement.width) {
             const imageBytes = await fetch(formData.techForceSignature).then((r) => r.arrayBuffer());
             const img = await pdfDoc.embedPng(imageBytes);
-            lastPage.drawImage(img, {
-              x: placement.x,
-              y: placement.y,
-              width: placement.width ?? 180,
-              height: placement.height ?? 54,
-            });
+            const sigPage = placement.pageIndex !== undefined ? pages[placement.pageIndex] : lastPage;
+            if (sigPage) sigPage.drawImage(img, { x: placement.x, y: placement.y, width: placement.width ?? 180, height: placement.height ?? 54 });
           }
         }
 
@@ -267,7 +367,7 @@ const Contract: React.FC = () => {
       }
     };
     run();
-  }, [formData, pdfUrl]);
+  }, [formData, pdfUrl, contractType]);
 
   useEffect(() => {
     return () => {
@@ -332,12 +432,14 @@ const Contract: React.FC = () => {
       const firstPage = pages[0];
       const lastPage = pages[pages.length - 1];
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const placements = contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS;
+      const clientSigPlacement = (contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS).clientSignatureLastPage as { x: number; y: number; width?: number; height?: number; pageIndex?: number };
 
       if (formData) {
-        const placeText = (key: keyof typeof TEXT_PLACEMENTS, value: string | undefined) => {
-          const placement = TEXT_PLACEMENTS[key];
+        const placeText = (key: string, value: string | undefined) => {
+          const placement = placements[key];
           if (!placement || !('fontSize' in placement)) return;
-          const text = String(value ?? '');
+          const text = String(value ?? '').trim();
           if (!text) return;
           const pageIndex = placement.pageIndex ?? 0;
           const page = pages[pageIndex] ?? firstPage;
@@ -349,75 +451,132 @@ const Contract: React.FC = () => {
             color: rgb(0, 0, 0),
           });
         };
-        placeText('effectiveDate', formData.effectiveDate);
-        placeText('businessName', formData.businessName);
-        placeText('serviceAddress', formData.serviceAddress);
-        placeText('cityStateZip', formData.cityStateZip);
-        placeText('locationContactNamePhone', formData.locationContactNamePhone);
-        placeText('locationContactEmail', formData.locationContactEmail);
-        placeText('billingEntity', billingEntity);
-        const billingCityStateZipLine = [billingAddress, [billingCity, [billingState, billingZip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
-        placeText('billingCityStateZip', billingCityStateZipLine);
-        placeText('billingContactNamePhone', `${billingContactName} ${billingContactPhone}`.trim());
-        placeText('billingContactEmail', billingContactEmail);
-        placeText('authorizedPersonName', formData.authorizedPersonName);
-        placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
-        placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
-        placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
-        placeText('termStartDate', formData.termStartDate);
-        placeText('implementationCost', formData.implementationCost);
-        placeText('shippingFee', formData.shippingFee);
-        placeText('qtyTimEBot', formData.qtyTimEBot);
-        placeText('qtyTimECharger', formData.qtyTimECharger);
-        placeText('qtyBaseMetalMonthly', formData.qtyBaseMetalMonthly);
-        placeText('qtyInsulatedFoodTransportMonthly', formData.qtyInsulatedFoodTransportMonthly);
-        placeText('qtyWheeledBinMonthly', formData.qtyWheeledBinMonthly);
-        placeText('qtyUniversalPlatformMonthly', formData.qtyUniversalPlatformMonthly);
-        placeText('qtyDoorOpenersMonthly', formData.qtyDoorOpenersMonthly);
-        placeText('qtyNeuralTechBrainMonthly', formData.qtyNeuralTechBrainMonthly);
-        placeText('qtyElevatorHardwareMonthly', formData.qtyElevatorHardwareMonthly);
-        placeText('qtyLuggageCartMonthly', formData.qtyLuggageCartMonthly);
-        placeText('qtyConcessionBinTall', formData.qtyConcessionBinTall);
-        placeText('qtyStackingChairCart', formData.qtyStackingChairCart);
-        placeText('qtyCargoCart', formData.qtyCargoCart);
-        placeText('qtyHousekeepingCart', formData.qtyHousekeepingCart);
-        placeText('qtyBIME', formData.qtyBIME);
-        placeText('qtyMobileBIME', formData.qtyMobileBIME);
-        placeText('monthlyRoboticServiceCost', formData.monthlyRoboticServiceCost);
-        placeText('qtyBaseMetalOneTime', formData.qtyBaseMetalOneTime);
-        placeText('qtyInsulatedFoodTransportOneTime', formData.qtyInsulatedFoodTransportOneTime);
-        placeText('qtyWheeledBinOneTime', formData.qtyWheeledBinOneTime);
-        placeText('qtyUniversalPlatformOneTime', formData.qtyUniversalPlatformOneTime);
-        placeText('qtyPlasticBags', formData.qtyPlasticBags);
-        placeText('qtyDoorOpenerHardwareOneTime', formData.qtyDoorOpenerHardwareOneTime);
-        placeText('qtyHandheldTablet', formData.qtyHandheldTablet);
-        placeText('additionalAccessoriesCost', formData.additionalAccessoriesCost);
-        placeText('implementationCostPage2', formData.implementationCost);
-        placeText('totalMonthlyCost', formData.totalMonthlyCost);
-        placeText('implementationCostDue', formData.implementationCostDue);
+        const placeQuantityWithSpelledOut = (key: string, value: string | undefined) => {
+          const placement = placements[key];
+          if (!placement || !('fontSize' in placement)) return;
+          const text = String(value ?? '').trim();
+          if (!text) return;
+          const pageIndex = placement.pageIndex ?? 0;
+          const page = pages[pageIndex] ?? firstPage;
+          page.drawText(text, {
+            x: placement.x,
+            y: placement.y,
+            size: placement.fontSize ?? 10,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+          const num = parseInt(text, 10);
+          if (!Number.isNaN(num)) {
+            const word = numberToWords(num);
+            if (word) {
+              page.drawText(word, {
+                x: placement.x + SPELLED_OUT_OFFSET,
+                y: placement.y,
+                size: placement.fontSize ?? 10,
+                font: helveticaFont,
+                color: rgb(0, 0, 0),
+              });
+            }
+          }
+        };
+        if (contractType === 'trial') {
+          placeText('effectiveDate', formData.effectiveDate);
+          placeText('businessName', formData.businessName);
+          placeText('serviceAddress', formData.serviceAddress);
+          placeText('cityStateZip', formData.cityStateZip);
+          placeText('locationContactNamePhone', formData.locationContactNamePhone);
+          placeText('locationContactEmail', formData.locationContactEmail);
+          placeText('authorizedPersonName', formData.authorizedPersonName);
+          placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
+          placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
+          placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
+          placeQuantityWithSpelledOut('qtyTimEBot', formData.qtyTimEBot);
+          placeQuantityWithSpelledOut('qtyBinsTrial', formData.qtyBinsTrial);
+          placeQuantityWithSpelledOut('qtyBasesTrial', formData.qtyBasesTrial);
+          placeQuantityWithSpelledOut('qtyBIME', formData.qtyBIME);
+          if (formData.scopeText) {
+            const scopePlacement = TRIAL_TEXT_PLACEMENTS.scopeText;
+            if (scopePlacement && scopePlacement.fontSize) {
+              const lines = formData.scopeText.split(/\r?\n/).filter(Boolean);
+              const lineHeight = (scopePlacement.fontSize ?? 9) + 2;
+              const page = pages[scopePlacement.pageIndex ?? 0] ?? firstPage;
+              let y = scopePlacement.y;
+              for (const line of lines.slice(0, 20)) {
+                if (y < 50) break;
+                page.drawText(line.slice(0, 80), { x: scopePlacement.x, y, size: scopePlacement.fontSize ?? 9, font: helveticaFont, color: rgb(0, 0, 0) });
+                y -= lineHeight;
+              }
+            }
+          }
+        } else {
+          placeText('effectiveDate', formData.effectiveDate);
+          placeText('businessName', formData.businessName);
+          placeText('serviceAddress', formData.serviceAddress);
+          placeText('cityStateZip', formData.cityStateZip);
+          placeText('locationContactNamePhone', formData.locationContactNamePhone);
+          placeText('locationContactEmail', formData.locationContactEmail);
+          placeText('billingEntity', billingEntity);
+          const billingCityStateZipLine = [billingAddress, [billingCity, [billingState, billingZip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+          placeText('billingCityStateZip', billingCityStateZipLine);
+          placeText('billingContactNamePhone', `${billingContactName} ${billingContactPhone}`.trim());
+          placeText('billingContactEmail', billingContactEmail);
+          placeText('authorizedPersonName', formData.authorizedPersonName);
+          placeText('authorizedPersonTitle', formData.authorizedPersonTitle);
+          placeText('authorizedPersonEmail', formData.authorizedPersonEmail);
+          placeText('authorizedPersonPhone', formData.authorizedPersonPhone);
+          placeText('termStartDate', formData.termStartDate);
+          placeText('implementationCost', formData.implementationCost);
+          placeText('shippingFee', formData.shippingFee);
+          placeText('qtyTimEBot', formData.qtyTimEBot);
+          placeText('qtyTimECharger', formData.qtyTimECharger);
+          placeText('qtyBaseMetalMonthly', formData.qtyBaseMetalMonthly);
+          placeText('qtyInsulatedFoodTransportMonthly', formData.qtyInsulatedFoodTransportMonthly);
+          placeText('qtyWheeledBinMonthly', formData.qtyWheeledBinMonthly);
+          placeText('qtyUniversalPlatformMonthly', formData.qtyUniversalPlatformMonthly);
+          placeText('qtyDoorOpenersMonthly', formData.qtyDoorOpenersMonthly);
+          placeText('qtyNeuralTechBrainMonthly', formData.qtyNeuralTechBrainMonthly);
+          placeText('qtyElevatorHardwareMonthly', formData.qtyElevatorHardwareMonthly);
+          placeText('qtyLuggageCartMonthly', formData.qtyLuggageCartMonthly);
+          placeText('qtyConcessionBinTall', formData.qtyConcessionBinTall);
+          placeText('qtyStackingChairCart', formData.qtyStackingChairCart);
+          placeText('qtyCargoCart', formData.qtyCargoCart);
+          placeText('qtyHousekeepingCart', formData.qtyHousekeepingCart);
+          placeText('qtyBIME', formData.qtyBIME);
+          placeText('qtyMobileBIME', formData.qtyMobileBIME);
+          placeText('monthlyRoboticServiceCost', formData.monthlyRoboticServiceCost);
+          placeText('qtyBaseMetalOneTime', formData.qtyBaseMetalOneTime);
+          placeText('qtyInsulatedFoodTransportOneTime', formData.qtyInsulatedFoodTransportOneTime);
+          placeText('qtyWheeledBinOneTime', formData.qtyWheeledBinOneTime);
+          placeText('qtyUniversalPlatformOneTime', formData.qtyUniversalPlatformOneTime);
+          placeText('qtyPlasticBags', formData.qtyPlasticBags);
+          placeText('qtyDoorOpenerHardwareOneTime', formData.qtyDoorOpenerHardwareOneTime);
+          placeText('qtyHandheldTablet', formData.qtyHandheldTablet);
+          placeText('additionalAccessoriesCost', formData.additionalAccessoriesCost);
+          placeText('implementationCostPage2', formData.implementationCost);
+          placeText('totalMonthlyCost', formData.totalMonthlyCost);
+          placeText('implementationCostDue', formData.implementationCostDue);
+        }
       }
 
       if (formData?.techForceSignature) {
-        const placement = TEXT_PLACEMENTS.techforceSignature as { x: number; y: number; width?: number; height?: number } | undefined;
+        const placement = placements.techforceSignature as { x: number; y: number; width?: number; height?: number; pageIndex?: number } | undefined;
         if (placement && placement.width) {
           const techForceImageBytes = await fetch(formData.techForceSignature).then((r) => r.arrayBuffer());
           const techForceImg = await pdfDoc.embedPng(techForceImageBytes);
-          lastPage.drawImage(techForceImg, {
-            x: placement.x,
-            y: placement.y,
-            width: placement.width ?? 180,
-            height: placement.height ?? 54,
-          });
+          const sigPage = placement.pageIndex !== undefined ? pages[placement.pageIndex] : lastPage;
+          if (sigPage) sigPage.drawImage(techForceImg, { x: placement.x, y: placement.y, width: placement.width ?? 180, height: placement.height ?? 54 });
         }
       }
 
       const imageBytes = await fetch(signatureImage).then(res => res.arrayBuffer());
       const signaturePdfImage = await pdfDoc.embedPng(imageBytes);
-      lastPage.drawImage(signaturePdfImage, {
-        x: CLIENT_SIGNATURE_PLACEMENT.x,
-        y: CLIENT_SIGNATURE_PLACEMENT.y,
-        width: CLIENT_SIGNATURE_PLACEMENT.width ?? 180,
-        height: CLIENT_SIGNATURE_PLACEMENT.height ?? 54,
+      const sigPageIndex = clientSigPlacement.pageIndex !== undefined ? clientSigPlacement.pageIndex : pages.length - 1;
+      const sigPage = pages[sigPageIndex] ?? lastPage;
+      if (sigPage) sigPage.drawImage(signaturePdfImage, {
+        x: clientSigPlacement.x,
+        y: clientSigPlacement.y,
+        width: clientSigPlacement.width ?? 180,
+        height: clientSigPlacement.height ?? 54,
       });
 
       const pdfBytes = await pdfDoc.save();
@@ -649,7 +808,8 @@ const Contract: React.FC = () => {
           )}
         </div>
 
-        {/* Billing Information (collected from client, placed on PDF on submit) */}
+        {/* Billing Information (service agreement only; trial link only asks for signature) */}
+        {contractType !== 'trial' && (
         <div className="contract-billing-section">
           <h2 className="contract-billing-title">Billing Information</h2>
           <p className="contract-billing-description">Please provide billing details. This information will appear on the contract PDF when you submit.</p>
@@ -738,6 +898,7 @@ const Contract: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Signature Section */}
         <div className="signature-section">

@@ -3,8 +3,9 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
+import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, fetchClientNotes, createClientNote, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow, type ClientNoteRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
+import { useAuth } from '../context/AuthContext';
 import { INDUSTRIES } from '../constants/industries';
 import './Page.css';
 import './ClientDetail.css';
@@ -12,6 +13,7 @@ import './Orders.css';
 
 const ClientDetail: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { clientId } = useParams<{ clientId: string }>();
   const clientIdNum = clientId ? parseInt(clientId, 10) : null;
 
@@ -19,9 +21,13 @@ const ClientDetail: React.FC = () => {
   const [clientOrders, setClientOrders] = useState<OrderRow[]>([]);
   const [clientContracts, setClientContracts] = useState<ContractRow[]>([]);
   const [clientInvoices, setClientInvoices] = useState<InvoiceRow[]>([]);
+  const [clientNotes, setClientNotes] = useState<ClientNoteRow[]>([]);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
+  const [noteError, setNoteError] = useState('');
 
   const clientData = apiClient;
 
@@ -104,15 +110,17 @@ const ClientDetail: React.FC = () => {
           return;
         }
         setApiClient(c);
-        const [orders, contracts, invoices] = await Promise.all([
+        const [orders, contracts, invoices, notes] = await Promise.all([
           fetchClientOrders(clientIdNum),
           fetchClientContracts(clientIdNum),
           fetchClientInvoices(clientIdNum),
+          fetchClientNotes(clientIdNum),
         ]);
         if (!cancelled) {
           setClientOrders(orders);
           setClientContracts(contracts);
           setClientInvoices(invoices);
+          setClientNotes(notes);
         }
       } catch {
         if (!cancelled) {
@@ -121,6 +129,7 @@ const ClientDetail: React.FC = () => {
           setClientOrders([]);
           setClientContracts([]);
           setClientInvoices([]);
+          setClientNotes([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -553,19 +562,69 @@ const ClientDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Additional Notes Section */}
+            {/* Notes Section — table of notes with submitter, date/time, and note */}
             <div className="form-section">
-              <h3 className="section-title">Additional Notes</h3>
-              <div className="form-group">
-                <label htmlFor="notes" className="form-label">Notes</label>
+              <h3 className="section-title">Notes</h3>
+              <div className="client-notes-table-wrapper">
+                <table className="client-notes-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Date &amp; Time</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientNotes.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="client-notes-empty">No notes yet.</td>
+                      </tr>
+                    ) : (
+                      clientNotes.map((n) => (
+                        <tr key={n.id}>
+                          <td>{n.submitted_by ?? '—'}</td>
+                          <td>{n.created_at ? new Date(n.created_at).toLocaleString() : '—'}</td>
+                          <td className="client-notes-note-cell">{n.note}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label htmlFor="new-note" className="form-label">Add a note</label>
                 <textarea
-                  id="notes"
+                  id="new-note"
                   className="form-textarea"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={5}
-                  placeholder="Enter any additional notes or comments about this client..."
+                  value={newNote}
+                  onChange={(e) => { setNewNote(e.target.value); setNoteError(''); }}
+                  rows={3}
+                  placeholder="Enter a note..."
+                  disabled={noteSubmitting}
                 />
+                {noteError && <p className="create-order-error" role="alert" style={{ marginTop: '0.5rem' }}>{noteError}</p>}
+                <button
+                  type="button"
+                  className="update-button"
+                  disabled={noteSubmitting || !newNote.trim() || !user}
+                  style={{ marginTop: '0.5rem' }}
+                  onClick={async () => {
+                    if (!clientIdNum || !user) return;
+                    setNoteError('');
+                    setNoteSubmitting(true);
+                    try {
+                      const created = await createClientNote(clientIdNum, newNote.trim(), user.id);
+                      setClientNotes((prev) => [created, ...prev]);
+                      setNewNote('');
+                    } catch (err) {
+                      setNoteError(err instanceof Error ? err.message : 'Failed to add note.');
+                    } finally {
+                      setNoteSubmitting(false);
+                    }
+                  }}
+                >
+                  {noteSubmitting ? 'Submitting…' : 'Submit note'}
+                </button>
               </div>
             </div>
 
@@ -591,7 +650,6 @@ const ClientDetail: React.FC = () => {
                       contact_phone: contactPhone.trim() || null,
                       billing_address: billingAddress.trim() || null,
                       site_location: siteLocationAddress.trim() || null,
-                      notes: notes.trim() || null,
                     });
                     navigate('/client');
                   } catch (err) {
