@@ -53,7 +53,7 @@
   border-radius: 8px;
   overflow: hidden;
   background-color: #E9ECEF;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
 .pdf-iframe {
