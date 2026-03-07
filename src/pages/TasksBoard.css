@@ -13,7 +13,7 @@
 
 .tasks-search-input:focus {
   outline: none;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15);
 }
 
@@ -169,7 +169,7 @@
 }
 
 .add-task-button {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
   border: none;
   border-radius: 6px;

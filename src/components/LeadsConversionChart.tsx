@@ -23,8 +23,8 @@ const LeadsConversionChart: React.FC<LeadsConversionChartProps> = ({ data }) => 
   const gaugeAngle = (conversionPercentage / 100) * 180; // Half circle gauge (0-180 degrees)
   
   // Determine color based on conversion percentage
-  let gaugeColor = '#15803d'; // Green (default)
-  let percentageColor = '#15803d';
+  let gaugeColor = '#2F6F44'; // Green (default)
+  let percentageColor = '#2F6F44';
   
   if (conversionPercentage < 2) {
     gaugeColor = '#dc2626'; // Red
@@ -33,8 +33,8 @@ const LeadsConversionChart: React.FC<LeadsConversionChartProps> = ({ data }) => 
     gaugeColor = '#eab308'; // Yellow
     percentageColor = '#eab308';
   } else {
-    gaugeColor = '#15803d'; // Green
-    percentageColor = '#15803d';
+    gaugeColor = '#2F6F44'; // Green
+    percentageColor = '#2F6F44';
   }
   
   const size = 200;

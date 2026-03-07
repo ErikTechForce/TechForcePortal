@@ -15,7 +15,7 @@
 
 .client-search-bar:focus {
   outline: none;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
@@ -126,7 +126,7 @@
 }
 
 .add-client-button {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
   border: none;
   border-radius: 6px;
@@ -219,7 +219,7 @@
 .add-client-radio-label input {
   width: 1.125rem;
   height: 1.125rem;
-  accent-color: #15803d;
+  accent-color: #2F6F44;
 }
 
 .add-client-error {

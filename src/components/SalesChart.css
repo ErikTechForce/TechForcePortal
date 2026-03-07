@@ -48,7 +48,7 @@
 
 .toggle-btn.active {
   background-color: white;
-  color: #73BF43;
+  color: #3CA233;
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -64,7 +64,7 @@
   font-weight: 500;
   color: #5A708D;
   background-color: white;
-  border: 1px solid #8A8F93;
+  border: 1px solid #E9ECEF;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -78,14 +78,8 @@
 }
 
 .period-btn.active {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
-  border-color: #15803d;
-}
-
-.period-btn.active:hover {
-  background-color: #16a34a;
-  border-color: #16a34a;
 }
 
 .chart-container {

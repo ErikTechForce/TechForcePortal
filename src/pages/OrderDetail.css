@@ -92,7 +92,7 @@
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
@@ -109,7 +109,7 @@
 
 .clickable-company:hover {
   background-color: #f3f4f6;
-  border-color: #15803d;
+  border-color: #2F6F44;
 }
 
 .products-table-wrapper {
@@ -199,7 +199,7 @@
 }
 
 .save-button {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
 }
 
@@ -212,32 +212,12 @@
   transform: scale(0.98);
 }
 
-.form-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #E9ECEF;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  color: #1B1C1E;
-  background-color: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-  font-family: inherit;
-  resize: vertical;
-}
-
-.form-textarea:focus {
-  outline: none;
-  border-color: #15803d;
-  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
-}
-
 .shipping-info-button {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -257,7 +237,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -277,7 +257,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -429,16 +409,16 @@
 .contract-view-pdf-button {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
-  color: #15803d;
+  color: #2F6F44;
   background: transparent;
-  border: 1px solid #15803d;
+  border: 1px solid #2F6F44;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .contract-view-pdf-button:hover {
-  background: #15803d;
+  background: #2F6F44;
   color: white;
 }
 
@@ -691,7 +671,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -776,7 +756,7 @@
 }
 
 .contract-type-button:hover {
-  border-color: #15803d;
+  border-color: #2F6F44;
   background: #f0fdf4;
 }
 
@@ -830,7 +810,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -853,7 +833,7 @@
 .contract-form-section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #15803d;
+  color: #2F6F44;
   margin: 0 0 0.75rem 0;
 }
 
@@ -931,7 +911,7 @@
 .pdf-download-link {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
   text-decoration: none;
   border-radius: 6px;
@@ -990,7 +970,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -1012,7 +992,7 @@
 }
 
 .signature-saved-message {
-  color: #15803d;
+  color: #2F6F44;
   font-weight: 600;
   margin: 0;
   font-size: 0.875rem;
@@ -1096,7 +1076,7 @@
 }
 
 .order-info-value.clickable-company {
-  color: #15803d;
+  color: #2F6F44;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -1135,7 +1115,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -1252,7 +1232,7 @@
 
 .templated-message-item:hover {
   background-color: #E9ECEF;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -1317,9 +1297,9 @@
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #15803d;
+  color: #2F6F44;
   background-color: white;
-  border: 1px solid #15803d;
+  border: 1px solid #2F6F44;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1481,7 +1461,7 @@
 
 .chat-input:focus {
   outline: none;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
@@ -1512,7 +1492,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #15803d;
+  background-color: #2F6F44;
   border: none;
   border-radius: 6px;
   cursor: pointer;

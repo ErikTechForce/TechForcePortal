@@ -51,7 +51,7 @@
 .robot-current-location {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #15803d;
+  color: #2F6F44;
   padding: 0.75rem 0;
 }
 
@@ -83,39 +83,6 @@
   font-weight: 600;
   color: #1B1C1E;
   margin-bottom: 0.5rem;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #E9ECEF;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  color: #1B1C1E;
-  background-color: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #15803d;
-  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
-}
-
-.form-input:disabled {
-  background-color: #f3f4f6;
-  color: #5A708D;
-  cursor: not-allowed;
-}
-
-.form-textarea {
-  resize: vertical;
-  font-family: inherit;
 }
 
 .activity-log-container {
@@ -189,7 +156,7 @@
 }
 
 .save-button {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
 }
 

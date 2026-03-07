@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
 import {
   getInventoryProducts,
   getProductAvailabilityAndInUse,
@@ -320,14 +321,8 @@ const Inventory: React.FC = () => {
       </div>
 
       {/* Add Product / Add Inventory modal */}
-      {addModalOpen && (
-        <div className="modal-overlay" onClick={closeAddModal}>
-          <div className="modal-content inventory-add-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Add Product</h3>
-              <button type="button" className="modal-close-button" onClick={closeAddModal} aria-label="Close">×</button>
-            </div>
-            <div className="modal-body">
+      <Modal isOpen={addModalOpen} onClose={closeAddModal} title="Add Product">
+        <div className="modal-body">
               {addModalChoice === null && (
                 <div className="inventory-add-choices">
                   <p className="inventory-add-prompt">What would you like to do?</p>
@@ -434,25 +429,22 @@ const Inventory: React.FC = () => {
                 </form>
               )}
             </div>
-            {addModalChoice !== null && (
-              <div className="inventory-modal-back">
-                <button type="button" className="link-button" onClick={() => setAddModalChoice(null)}>
-                  ← Back
-                </button>
-              </div>
-            )}
+        {addModalChoice !== null && (
+          <div className="inventory-modal-back">
+            <button type="button" className="link-button" onClick={() => setAddModalChoice(null)}>
+              ← Back
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
-      {operationsEditIndex !== null && (
-        <div className="modal-overlay" onClick={closeOperationsEdit}>
-          <div className="modal-content inventory-add-modal inventory-ffe-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">FF&E Item — {operationsRows[operationsEditIndex]?.product || 'New item'}</h3>
-              <button type="button" className="modal-close-button" onClick={closeOperationsEdit} aria-label="Close">×</button>
-            </div>
-            <form onSubmit={handleSaveOperationsEdit} className="modal-body">
+      <Modal
+        isOpen={operationsEditIndex !== null}
+        onClose={closeOperationsEdit}
+        title={`FF&E Item — ${operationsEditIndex !== null ? (operationsRows[operationsEditIndex]?.product || 'New item') : ''}`}
+        wide
+      >
+        <form onSubmit={handleSaveOperationsEdit} className="modal-body">
               <div className="form-group">
                 <label className="form-label">Product</label>
                 <input
@@ -546,10 +538,8 @@ const Inventory: React.FC = () => {
                 <button type="button" className="cancel-button" onClick={closeOperationsEdit}>Cancel</button>
                 <button type="submit" className="save-button">Save</button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 };

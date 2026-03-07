@@ -6,6 +6,7 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClients, createClient, type ClientRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { getInventoryProducts } from '../data/inventory';
+import Modal from '../components/Modal';
 import './Page.css';
 import './Client.css';
 import './ClientDetail.css';
@@ -269,16 +270,8 @@ const Client: React.FC = () => {
         </main>
       </div>
 
-      {addModalOpen && (
-        <div className="modal-overlay" onClick={closeAddModal}>
-          <div className="modal-content modal-content--wide" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Add Client or Lead</h3>
-              <button type="button" className="modal-close-button" onClick={closeAddModal} aria-label="Close">
-                ×
-              </button>
-            </div>
-            <form className="modal-form" onSubmit={handleAddSubmit}>
+      <Modal isOpen={addModalOpen} onClose={closeAddModal} title="Add Client or Lead" wide>
+        <form className="modal-form" onSubmit={handleAddSubmit}>
               <div className="form-group">
                 <span className="form-label">Add as</span>
                 <div className="add-client-type-row">
@@ -451,10 +444,8 @@ const Client: React.FC = () => {
                   {submitting ? 'Adding…' : 'Add'}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 };

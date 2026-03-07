@@ -98,9 +98,9 @@
 }
 
 .toggle-button.active {
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
-  border-color: #15803d;
+  border-color: #2F6F44;
 }
 
 .toggle-button.active:hover {

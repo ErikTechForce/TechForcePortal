@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
+import CreateOrderForm from './CreateOrder';
 import { fetchOrders, type OrderRow } from '../api/orderApi';
 import { fetchClients } from '../api/clients';
 import './Page.css';
@@ -21,6 +23,7 @@ const Orders: React.FC = () => {
   const [clients, setClients] = useState<Array<{ id: number; company: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [orderSearch, setOrderSearch] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const companyToClientId = useMemo(() => {
     const map: Record<string, number> = {};
@@ -58,11 +61,6 @@ const Orders: React.FC = () => {
 
   const handleOrderClick = (orderNumber: string) => {
     navigate(`/orders/${orderNumber}`);
-  };
-
-  const handleCreateOrder = () => {
-    // Placeholder: could navigate to /orders/new or open a modal
-    navigate('/orders/new');
   };
 
   const renderTable = (list: OrderRow[], emptyMessage: string) => (
@@ -138,8 +136,8 @@ const Orders: React.FC = () => {
                 onChange={(e) => setOrderSearch(e.target.value)}
                 aria-label="Search orders"
               />
-              <button type="button" className="page-toolbar-btn" onClick={handleCreateOrder}>
-                +&nbsp; Add Order
+              <button type="button" className="page-toolbar-btn" onClick={() => setCreateModalOpen(true)}>
+                + Create New Order
               </button>
             </div>
 
@@ -173,6 +171,15 @@ const Orders: React.FC = () => {
           </div>
         </main>
       </div>
+
+      <Modal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        title="Create New Order"
+        wide
+      >
+        <CreateOrderForm onClose={() => setCreateModalOpen(false)} />
+      </Modal>
     </div>
   );
 };

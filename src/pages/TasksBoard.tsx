@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
+import AddTaskForm from './AddTask';
 import { useAuth } from '../context/AuthContext';
 import { fetchTasks, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
@@ -55,6 +57,7 @@ const TasksBoard: React.FC = () => {
   const [taskSearch, setTaskSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -102,7 +105,7 @@ const TasksBoard: React.FC = () => {
   }, [user?.id]);
 
   const handleAddTask = () => {
-    navigate('/tasks/add');
+    setAddTaskModalOpen(true);
   };
 
   const handleTaskClick = (taskId: number) => {
@@ -377,6 +380,15 @@ const TasksBoard: React.FC = () => {
           </div>
         </main>
       </div>
+
+      <Modal
+        isOpen={addTaskModalOpen}
+        onClose={() => setAddTaskModalOpen(false)}
+        title="Add New Task"
+        wide
+      >
+        <AddTaskForm onClose={() => setAddTaskModalOpen(false)} />
+      </Modal>
     </div>
   );
 };

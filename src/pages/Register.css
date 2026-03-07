@@ -157,7 +157,7 @@
 .link-button {
   background: none;
   border: none;
-  color: #15803d;
+  color: #2F6F44;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -172,7 +172,7 @@
 }
 
 .link-button:focus {
-  outline: 2px solid #15803d;
+  outline: 2px solid #2F6F44;
   outline-offset: 2px;
   border-radius: 4px;
 }

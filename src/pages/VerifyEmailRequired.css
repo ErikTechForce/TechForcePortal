@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #15803d 0%, #14532d 100%);
+  background: linear-gradient(135deg, #2F6F44 0%, #14532d 100%);
   padding: 20px;
 }
 
@@ -72,7 +72,7 @@
 
 .verify-required-form .form-group input:focus {
   outline: none;
-  border-color: #15803d;
+  border-color: #2F6F44;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
@@ -83,7 +83,7 @@
 
 .verify-required-message {
   font-size: 14px;
-  color: #15803d;
+  color: #2F6F44;
   text-align: center;
 }
 
@@ -95,7 +95,7 @@
 
 .verify-required-button {
   padding: 12px 24px;
-  background-color: #15803d;
+  background-color: #2F6F44;
   color: white;
   border: none;
   border-radius: 8px;
@@ -122,7 +122,7 @@
 
 .verify-required-link {
   font-size: 14px;
-  color: #15803d;
+  color: #2F6F44;
   font-weight: 500;
   text-decoration: none;
 }
