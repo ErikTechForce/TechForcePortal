@@ -22,12 +22,9 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
   useEffect(() => {
     if (!isOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -40,7 +37,6 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div
       className="modal-overlay"
-      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-heading"

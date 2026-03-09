@@ -23,8 +23,8 @@ const STATUS_PILL_COLORS: Record<string, string> = {
 };
 
 const PRIORITY_PILL_COLORS: Record<string, string> = {
-  Low: '#d1fae5',
-  Medium: '#fef3c7',
+  Low: '#A8F7A9BF',
+  Medium: '#F9C39DBF',
   High: '#fed7aa',
   Urgent: '#fecaca',
 };

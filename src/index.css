@@ -12,7 +12,7 @@
   --fs-body: 1rem;   /* 16px */
 }
 
-h1, h2, h3, h4, button, a, label, link {
+h1, h2, h3, h4, th, button, a, label, link {
   font-family: var(--font-main);
 }
 
@@ -31,12 +31,12 @@ h3 {
   font-weight: 600; /* Semibold */
 }
 
-h4, label {
+h4, label, th {
   font-size: var(--fs-h4);
   font-weight: 500; /* Medium */
 }
 
-p, span, input, text, textarea {
+p, span, input, text, textarea, td {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 400; /* Regular */

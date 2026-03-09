@@ -268,18 +268,18 @@
 }
 
 .status-active {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .status-maintenance {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #F9C39DBF;
+  color: #7C3512;
 }
 
 .status-ready {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #2A425F;
 }
 
 .status-inspection {

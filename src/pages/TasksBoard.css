@@ -71,16 +71,15 @@
 }
 
 .tasks-board-card {
-  background-color: white;
-  border: 1px solid #8A8F93;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
   transition: box-shadow 0.2s ease;
 }
 
 .tasks-board-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(27, 28, 30, 0.3);
 }
 
 .tasks-card-title {
@@ -94,6 +93,26 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.tasks-card-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tasks-card-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tasks-card-content::-webkit-scrollbar-thumb {
+  background-color: #8A8F93;
+  border-radius: 9999px;
+}
+
+.tasks-card-content::-webkit-scrollbar-thumb:hover {
+  background-color: #5A708D;
 }
 
 .tasks-empty-hint {
@@ -291,6 +310,155 @@
 
 .completed-tasks-table tbody tr:hover {
   background-color: #E9ECEF;
+}
+
+/* ── Drag-and-drop ──────────────────────────────────────────────────────────── */
+
+.tasks-board-card--drag-over {
+  border: 2px dashed #2F6F44;
+  background-color: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(47, 111, 68, 0.15);
+}
+
+.tasks-board-item--draggable {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: grab;
+}
+
+.tasks-board-item--draggable:active {
+  cursor: grabbing;
+}
+
+.tasks-board-item--dragging {
+  opacity: 0.4;
+}
+
+.tasks-board-item--insert-before {
+  position: relative;
+}
+
+.tasks-board-item--insert-before::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2F6F44;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.tasks-board-item--insert-after {
+  position: relative;
+}
+
+.tasks-board-item--insert-after::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2F6F44;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.tasks-item-drag-handle {
+  flex-shrink: 0;
+  color: #8A8F93;
+  font-size: 1rem;
+  padding-top: 0.1rem;
+  user-select: none;
+  cursor: grab;
+}
+
+.tasks-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.tasks-drag-error {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Drag-and-drop modals ───────────────────────────────────────────────────── */
+
+.tasks-modal-body {
+  padding: 0.25rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.tasks-modal-desc {
+  font-size: 0.95rem;
+  color: #1B1C1E;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tasks-modal-error {
+  font-size: 0.875rem;
+  color: #b91c1c;
+  margin: 0;
+}
+
+.tasks-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.tasks-modal-btn {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.925rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.tasks-modal-btn--secondary {
+  background-color: #E9ECEF;
+  color: #1B1C1E;
+}
+
+.tasks-modal-btn--secondary:hover {
+  background-color: #d1d5db;
+}
+
+.tasks-modal-btn--primary {
+  background-color: #2F6F44;
+  color: white;
+}
+
+.tasks-modal-btn--primary:hover {
+  background-color: #14532d;
+}
+
+.tasks-modal-btn--danger {
+  background-color: #b91c1c;
+  color: white;
+}
+
+.tasks-modal-btn--danger:hover {
+  background-color: #991b1b;
 }
 
 /* Responsive: card layout on mobile so no horizontal scroll */

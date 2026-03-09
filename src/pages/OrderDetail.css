@@ -284,7 +284,7 @@
 }
 
 .generate-invoice-button:hover {
-  background-color: #1e40af;
+  background-color: #2A425F;
 }
 
 .generate-invoice-button:active {
@@ -397,13 +397,13 @@
 }
 
 .contract-status-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: #F9C39DBF;
+  color: #7C3512;
 }
 
 .contract-status-signed {
-  background: #d1fae5;
-  color: #065f46;
+  background: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .contract-view-pdf-button {
@@ -1097,17 +1097,17 @@
 
 .stage-badge.stage-contract {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #2A425F;
 }
 
 .stage-badge.stage-delivery {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #F9C39DBF;
+  color: #7C3512;
 }
 
 .stage-badge.stage-installation {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .edit-order-button {

@@ -8,7 +8,7 @@
 }
 
 .orders-create-button {
-  background-color: #2F6F44;
+  background-color: #1F4B31;
   color: white;
   border: none;
   border-radius: 6px;
@@ -43,7 +43,7 @@
 
 .orders-search-input:focus {
   outline: none;
-  border-color: #2F6F44;
+  border-color: #1F4B31;
   box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15);
 }
 
@@ -139,6 +139,7 @@
 .orders-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .orders-table thead {
@@ -154,12 +155,30 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 2px solid #8A8F93;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fixed column widths — keeps all four tables perfectly aligned */
+.orders-table th:nth-child(1) { width: 20%; }
+.orders-table th:nth-child(2) { width: 38%; }
+.orders-table th:nth-child(3) { width: 22%; }
+.orders-table th:nth-child(4) { width: 20%; }
+
+/* Status column: let the badge render without being clipped */
+.orders-table td:nth-child(3) {
+  overflow: visible;
+  white-space: normal;
 }
 
 .orders-table td {
   padding: 1rem;
   border-bottom: 1px solid #8A8F93;
   color: #1B1C1E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .orders-table tbody tr:last-child td {
@@ -181,48 +200,48 @@
 }
 
 .status-pending {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #F9C39DBF;
+  color: #7C3512;
 }
 
 .status-in-progress {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #2A425F;
 }
 
 .status-approved {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .status-scheduled {
-  background-color: #e0e7ff;
-  color: #3730a3;
+  background-color: #F0BBDFBF;
+  color: #6B1A4A;
 }
 
 .status-in-shipment {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #F9C39DBF;
+  color: #7C3512;
 }
 
 .status-delivered {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .status-awaiting-invoice {
   background-color: #dbeafe;
-  color: #1e40af;
+  color: #2A425F;
 }
 
 .status-invoice-ready {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 .status-completed {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: #A8F7A9BF;
+  color: #1F4B31;
 }
 
 /* Responsive: card layout on mobile */
