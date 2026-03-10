@@ -1,0 +1,73 @@
+.low-stock-card .card-content {
+  padding-right: 0.5rem;
+}
+
+.low-stock-empty {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.low-stock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.low-stock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, padding-left 0.2s ease;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.low-stock-row:last-child {
+  border-bottom: none;
+}
+
+.low-stock-row:hover {
+  background-color: #f9fafb;
+  padding-left: 0.75rem;
+}
+
+.low-stock-yellow {
+  background-color: #fef9c3;
+}
+
+.low-stock-yellow:hover {
+  background-color: #fef08a;
+}
+
+.low-stock-red {
+  background-color: #fecaca;
+}
+
+.low-stock-red:hover {
+  background-color: #fca5a5;
+}
+
+.low-stock-name {
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.low-stock-count {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 1.5rem;
+  text-align: right;
+}
+
+.low-stock-red .low-stock-count,
+.low-stock-yellow .low-stock-count {
+  color: #1f2937;
+}

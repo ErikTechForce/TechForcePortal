@@ -70,6 +70,14 @@ export interface ClientNoteRow {
   submitted_by: string | null;
   note: string;
   created_at: string;
+  task_id?: number | null;
+  task_name?: string | null;
+}
+
+export interface ClientTaskOption {
+  id: number;
+  name: string;
+  status: string;
 }
 
 export async function fetchClients(type?: 'client' | 'lead', assignedToUserId?: number): Promise<ClientRow[]> {
@@ -118,14 +126,38 @@ export async function fetchClientNotes(clientId: number): Promise<ClientNoteRow[
   return data.notes || [];
 }
 
-export async function createClientNote(clientId: number, note: string, userId: number): Promise<ClientNoteRow> {
+export async function fetchClientTasks(clientId: number): Promise<ClientTaskOption[]> {
+  const res = await fetch(`${API_BASE}/api/clients/${clientId}/tasks`);
+  if (!res.ok) throw new Error('Failed to fetch client tasks');
+  const data = await res.json();
+  return data.tasks || [];
+}
+
+export async function createClientNote(clientId: number, note: string, userId: number, taskId?: number | null): Promise<ClientNoteRow> {
   const res = await fetch(`${API_BASE}/api/clients/${clientId}/notes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ note, user_id: userId }),
+    body: JSON.stringify({ note, user_id: userId, ...(taskId != null && taskId > 0 ? { task_id: taskId } : {}) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to add note');
+  return data;
+}
+
+export async function updateClientNote(
+  clientId: number,
+  noteId: number,
+  note: string,
+  userId: number,
+  taskId?: number | null
+): Promise<ClientNoteRow> {
+  const res = await fetch(`${API_BASE}/api/clients/${clientId}/notes/${noteId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note, user_id: userId, ...(taskId != null && taskId > 0 ? { task_id: taskId } : {}) }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update note');
   return data;
 }
 

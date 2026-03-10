@@ -1453,7 +1453,28 @@ app.get('/api/clients/:id/invoices', async (req, res) => {
   }
 });
 
-// GET /api/clients/:id/notes — notes table for client (user, date/time, note)
+// GET /api/clients/:id/tasks — tasks for this client (for notes task dropdown)
+app.get('/api/clients/:id/tasks', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const result = await pool.query(
+      `SELECT t.id, t.name, t.status
+       FROM tasks t
+       WHERE t.client_id = $1
+       ORDER BY t.updated_at DESC`,
+      [id]
+    );
+    res.json({ tasks: result.rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch tasks.' });
+  }
+});
+
+// GET /api/clients/:id/notes — notes table for client (user, date/time, note, optional task)
 app.get('/api/clients/:id/notes', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -1461,10 +1482,12 @@ app.get('/api/clients/:id/notes', async (req, res) => {
     const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
     if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
     const result = await pool.query(
-      `SELECT n.id, n.client_id, n.user_id, n.note, n.created_at,
-              u.username AS submitted_by
+      `SELECT n.id, n.client_id, n.user_id, n.note, n.created_at, n.task_id,
+              u.username AS submitted_by,
+              t.name AS task_name
        FROM client_notes n
        LEFT JOIN users u ON u.id = n.user_id
+       LEFT JOIN tasks t ON t.id = n.task_id
        WHERE n.client_id = $1
        ORDER BY n.created_at DESC`,
       [id]
@@ -1476,25 +1499,34 @@ app.get('/api/clients/:id/notes', async (req, res) => {
   }
 });
 
-// POST /api/clients/:id/notes — add a note (body: { note: string, user_id: number })
+// POST /api/clients/:id/notes — add a note (body: { note: string, user_id: number, task_id?: number })
 app.post('/api/clients/:id/notes', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
-    const body = req.body as { note?: string; user_id?: number };
+    const body = req.body as { note?: string; user_id?: number; task_id?: number };
     const note = typeof body.note === 'string' ? body.note.trim() : '';
     if (!note) return res.status(400).json({ error: 'note is required.' });
     const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
     if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
     const user_id = body.user_id != null && Number.isInteger(body.user_id) && body.user_id > 0 ? body.user_id : null;
+    let task_id: number | null = null;
+    if (body.task_id != null && Number.isInteger(body.task_id) && body.task_id > 0) {
+      const taskRow = await pool.query('SELECT id, client_id FROM tasks WHERE id = $1', [body.task_id]);
+      const task = taskRow.rows[0] as { id: number; client_id: number | null } | undefined;
+      if (task && task.client_id === id) task_id = task.id;
+    }
     const insert = await pool.query(
-      `INSERT INTO client_notes (client_id, user_id, note) VALUES ($1, $2, $3)
-       RETURNING id, client_id, user_id, note, created_at`,
-      [id, user_id, note]
+      `INSERT INTO client_notes (client_id, user_id, note, task_id) VALUES ($1, $2, $3, $4)
+       RETURNING id, client_id, user_id, note, task_id, created_at`,
+      [id, user_id, note, task_id]
     );
-    const row = insert.rows[0] as { id: number; user_id: number | null; created_at: string };
+    const row = insert.rows[0] as { id: number; user_id: number | null; task_id: number | null; created_at: string };
     const username = user_id
       ? (await pool.query('SELECT username FROM users WHERE id = $1', [user_id]).then(r => (r.rows[0] as { username?: string } | undefined)?.username ?? null))
+      : null;
+    const task_name = row.task_id
+      ? (await pool.query('SELECT name FROM tasks WHERE id = $1', [row.task_id]).then(r => (r.rows[0] as { name?: string } | undefined)?.name ?? null))
       : null;
     res.status(201).json({
       id: row.id,
@@ -1502,11 +1534,69 @@ app.post('/api/clients/:id/notes', async (req, res) => {
       user_id: row.user_id,
       submitted_by: username,
       note,
+      task_id: row.task_id,
+      task_name,
       created_at: row.created_at,
     });
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to add note.' });
+  }
+});
+
+// PATCH /api/clients/:id/notes/:noteId — update a note (only the user who created it)
+app.patch('/api/clients/:id/notes/:noteId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const noteId = parseInt(req.params.noteId, 10);
+    if (Number.isNaN(id) || Number.isNaN(noteId)) return res.status(400).json({ error: 'Invalid client or note id.' });
+        const body = req.body as { note?: string, user_id?: number, task_id?: number };
+    const noteText = typeof body.note === 'string' ? body.note.trim() : '';
+    if (!noteText) return res.status(400).json({ error: 'note is required.' });
+    const editorUserId = body.user_id != null && Number.isInteger(body.user_id) && body.user_id > 0 ? body.user_id : null;
+    if (editorUserId == null) return res.status(400).json({ error: 'user_id is required.' });
+
+    const existing = await pool.query(
+      'SELECT id, client_id, user_id, task_id FROM client_notes WHERE id = $1',
+      [noteId]
+    );
+    const row = existing.rows[0] as { id: number; client_id: number; user_id: number | null; task_id: number | null } | undefined;
+    if (!row || row.client_id !== id) return res.status(404).json({ error: 'Note not found.' });
+    if (row.user_id !== editorUserId) return res.status(403).json({ error: 'Only the note creator can edit it.' });
+
+    let task_id: number | null = null;
+    if (body.task_id != null && Number.isInteger(body.task_id) && body.task_id > 0) {
+      const taskRow = await pool.query('SELECT id, client_id FROM tasks WHERE id = $1', [body.task_id]);
+      const task = taskRow.rows[0] as { id: number; client_id: number | null } | undefined;
+      if (task && task.client_id === id) task_id = task.id;
+    }
+
+    await pool.query(
+      'UPDATE client_notes SET note = $1, task_id = $2 WHERE id = $3',
+      [noteText, task_id, noteId]
+    );
+    const userRow = await pool.query('SELECT username FROM users WHERE id = $1', [editorUserId]);
+    const username = (userRow.rows[0] as { username?: string } | undefined)?.username ?? null;
+    let task_name: string | null = null;
+    if (task_id) {
+      const taskRow = await pool.query('SELECT name FROM tasks WHERE id = $1', [task_id]);
+      task_name = (taskRow.rows[0] as { name?: string } | undefined)?.name ?? null;
+    }
+    const createdRow = await pool.query('SELECT created_at FROM client_notes WHERE id = $1', [noteId]);
+    const created_at = (createdRow.rows[0] as { created_at?: string } | undefined)?.created_at ?? null;
+    res.json({
+      id: noteId,
+      client_id: id,
+      user_id: editorUserId,
+      submitted_by: username,
+      note: noteText,
+      task_id,
+      task_name,
+      created_at,
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to update note.' });
   }
 });
 

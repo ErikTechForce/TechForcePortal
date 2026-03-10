@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, fetchClientNotes, createClientNote, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow, type ClientNoteRow } from '../api/clients';
+import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, fetchClientNotes, fetchClientTasks, createClientNote, updateClientNote, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow, type ClientNoteRow, type ClientTaskOption } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { useAuth } from '../context/AuthContext';
 import { INDUSTRIES } from '../constants/industries';
@@ -22,12 +22,19 @@ const ClientDetail: React.FC = () => {
   const [clientContracts, setClientContracts] = useState<ContractRow[]>([]);
   const [clientInvoices, setClientInvoices] = useState<InvoiceRow[]>([]);
   const [clientNotes, setClientNotes] = useState<ClientNoteRow[]>([]);
+  const [clientTasks, setClientTasks] = useState<ClientTaskOption[]>([]);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [newNote, setNewNote] = useState('');
+  const [newNoteTaskId, setNewNoteTaskId] = useState<number | ''>('');
   const [noteSubmitting, setNoteSubmitting] = useState(false);
   const [noteError, setNoteError] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editNoteText, setEditNoteText] = useState('');
+  const [editNoteTaskId, setEditNoteTaskId] = useState<number | ''>('');
+  const [noteEditError, setNoteEditError] = useState('');
+  const [noteUpdating, setNoteUpdating] = useState(false);
 
   const clientData = apiClient;
 
@@ -110,17 +117,19 @@ const ClientDetail: React.FC = () => {
           return;
         }
         setApiClient(c);
-        const [orders, contracts, invoices, notes] = await Promise.all([
+        const settled = await Promise.allSettled([
           fetchClientOrders(clientIdNum),
           fetchClientContracts(clientIdNum),
           fetchClientInvoices(clientIdNum),
           fetchClientNotes(clientIdNum),
+          fetchClientTasks(clientIdNum),
         ]);
         if (!cancelled) {
-          setClientOrders(orders);
-          setClientContracts(contracts);
-          setClientInvoices(invoices);
-          setClientNotes(notes);
+          setClientOrders(settled[0].status === 'fulfilled' ? settled[0].value : []);
+          setClientContracts(settled[1].status === 'fulfilled' ? settled[1].value : []);
+          setClientInvoices(settled[2].status === 'fulfilled' ? settled[2].value : []);
+          setClientNotes(settled[3].status === 'fulfilled' ? settled[3].value : []);
+          setClientTasks(settled[4].status === 'fulfilled' ? settled[4].value : []);
         }
       } catch {
         if (!cancelled) {
@@ -130,6 +139,7 @@ const ClientDetail: React.FC = () => {
           setClientContracts([]);
           setClientInvoices([]);
           setClientNotes([]);
+          setClientTasks([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -562,7 +572,7 @@ const ClientDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Notes Section — table of notes with submitter, date/time, and note */}
+            {/* Notes Section — table of notes with submitter, date/time, task, and note */}
             <div className="form-section">
               <h3 className="section-title">Notes</h3>
               <div className="client-notes-table-wrapper">
@@ -571,20 +581,109 @@ const ClientDetail: React.FC = () => {
                     <tr>
                       <th>User</th>
                       <th>Date &amp; Time</th>
+                      <th>Task</th>
                       <th>Note</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {clientNotes.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="client-notes-empty">No notes yet.</td>
+                        <td colSpan={5} className="client-notes-empty">No notes yet.</td>
                       </tr>
                     ) : (
                       clientNotes.map((n) => (
                         <tr key={n.id}>
                           <td>{n.submitted_by ?? '—'}</td>
                           <td>{n.created_at ? new Date(n.created_at).toLocaleString() : '—'}</td>
-                          <td className="client-notes-note-cell">{n.note}</td>
+                          {editingNoteId === n.id ? (
+                            <>
+                              <td>
+                                <select
+                                  className="form-select"
+                                  value={editNoteTaskId}
+                                  onChange={(e) => setEditNoteTaskId(e.target.value === '' ? '' : Number(e.target.value))}
+                                  disabled={noteUpdating}
+                                >
+                                  <option value="">None</option>
+                                  {clientTasks.map((t) => (
+                                    <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="client-notes-note-cell">
+                                <textarea
+                                  className="form-textarea"
+                                  value={editNoteText}
+                                  onChange={(e) => { setEditNoteText(e.target.value); setNoteEditError(''); }}
+                                  rows={2}
+                                  disabled={noteUpdating}
+                                />
+                                {noteEditError && <p className="create-order-error" role="alert" style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>{noteEditError}</p>}
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="update-button"
+                                  disabled={noteUpdating || !editNoteText.trim()}
+                                  onClick={async () => {
+                                    if (!clientIdNum || !user) return;
+                                    setNoteEditError('');
+                                    setNoteUpdating(true);
+                                    try {
+                                      const taskId = editNoteTaskId === '' ? undefined : editNoteTaskId;
+                                      const updated = await updateClientNote(clientIdNum, n.id, editNoteText.trim(), user.id, taskId);
+                                      setClientNotes((prev) => prev.map((note) => (note.id === n.id ? updated : note)));
+                                      setEditingNoteId(null);
+                                      setEditNoteText('');
+                                      setEditNoteTaskId('');
+                                    } catch (err) {
+                                      setNoteEditError(err instanceof Error ? err.message : 'Failed to update note.');
+                                    } finally {
+                                      setNoteUpdating(false);
+                                    }
+                                  }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  className="cancel-button"
+                                  disabled={noteUpdating}
+                                  style={{ marginLeft: '0.5rem' }}
+                                  onClick={() => {
+                                    setEditingNoteId(null);
+                                    setEditNoteText('');
+                                    setEditNoteTaskId('');
+                                    setNoteEditError('');
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td>{n.task_id && n.task_name ? <Link to={`/tasks/${n.task_id}`}>{n.task_name}</Link> : '—'}</td>
+                              <td className="client-notes-note-cell">{n.note}</td>
+                              <td>
+                                {user && n.user_id === user.id ? (
+                                  <button
+                                    type="button"
+                                    className="update-button"
+                                    onClick={() => {
+                                      setEditingNoteId(n.id);
+                                      setEditNoteText(n.note);
+                                      setEditNoteTaskId(n.task_id ?? '');
+                                      setNoteEditError('');
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                ) : null}
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))
                     )}
@@ -602,6 +701,26 @@ const ClientDetail: React.FC = () => {
                   placeholder="Enter a note..."
                   disabled={noteSubmitting}
                 />
+                <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                  <label htmlFor="new-note-task" className="form-label">Attach to task (optional)</label>
+                  <select
+                    id="new-note-task"
+                    className="form-select"
+                    value={newNoteTaskId}
+                    onChange={(e) => setNewNoteTaskId(e.target.value === '' ? '' : Number(e.target.value))}
+                    disabled={noteSubmitting}
+                  >
+                    <option value="">None</option>
+                    {clientTasks.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+                    ))}
+                  </select>
+                  {clientTasks.length === 0 && (
+                    <p className="form-hint" style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>
+                      No tasks linked to this client. Link a task to this client from the task&apos;s page to see it here.
+                    </p>
+                  )}
+                </div>
                 {noteError && <p className="create-order-error" role="alert" style={{ marginTop: '0.5rem' }}>{noteError}</p>}
                 <button
                   type="button"
@@ -613,9 +732,11 @@ const ClientDetail: React.FC = () => {
                     setNoteError('');
                     setNoteSubmitting(true);
                     try {
-                      const created = await createClientNote(clientIdNum, newNote.trim(), user.id);
+                      const taskId = newNoteTaskId === '' ? undefined : newNoteTaskId;
+                      const created = await createClientNote(clientIdNum, newNote.trim(), user.id, taskId);
                       setClientNotes((prev) => [created, ...prev]);
                       setNewNote('');
+                      setNewNoteTaskId('');
                     } catch (err) {
                       setNoteError(err instanceof Error ? err.message : 'Failed to add note.');
                     } finally {

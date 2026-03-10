@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
+import LowStockInventory from '../components/LowStockInventory';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchTasks, type TaskRow } from '../api/tasks';
 import { fetchSalesProductCounts, fetchSiteActivity, type SalesProductCounts, type SiteActivityEntry } from '../api/orderApi';
@@ -180,9 +181,7 @@ const Dashboard: React.FC = () => {
               <div className="dashboard-chart-card">
                 <Pending />
               </div>
-              <div className="dashboard-chart-card">
-                <SalesChart productData={salesProductData} totalData={salesTotalData} />
-              </div>
+              <LowStockInventory />
               <div className="dashboard-chart-card">
                 <h3 className="chart-title">Robots Online</h3>
                 <div className="robots-chart-wrapper">
@@ -238,6 +237,12 @@ const Dashboard: React.FC = () => {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+              <div className="dashboard-card">
+                <h3 className="chart-title" style={{ margin: '0 0 0.75rem 0', padding: 0 }}>Sales</h3>
+                <div className="card-content">
+                  <SalesChart productData={salesProductData} totalData={salesTotalData} />
                 </div>
               </div>
             </div>
