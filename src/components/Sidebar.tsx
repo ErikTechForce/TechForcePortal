@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLayout } from '../context/LayoutContext';
+import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 interface MenuItem {
@@ -11,9 +12,12 @@ interface MenuItem {
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const layout = useLayout();
+  const { user } = useAuth();
   const isOpen = layout?.mobileMenuOpen ?? false;
   const closeMobileMenuRef = useRef(layout?.closeMobileMenu);
   closeMobileMenuRef.current = layout?.closeMobileMenu;
+
+  const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
   /* Close menu only when route changes (user navigated), not when context reference changes */
   useEffect(() => {
@@ -29,14 +33,20 @@ const Sidebar: React.FC = () => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, layout]);
 
-  const mainMenuItems: MenuItem[] = [
-    { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Orders', path: '/orders' },
-    { label: 'Tasks Board', path: '/tasks' },
-    { label: 'Client', path: '/client' },
-    { label: 'Inventory', path: '/inventory' },
-    { label: 'Robots', path: '/robots' },
-  ];
+  const mainMenuItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [
+      { label: 'Dashboard', path: '/dashboard' },
+      { label: 'Orders', path: '/orders' },
+      { label: 'Tasks Board', path: '/tasks' },
+      { label: 'Client', path: '/client' },
+      { label: 'Inventory', path: '/inventory' },
+      { label: 'Robots', path: '/robots' },
+    ];
+    if (isAdmin) {
+      items.push({ label: 'Employees', path: '/employees' });
+    }
+    return items;
+  }, [isAdmin]);
 
   const settingsMenuItem: MenuItem = { label: 'Settings', path: '/settings' };
 

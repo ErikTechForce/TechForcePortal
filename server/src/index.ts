@@ -293,6 +293,27 @@ const SELF_ASSIGNABLE_ROLES = [
   'corporate', 'r_d', 'support', 'customer_service', 'it', 'operations', 'finances', 'manufacturing', 'hr',
 ] as const;
 
+// GET /api/users/me?userId=1 — get current user profile with fresh roles (for syncing after role changes)
+app.get('/api/users/me', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string, 10);
+    if (!Number.isInteger(userId) || userId < 1) return res.status(400).json({ error: 'Valid userId required.' });
+    const result = await pool.query(
+      `SELECT u.id, u.username, u.email,
+        (SELECT COALESCE(array_agg(ur.role ORDER BY ur.role), ARRAY[]::text[]) FROM user_roles ur WHERE ur.user_id = u.id) AS roles
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    );
+    const row = result.rows[0] as { id: number; username: string; email: string; roles?: string[] } | undefined;
+    if (!row) return res.status(404).json({ error: 'User not found.' });
+    const roles = Array.isArray(row.roles) && row.roles.length > 0 ? row.roles : ['sales'];
+    res.json({ user: { id: row.id, username: row.username, email: row.email, roles } });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch user.' });
+  }
+});
+
 // GET /api/users/verified — list verified users (for employee assignment dropdowns)
 app.get('/api/users/verified', async (req, res) => {
   try {
@@ -345,6 +366,49 @@ app.patch('/api/users/me', async (req, res) => {
       );
     }
     res.json({ success: true, roles });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to update roles.' });
+  }
+});
+
+// PATCH /api/users/:id/roles — admin only: set another user's roles (body: { admin_user_id: number, roles: string[] })
+app.patch('/api/users/:id/roles', async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(targetId) || targetId < 1) return res.status(400).json({ error: 'Invalid user id.' });
+    const body = req.body as { admin_user_id?: number; roles?: string[] };
+    const adminUserId = body.admin_user_id != null ? Number(body.admin_user_id) : NaN;
+    if (!Number.isInteger(adminUserId) || adminUserId < 1) return res.status(400).json({ error: 'admin_user_id is required.' });
+    const adminRoles = await pool.query(
+      'SELECT array_agg(role) AS roles FROM user_roles WHERE user_id = $1',
+      [adminUserId]
+    );
+    const adminRolesRow = adminRoles.rows[0] as { roles: string[] | null } | undefined;
+    const hasAdmin = (adminRolesRow?.roles ?? []).filter(Boolean).includes('admin');
+    if (!hasAdmin) return res.status(403).json({ error: 'Only admins can update user roles.' });
+    const rawRoles = Array.isArray(body.roles) ? body.roles : [];
+    const roles = rawRoles.map((r) => String(r).trim().toLowerCase()).filter(Boolean);
+    for (const role of roles) {
+      if (!ALLOWED_ROLES.includes(role as typeof ALLOWED_ROLES[number])) {
+        return res.status(400).json({ error: `Invalid role: ${role}.` });
+      }
+    }
+    const userExists = await pool.query('SELECT id FROM users WHERE id = $1', [targetId]);
+    if (userExists.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+    await pool.query('DELETE FROM user_roles WHERE user_id = $1', [targetId]);
+    if (roles.length > 0) {
+      await pool.query(
+        `INSERT INTO user_roles (user_id, role) SELECT $1, unnest($2::text[]) ON CONFLICT (user_id, role) DO NOTHING`,
+        [targetId, roles]
+      );
+    }
+    const updated = await pool.query(
+      'SELECT COALESCE(array_agg(role ORDER BY role), ARRAY[]::text[]) AS roles FROM user_roles WHERE user_id = $1',
+      [targetId]
+    );
+    const rolesResult = (updated.rows[0] as { roles: string[] })?.roles ?? [];
+    res.json({ success: true, roles: rolesResult });
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to update roles.' });

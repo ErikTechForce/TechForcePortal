@@ -102,21 +102,11 @@ const Settings: React.FC = () => {
               <div className="form-section">
                 <h3 className="section-title">Roles</h3>
                 <p className="page-subtitle" style={{ marginBottom: '1rem' }}>
-                  You can assign yourself multiple roles. Admin can only be set by an existing admin.
+                  You can assign yourself multiple roles. Admin can only be set by an existing admin on the Employees page.
                 </p>
                 <div className="form-group">
                   <span className="form-label">Your roles</span>
                   <div className="settings-roles-checkbox-list">
-                    {getUserRoles(user).includes('admin') && (
-                      <label className="settings-role-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedRoles.includes('admin')}
-                          onChange={() => toggleRole('admin')}
-                        />
-                        <span>{ROLE_LABELS.admin}</span>
-                      </label>
-                    )}
                     {SELF_ASSIGNABLE_ROLES.map((r) => (
                       <label key={r} className="settings-role-checkbox">
                         <input

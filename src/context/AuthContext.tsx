@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { fetchCurrentUser } from '../api/users';
 
 const STORAGE_KEY = 'techforce_user';
 
@@ -40,6 +41,24 @@ function loadStoredUser(): AuthUser | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(loadStoredUser);
+
+  // Sync roles (and profile) from server on load so sidebar/Employees reflect DB (e.g. after migration or admin grant)
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    fetchCurrentUser(user.id)
+      .then((fresh) => {
+        if (cancelled) return;
+        setUser((prev) => {
+          if (!prev) return null;
+          const next = { ...prev, roles: fresh.roles, username: fresh.username, email: fresh.email };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const login = useCallback((u: AuthUser) => {
     setUser(u);
