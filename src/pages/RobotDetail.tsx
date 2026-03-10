@@ -28,6 +28,11 @@ const RobotDetail: React.FC = () => {
   const decodedSerialNumber = serialNumberFromUrl ? decodeURIComponent(serialNumberFromUrl) : '';
 
   const [unit, setUnit] = useState<InventoryUnit | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    locationHistory: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   const [locationHistory, setLocationHistory] = useState<LocationHistoryEntry[]>([]);
   const [location, setLocation] = useState('');
   const [business, setBusiness] = useState('');
@@ -348,9 +353,13 @@ const RobotDetail: React.FC = () => {
               </div>
 
               <div className="form-section">
-                <h3 className="section-title">Location history</h3>
+                <div className="collapsible-header" onClick={() => toggleSection('locationHistory')}>
+                  <h3 className="section-title">Location history</h3>
+                  <span className={`collapse-arrow${!collapsedSections.locationHistory ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.locationHistory && <>
                 <p className="robot-location-history-desc">Date and time the robot was first at each location (saved in database).</p>
-                <div className="activity-log-container">
+                <div className="activity-log-container collapsible-table-wrapper">
                   <table className="activity-log-table">
                     <thead>
                       <tr>
@@ -374,6 +383,7 @@ const RobotDetail: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+                </>}
               </div>
 
               <div className="form-actions">

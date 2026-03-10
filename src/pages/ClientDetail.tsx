@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import Modal from '../components/Modal';
 import SearchableDropdown from '../components/SearchableDropdown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { INDUSTRIES } from '../constants/industries';
@@ -21,6 +24,14 @@ const ClientDetail: React.FC = () => {
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    products: false,
+    orders: false,
+    contracts: false,
+    invoices: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const clientData = apiClient;
 
@@ -44,12 +55,28 @@ const ClientDetail: React.FC = () => {
   const [editPointOfContact, setEditPointOfContact] = useState('');
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [clientMessage, setClientMessage] = useState('');
   const [editContactEmail, setEditContactEmail] = useState('');
   const [editContactPhone, setEditContactPhone] = useState('');
   const [editBillingAddress, setEditBillingAddress] = useState('');
   const [editSiteLocationAddress, setEditSiteLocationAddress] = useState('');
   const [editIndustry, setEditIndustry] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const handleDeleteClient = async () => {
+    if (!clientIdNum) return;
+    setDeleting(true);
+    try {
+      await deleteClient(clientIdNum);
+      navigate('/client');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete client.');
+      setDeleteModalOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const ordersList = clientOrders;
 
@@ -216,6 +243,8 @@ const ClientDetail: React.FC = () => {
       setEditStartDate(updated.start_date ?? '');
       setEditIndustry(updated.industry ?? '');
       setIsClientInfoModalOpen(false);
+      setClientMessage('Client updated successfully.');
+      setTimeout(() => setClientMessage(''), 4000);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to update client.');
     } finally {
@@ -267,6 +296,8 @@ const ClientDetail: React.FC = () => {
       setEditBillingAddress(updated.billing_address ?? '');
       setEditSiteLocationAddress(updated.site_location ?? '');
       setIsContactInfoModalOpen(false);
+      setClientMessage('Client updated successfully.');
+      setTimeout(() => setClientMessage(''), 4000);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to update contact info.');
     } finally {
@@ -321,20 +352,44 @@ const ClientDetail: React.FC = () => {
         <Sidebar />
         <main className="page-main">
           <div className="page-content">
-            <h2 className="page-title">Client Details</h2>
-            <p className="page-subtitle">View and update client information</p>
-            
+            <div className="task-detail-page-header">
+              <div>
+                <h2 className="page-title">Client Details</h2>
+                <p className="page-subtitle">View and update client information</p>
+              </div>
+              <button
+                type="button"
+                className="back-button"
+                onClick={() => navigate('/client')}
+              >
+                Back to Clients
+              </button>
+            </div>
+
             {/* Client Information Card */}
             <div className="client-info-card">
               <div className="client-info-header">
                 <h3 className="section-title">Client Information</h3>
-                <button 
-                  type="button" 
-                  className="edit-client-button"
-                  onClick={handleClientInfoEditClick}
-                >
-                  Edit
-                </button>
+                <div className="client-action-buttons">
+                  <button
+                    type="button"
+                    className="client-action-btn client-action-btn--edit"
+                    data-tooltip="Edit client"
+                    onClick={handleClientInfoEditClick}
+                    aria-label="Edit client"
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </button>
+                  <button
+                    type="button"
+                    className="client-action-btn client-action-btn--delete"
+                    data-tooltip="Delete client"
+                    onClick={() => setDeleteModalOpen(true)}
+                    aria-label="Delete client"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </div>
               </div>
               
               <div className="client-info-grid">
@@ -364,13 +419,17 @@ const ClientDetail: React.FC = () => {
             <div className="client-info-card">
               <div className="client-info-header">
                 <h3 className="section-title">Point of Contact Information</h3>
-                <button 
-                  type="button" 
-                  className="edit-client-button"
-                  onClick={handleContactInfoEditClick}
-                >
-                  Edit
-                </button>
+                <div className="client-action-buttons">
+                  <button
+                    type="button"
+                    className="client-action-btn client-action-btn--edit"
+                    data-tooltip="Edit contact"
+                    onClick={handleContactInfoEditClick}
+                    aria-label="Edit contact"
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </button>
+                </div>
               </div>
               
               <div className="client-info-grid">
@@ -401,11 +460,24 @@ const ClientDetail: React.FC = () => {
               </div>
             </div>
 
+            {clientMessage && (
+              <p
+                className="update-message-banner settings-success"
+                role="alert"
+                style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}
+              >
+                {clientMessage}
+              </p>
+            )}
+
             {/* Products Section */}
             {clientProducts.length > 0 && (
-              <div className="form-section">
-                <h3 className="section-title">Products</h3>
-                <div className="orders-table-wrapper">
+              <div className="order-detail-table-section">
+                <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                  <h3 className="section-title">Products</h3>
+                  <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.products && <div className="orders-table-wrapper">
                   <table className="orders-table">
                     <thead>
                       <tr>
@@ -432,14 +504,18 @@ const ClientDetail: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div>}
               </div>
             )}
 
             {/* Orders Section */}
             {ordersList.length > 0 && (
-              <div className="form-section">
-                <h3 className="section-title">Orders</h3>
+              <div className="order-detail-table-section">
+                <div className="collapsible-header" onClick={() => toggleSection('orders')}>
+                  <h3 className="section-title">Orders</h3>
+                  <span className={`collapse-arrow${!collapsedSections.orders ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.orders && (
                 <div className="orders-table-wrapper">
                   <table className="orders-table">
                     <thead>
@@ -474,13 +550,18 @@ const ClientDetail: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             )}
 
             {/* Contracts Section */}
             {clientContracts.length > 0 && (
-              <div className="form-section">
-                <h3 className="section-title">Contracts</h3>
+              <div className="order-detail-table-section">
+                <div className="collapsible-header" onClick={() => toggleSection('contracts')}>
+                  <h3 className="section-title">Contracts</h3>
+                  <span className={`collapse-arrow${!collapsedSections.contracts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.contracts && (
                 <div className="orders-table-wrapper">
                   <table className="orders-table">
                     <thead>
@@ -511,13 +592,18 @@ const ClientDetail: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             )}
 
             {/* Invoices Section */}
             {clientInvoices.length > 0 && (
-              <div className="form-section">
-                <h3 className="section-title">Invoices</h3>
+              <div className="order-detail-table-section">
+                <div className="collapsible-header" onClick={() => toggleSection('invoices')}>
+                  <h3 className="section-title">Invoices</h3>
+                  <span className={`collapse-arrow${!collapsedSections.invoices ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.invoices && (
                 <div className="orders-table-wrapper">
                   <table className="orders-table">
                     <thead>
@@ -546,11 +632,12 @@ const ClientDetail: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             )}
 
             {/* Additional Notes Section */}
-            <div className="form-section">
+            <div className="order-detail-table-section">
               <h3 className="section-title">Additional Notes</h3>
               <div className="form-group">
                 <label htmlFor="notes" className="form-label">Notes</label>
@@ -567,72 +654,58 @@ const ClientDetail: React.FC = () => {
 
             <div className="form-actions">
               {saveError && <p className="create-order-error" style={{ marginBottom: '1rem' }} role="alert">{saveError}</p>}
-              <button type="button" className="cancel-button" onClick={() => navigate('/client')}>
-                Cancel
-              </button>
               <button
                 type="button"
                 className="update-button"
                 disabled={saving || !clientIdNum}
                 onClick={async () => {
-                  if (!clientIdNum) { navigate('/client'); return; }
+                  if (!clientIdNum) return;
                   setSaveError('');
                   setSaving(true);
                   try {
-                    await updateClient(clientIdNum, {
-                      employee_name: employee.trim() || null,
-                      start_date: startDate.trim() || null,
-                      point_of_contact: pointOfContact.trim(),
-                      contact_email: contactEmail.trim() || null,
-                      contact_phone: contactPhone.trim() || null,
-                      billing_address: billingAddress.trim() || null,
-                      site_location: siteLocationAddress.trim() || null,
-                      notes: notes.trim() || null,
-                    });
-                    navigate('/client');
+                    await updateClient(clientIdNum, { notes: notes.trim() || null });
+                    setClientMessage('Client updated successfully.');
+                    setTimeout(() => setClientMessage(''), 4000);
                   } catch (err) {
-                    setSaveError(err instanceof Error ? err.message : 'Failed to update client.');
+                    setSaveError(err instanceof Error ? err.message : 'Failed to save notes.');
                   } finally {
                     setSaving(false);
                   }
                 }}
               >
-                {saving ? 'Saving…' : 'Update'}
+                {saving ? 'Saving…' : 'Update Notes'}
               </button>
             </div>
 
-            {/* Delete client */}
-            {clientIdNum && (
-              <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #8A8F93)', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="cancel-button"
-                  disabled={deleting}
-                  style={{ background: 'var(--danger-color, #dc2626)', color: '#fff', border: 'none' }}
-                  onClick={async () => {
-                    if (!window.confirm('Are you sure you want to delete this client? This cannot be undone.')) return;
-                    setDeleting(true);
-                    try {
-                      await deleteClient(clientIdNum);
-                      navigate('/client');
-                    } catch (err) {
-                      alert(err instanceof Error ? err.message : 'Failed to delete client.');
-                    } finally {
-                      setDeleting(false);
-                    }
-                  }}
-                >
-                  {deleting ? 'Deleting…' : 'Delete client'}
-                </button>
-              </div>
-            )}
           </div>
         </main>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Delete Client" narrow>
+        <div className="modal-body">
+          <p style={{ marginBottom: '1rem' }}>
+            Are you sure you want to delete <strong>{company}</strong>? This action cannot be undone.
+          </p>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="cancel-button" onClick={() => setDeleteModalOpen(false)}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="client-delete-confirm-btn"
+            disabled={deleting}
+            onClick={handleDeleteClient}
+          >
+            {deleting ? 'Deleting…' : 'Delete Client'}
+          </button>
+        </div>
+      </Modal>
+
       {/* Client Information Edit Modal */}
       {isClientInfoModalOpen && (
-        <div className="modal-overlay" onClick={handleClientInfoCancel}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Client Information</h3>
@@ -702,7 +775,7 @@ const ClientDetail: React.FC = () => {
 
       {/* Point of Contact Information Edit Modal */}
       {isContactInfoModalOpen && (
-        <div className="modal-overlay" onClick={handleContactInfoCancel}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Point of Contact Information</h3>

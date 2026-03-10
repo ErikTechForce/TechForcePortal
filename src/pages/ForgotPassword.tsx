@@ -53,6 +53,7 @@ const ForgotPassword: React.FC = () => {
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
+              className="form-input"
               type="email"
               id="email"
               value={email}

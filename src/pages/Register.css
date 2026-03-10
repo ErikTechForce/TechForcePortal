@@ -87,15 +87,6 @@
   color: #2d3748;
 }
 
-.form-group input {
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  outline: none;
-}
-
 .form-group input.error {
   border-color: #DC2626;
 }

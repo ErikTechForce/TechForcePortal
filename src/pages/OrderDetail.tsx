@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PDFDocument, rgb, StandardFonts, PDFImage } from 'pdf-lib';
@@ -364,6 +366,15 @@ const OrderDetail: React.FC = () => {
   const [contractsLoading, setContractsLoading] = useState(false);
   const [contractToDelete, setContractToDelete] = useState<{ id: number; label: string } | null>(null);
   const [deleteOrderModalOpen, setDeleteOrderModalOpen] = useState(false);
+
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    contracts: false,
+    invoice: false,
+    products: false,
+    activityLog: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   const [orderInvoices, setOrderInvoices] = useState<OrderInvoiceRow[]>([]);
   const [orderInvoicesLoading, setOrderInvoicesLoading] = useState(false);
   const [isGenerateInvoiceModalOpen, setIsGenerateInvoiceModalOpen] = useState(false);
@@ -1021,6 +1032,7 @@ Techforce Team`
   };
 
   const [editSaveError, setEditSaveError] = useState('');
+  const [orderMessage, setOrderMessage] = useState('');
   const [editSaving, setEditSaving] = useState(false);
 
   const handleEditSave = async (e: React.FormEvent) => {
@@ -1084,6 +1096,8 @@ Techforce Team`
       setInstallationEmployee(editInstallationEmployee);
       setSiteLocation(editSiteLocation);
       setIsEditModalOpen(false);
+      setOrderMessage('Order updated successfully.');
+      setTimeout(() => setOrderMessage(''), 4000);
     } catch (err) {
       setEditSaveError(err instanceof Error ? err.message : 'Failed to save order.');
     } finally {
@@ -1882,7 +1896,6 @@ Techforce Team`
 
     const dataURL = canvas.toDataURL('image/png');
     setSignature(dataURL);
-    alert('Signature saved! The contract can now be finalized.');
   };
 
   useEffect(() => {
@@ -1963,7 +1976,7 @@ Techforce Team`
                 className="back-button" 
                 onClick={() => navigate('/orders')}
               >
-                ← Back to Orders
+                Back to Orders
               </button>
             </div>
             <p className="page-subtitle">View and update order information</p>
@@ -1972,70 +1985,83 @@ Techforce Team`
             <div className={`order-info-card stage-${stage.toLowerCase()}`}>
               <div className="order-info-header">
                 <h3 className="section-title">Order Information</h3>
-                <button 
-                  type="button" 
-                  className="edit-order-button"
-                  onClick={handleEditClick}
-                >
-                  Edit
-                </button>
+                <div className="order-action-buttons">
+                  <button
+                    type="button"
+                    className="order-action-btn order-action-btn--edit"
+                    onClick={handleEditClick}
+                    data-tooltip="Edit order"
+                    aria-label="Edit order"
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </button>
+                  <button
+                    type="button"
+                    className="order-action-btn order-action-btn--delete"
+                    onClick={openDeleteOrderModal}
+                    data-tooltip="Delete order"
+                    aria-label="Delete order"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </div>
               </div>
               
               <div className="order-info-grid">
                 <div className="order-info-item">
                   <label className="order-info-label">Order Number</label>
-                  <div className="order-info-value">{orderData.orderNumber}</div>
+                  <p className="order-info-value">{orderData.orderNumber}</p>
                 </div>
 
                 <div className="order-info-item">
                   <label className="order-info-label">Company Name</label>
-                  <div 
-                    className="order-info-value clickable-company"
+                  <p 
+                    className="order-info-value"
                     onClick={handleCompanyClick}
                     style={{ cursor: 'pointer' }}
                   >
                     {orderData.companyName}
-                  </div>
+                  </p>
                 </div>
 
                 <div className="order-info-item">
                   <label className="order-info-label">Stage</label>
-                  <div className="order-info-value">
+                  <p className="order-info-value">
                     <span className={`stage-badge stage-${stage.toLowerCase()}`}>
                       {stage === 'Delivery' ? 'Invoice' : stage}
                     </span>
-                  </div>
+                  </p>
                 </div>
 
                 <div className="order-info-item">
                   <label className="order-info-label">Status</label>
-                  <div className="order-info-value">
+                  <p className="order-info-value">
                     <span className={`status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}`}>
                       {status}
                     </span>
-                  </div>
+                  </p>
                 </div>
 
                 <div className="order-info-item">
                   <label className="order-info-label">Employee</label>
-                  <div className="order-info-value">{employee || 'unassigned'}</div>
+                  <p className="order-info-value">{employee || 'unassigned'}</p>
                 </div>
 
                 {stage === 'Contract' && (
                   <div className="order-info-item">
                     <label className="order-info-label">Last Contact Date</label>
-                    <div className="order-info-value">
+                    <p className="order-info-value">
                       {chatMessages.length === 0 ? 'Not contacted' : (lastContactDate || 'Not set')}
-                    </div>
+                    </p>
                   </div>
                 )}
 
                 {stage === 'Delivery' && (
                   <div className="order-info-item">
                     <label className="order-info-label">Shipping Address</label>
-                    <div className="order-info-value" style={{ whiteSpace: 'pre-wrap' }}>
+                    <p className="order-info-value" style={{ whiteSpace: 'pre-wrap' }}>
                       {invoiceStageShippingFromContract || shippingAddress || 'Not set'}
-                    </div>
+                    </p>
                   </div>
                 )}
 
@@ -2043,24 +2069,34 @@ Techforce Team`
                   <>
                     <div className="order-info-item">
                       <label className="order-info-label">Installation Appointment</label>
-                      <div className="order-info-value">{installationAppointmentTime ? formatInstallationAppointmentTime(installationAppointmentTime) : 'Not set'}</div>
+                      <p className="order-info-value">{installationAppointmentTime ? formatInstallationAppointmentTime(installationAppointmentTime) : 'Not set'}</p>
                     </div>
                     {installationEmployee && (
                       <div className="order-info-item">
                         <label className="order-info-label">Installation Employee</label>
-                        <div className="order-info-value">{installationEmployee}</div>
+                        <p className="order-info-value">{installationEmployee}</p>
                       </div>
                     )}
                     {siteLocation && (
                       <div className="order-info-item">
                         <label className="order-info-label">Site Location</label>
-                        <div className="order-info-value">{siteLocation}</div>
+                        <p className="order-info-value">{siteLocation}</p>
                       </div>
                     )}
                   </>
                 )}
               </div>
             </div>
+
+            {orderMessage && (
+              <p
+                className="update-message-banner settings-success"
+                role="alert"
+                style={{ marginTop: '1rem' }}
+              >
+                {orderMessage}
+              </p>
+            )}
 
             {/* Generate Contract and Move to Invoice - Contract stage */}
             {stage === 'Contract' && (
@@ -2310,7 +2346,7 @@ Techforce Team`
 
             {/* Edit Modal */}
             {isEditModalOpen && (
-              <div className="modal-overlay" onClick={handleEditCancel}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h3 className="modal-title">Edit Order Information</h3>
@@ -2436,7 +2472,7 @@ Techforce Team`
 
             {/* Shipping Information Modal */}
             {isShippingModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsShippingModalOpen(false)}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h3 className="modal-title">Enter Shipping Information</h3>
@@ -2598,7 +2634,7 @@ Techforce Team`
 
             {/* Generate Invoice Modal (2 steps) */}
             {isGenerateInvoiceModalOpen && (
-              <div className="modal-overlay" onClick={() => !generateInvoiceSubmitting && (setIsGenerateInvoiceModalOpen(false), setGenerateInvoiceStep('confirm'))}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
                   <div className="modal-header">
                     <h3 className="modal-title">
@@ -2755,7 +2791,7 @@ Techforce Team`
 
             {/* Upload Invoice PDF Modal */}
             {isUploadPdfModalOpen && (
-              <div className="modal-overlay" onClick={() => !uploadPdfSubmitting && (setIsUploadPdfModalOpen(false), setUploadPdfFile(null))}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
                   <div className="modal-header">
                     <h3 className="modal-title">Upload invoice PDF</h3>
@@ -2875,7 +2911,7 @@ Techforce Team`
             </div>
 
             {isChatLogModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsChatLogModalOpen(false)}>
+              <div className="modal-overlay">
                 <div className="modal-content chat-log-modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h3 className="modal-title">Chat Log</h3>
@@ -2936,7 +2972,7 @@ Techforce Team`
 
             {/* Installation Appointment Modal */}
             {isInstallationModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsInstallationModalOpen(false)}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h3 className="modal-title">Set Installation Appointment</h3>
@@ -3147,7 +3183,7 @@ Techforce Team`
 
             {/* Confirm Inventory Modal - Installation stage */}
             {isConfirmInventoryModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsConfirmInventoryModalOpen(false)}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px' }}>
                   <div className="modal-header">
                     <h3 className="modal-title">Confirm Inventory</h3>
@@ -3210,7 +3246,7 @@ Techforce Team`
 
             {/* Delivery Modal - contract data card then product table + Complete Order */}
             {isDeliveryModalOpen && deliveryCardData && (
-              <div className="modal-overlay" onClick={() => { setIsDeliveryModalOpen(false); setDeliveryModalStep('card'); }}>
+              <div className="modal-overlay">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: deliveryModalStep === 'products' ? '560px' : '480px' }}>
                   <div className="modal-header">
                     <h3 className="modal-title">Delivery Information</h3>
@@ -3338,7 +3374,7 @@ Techforce Team`
 
             {/* Templated Messages Modal */}
             {isTemplatedModalOpen && (
-              <div className="modal-overlay" onClick={() => setIsTemplatedModalOpen(false)}>
+              <div className="modal-overlay">
                 <div className="modal-content templated-modal-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h3 className="modal-title">Select Templated Message</h3>
@@ -3369,7 +3405,7 @@ Techforce Team`
 
             {/* Contract Generation Modal */}
             {isContractModalOpen && (
-              <div className={`modal-overlay ${isContractModalFullscreen ? 'contract-modal-fullscreen-overlay' : ''}`} onClick={closeContractModal}>
+              <div className={`modal-overlay ${isContractModalFullscreen ? 'contract-modal-fullscreen-overlay' : ''}`}>
                 <div className={`modal-content contract-modal-content ${isContractModalFullscreen ? 'contract-modal-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header contract-modal-header">
                     <h3 className="modal-title">
@@ -3687,7 +3723,7 @@ Techforce Team`
                     {contractModalStep === 'signature' && (
                       <div className="contract-signature-step">
                         <p className="contract-signature-prompt">Sign in the TechForce section. This signature will appear on the last page of the contract PDF.</p>
-                        <div className="signature-section">
+                        <div className="order-detail-signature-section">
                           <div className="signature-pad-container">
                             <canvas
                               ref={signatureCanvasRef}
@@ -3703,7 +3739,7 @@ Techforce Team`
                               onTouchEnd={stopDrawing}
                             />
                             <div className="signature-actions">
-                              <button type="button" className="clear-signature-button" onClick={clearSignature}>
+                              <button type="button" className="order-detail-clear-signature-button" onClick={clearSignature}>
                                 Clear
                               </button>
                               <button type="button" className="save-signature-button" onClick={saveSignature}>
@@ -3791,104 +3827,94 @@ Techforce Team`
             {/* Contract stage: Contracts → Activity log → Invoice → Products */}
             {stage === 'Contract' && (
               <>
-                <div className="order-detail-table-section contracts-table-section">
-                  <h3 className="section-title">Contracts</h3>
-                  {contractsLoading ? (
-                    <p className="contracts-table-loading">Loading contracts…</p>
-                  ) : orderContracts.length === 0 ? (
-                    <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
-                  ) : (
-                    <div className="contracts-table-wrapper">
-                      <table className="contracts-table">
-                        <thead>
-                          <tr>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Generated</th>
-                            <th>Signed</th>
-                            <th>Link</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderContracts.map((c) => (
-                            <tr key={c.id}>
-                              <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
-                              <td>
-                                <span className={`contract-status contract-status-${c.status}`}>
-                                  {c.status === 'signed' ? 'Signed' : 'Pending'}
-                                </span>
-                              </td>
-                              <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
-                              <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="contract-copy-link-button"
-                                  onClick={() => handleCopyContractLink(c.id)}
-                                >
-                                  Copy link
-                                </button>
-                              </td>
-                              <td className="contracts-table-actions">
-                                <button
-                                  type="button"
-                                  className="contract-view-pdf-button"
-                                  onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}
-                                >
-                                  View PDF
-                                </button>
-                                <button
-                                  type="button"
-                                  className="contract-delete-button"
-                                  onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })}
-                                  aria-label="Delete contract"
-                                  title="Delete contract"
-                                >
-                                  ✕
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-                <div className="order-detail-table-section activity-log-section">
-                  <h3 className="section-title">Activity Log</h3>
-                  {activityLog.length > 0 ? (
-                    <div className="activity-log-container">
-                      <table className="activity-log-table">
-                        <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>User</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activityLog.map((entry) => (
-                            <tr key={entry.id}>
-                              <td>{entry.timestamp}</td>
-                              <td>{entry.action}</td>
-                              <td>{entry.user}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="activity-log-empty">No activity recorded yet.</p>
-                  )}
-                </div>
-                <div className="order-detail-table-section invoice-table-section">
-                  <h3 className="section-title">Invoice</h3>
-                  <div className="invoice-table-wrapper">
-                    {orderInvoicesLoading ? (
-                      <p className="invoice-table-empty">Loading invoices…</p>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('contracts')}>
+                    <h3 className="section-title">Contracts</h3>
+                    <span className={`collapse-arrow${!collapsedSections.contracts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.contracts && (
+                    contractsLoading ? (
+                      <p className="contracts-table-loading">Loading contracts…</p>
+                    ) : orderContracts.length === 0 ? (
+                      <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
                     ) : (
-                      <>
+                      <div className="contracts-table-wrapper">
+                        <table className="contracts-table">
+                          <thead>
+                            <tr>
+                              <th>Type</th>
+                              <th>Status</th>
+                              <th>Generated</th>
+                              <th>Signed</th>
+                              <th>Link</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderContracts.map((c) => (
+                              <tr key={c.id}>
+                                <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
+                                <td>
+                                  <span className={`contract-status contract-status-${c.status}`}>
+                                    {c.status === 'signed' ? 'Signed' : 'Pending'}
+                                  </span>
+                                </td>
+                                <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
+                                <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="contract-copy-link-button"
+                                    onClick={() => handleCopyContractLink(c.id)}
+                                  >
+                                    Copy link
+                                  </button>
+                                </td>
+                                <td className="contracts-table-actions">
+                                  <button
+                                    type="button"
+                                    className="contract-view-pdf-button"
+                                    onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}
+                                  >
+                                    View PDF
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="contract-delete-button"
+                                    onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })}
+                                    aria-label="Delete contract"
+                                    title="Delete contract"
+                                  >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header">
+                    <div className="collapsible-header-left" onClick={() => toggleSection('invoice')}>
+                      <h3 className="section-title">Invoice</h3>
+                      <span className={`collapse-arrow${!collapsedSections.invoice ? ' collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="section-header-btn"
+                      onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                    >
+                      + Upload PDF
+                    </button>
+                  </div>
+                  {!collapsedSections.invoice && (
+                    <div className="invoice-table-wrapper">
+                      {orderInvoicesLoading ? (
+                        <p className="invoice-table-empty">Loading invoices…</p>
+                      ) : (
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -3915,54 +3941,82 @@ Techforce Team`
                             )}
                           </tbody>
                         </table>
-                        <div style={{ marginTop: '0.75rem' }}>
-                          <button
-                            type="button"
-                            className="save-button"
-                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
-                          >
-                            Upload PDF
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="order-detail-table-section form-section">
-                  <h3 className="section-title">Products</h3>
-                  {orderContracts.length === 0 ? (
-                    <p className="no-products">No contracts yet. Generate a contract to see products.</p>
-                  ) : orderProductsFromContract.length > 0 ? (
-                    <div className="products-table-wrapper">
-                      <table className="products-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Serial Number</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderProductsFromContract.map((product) => (
-                            <tr key={product.id}>
-                              <td>{product.productName}</td>
-                              <td>{product.serialNumber || 'N/A'}</td>
-                              <td>
-                                <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
-                                  {product.status || 'Pending'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      )}
                     </div>
-                  ) : (
-                    <p className="no-products">No products found for this order.</p>
+                  )}
+                </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                    <h3 className="section-title">Products</h3>
+                    <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.products && (
+                    orderContracts.length === 0 ? (
+                      <p className="no-products">No contracts yet. Generate a contract to see products.</p>
+                    ) : orderProductsFromContract.length > 0 ? (
+                      <div className="products-table-wrapper">
+                        <table className="products-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Serial Number</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderProductsFromContract.map((product) => (
+                              <tr key={product.id}>
+                                <td>{product.productName}</td>
+                                <td>{product.serialNumber || 'N/A'}</td>
+                                <td>
+                                  <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
+                                    {product.status || 'Pending'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="no-products">No products found for this order.</p>
+                    )
+                  )}
+                </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('activityLog')}>
+                    <h3 className="section-title">Activity Log</h3>
+                    <span className={`collapse-arrow${!collapsedSections.activityLog ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.activityLog && (
+                    activityLog.length > 0 ? (
+                      <div className="activity-log-container">
+                        <table className="activity-log-table">
+                          <thead>
+                            <tr>
+                              <th>Timestamp</th>
+                              <th>Action</th>
+                              <th>User</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activityLog.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>{entry.timestamp}</td>
+                                <td>{entry.action}</td>
+                                <td>{entry.user}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    )
                   )}
                 </div>
                 {contractToDelete && (
-                  <div className="modal-overlay" onClick={() => setContractToDelete(null)}>
+                  <div className="modal-overlay">
                     <div className="modal-content contract-delete-modal" onClick={(e) => e.stopPropagation()}>
                       <div className="modal-header">
                         <h3 className="modal-title">Delete contract</h3>
@@ -3982,13 +4036,25 @@ Techforce Team`
             {/* Delivery stage: Invoice → Products → Contracts → Activity log */}
             {stage === 'Delivery' && (
               <>
-                <div className="order-detail-table-section invoice-table-section">
-                  <h3 className="section-title">Invoice</h3>
-                  <div className="invoice-table-wrapper">
-                    {orderInvoicesLoading ? (
-                      <p className="invoice-table-empty">Loading invoices…</p>
-                    ) : (
-                      <>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header">
+                    <div className="collapsible-header-left" onClick={() => toggleSection('invoice')}>
+                      <h3 className="section-title">Invoice</h3>
+                      <span className={`collapse-arrow${!collapsedSections.invoice ? ' collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="section-header-btn"
+                      onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                    >
+                      + Upload PDF
+                    </button>
+                  </div>
+                  {!collapsedSections.invoice && (
+                    <div className="invoice-table-wrapper">
+                      {orderInvoicesLoading ? (
+                        <p className="invoice-table-empty">Loading invoices…</p>
+                      ) : (
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -4015,123 +4081,129 @@ Techforce Team`
                             )}
                           </tbody>
                         </table>
-                        <div style={{ marginTop: '0.75rem' }}>
-                          <button
-                            type="button"
-                            className="save-button"
-                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
-                          >
-                            Upload PDF
-                          </button>
-                        </div>
-                      </>
-                    )}
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                    <h3 className="section-title">Products</h3>
+                    <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
                   </div>
-                </div>
-                <div className="order-detail-table-section form-section">
-                  <h3 className="section-title">Products</h3>
-                  {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
-                    <div className="products-table-wrapper">
-                      <table className="products-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Serial Number</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => (
-                            <tr key={product.id}>
-                              <td>{product.productName}</td>
-                              <td>{product.serialNumber || 'N/A'}</td>
-                              <td>
-                                <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
-                                  {product.status || 'Pending'}
-                                </span>
-                              </td>
+                  {!collapsedSections.products && (
+                    (orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
+                      <div className="products-table-wrapper">
+                        <table className="products-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Serial Number</th>
+                              <th>Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="no-products">No products found for this order.</p>
+                          </thead>
+                          <tbody>
+                            {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => (
+                              <tr key={product.id}>
+                                <td>{product.productName}</td>
+                                <td>{product.serialNumber || 'N/A'}</td>
+                                <td>
+                                  <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
+                                    {product.status || 'Pending'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="no-products">No products found for this order.</p>
+                    )
                   )}
                 </div>
-                <div className="order-detail-table-section contracts-table-section">
-                  <h3 className="section-title">Contracts</h3>
-                  {contractsLoading ? (
-                    <p className="contracts-table-loading">Loading contracts…</p>
-                  ) : orderContracts.length === 0 ? (
-                    <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
-                  ) : (
-                    <div className="contracts-table-wrapper">
-                      <table className="contracts-table">
-                        <thead>
-                          <tr>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Generated</th>
-                            <th>Signed</th>
-                            <th>Link</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderContracts.map((c) => (
-                            <tr key={c.id}>
-                              <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
-                              <td>
-                                <span className={`contract-status contract-status-${c.status}`}>
-                                  {c.status === 'signed' ? 'Signed' : 'Pending'}
-                                </span>
-                              </td>
-                              <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
-                              <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
-                              <td>
-                                <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
-                              </td>
-                              <td className="contracts-table-actions">
-                                <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
-                                <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract">✕</button>
-                              </td>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('contracts')}>
+                    <h3 className="section-title">Contracts</h3>
+                    <span className={`collapse-arrow${!collapsedSections.contracts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.contracts && (
+                    contractsLoading ? (
+                      <p className="contracts-table-loading">Loading contracts…</p>
+                    ) : orderContracts.length === 0 ? (
+                      <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
+                    ) : (
+                      <div className="contracts-table-wrapper">
+                        <table className="contracts-table">
+                          <thead>
+                            <tr>
+                              <th>Type</th>
+                              <th>Status</th>
+                              <th>Generated</th>
+                              <th>Signed</th>
+                              <th>Link</th>
+                              <th></th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {orderContracts.map((c) => (
+                              <tr key={c.id}>
+                                <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
+                                <td>
+                                  <span className={`contract-status contract-status-${c.status}`}>
+                                    {c.status === 'signed' ? 'Signed' : 'Pending'}
+                                  </span>
+                                </td>
+                                <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
+                                <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
+                                <td>
+                                  <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
+                                </td>
+                                <td className="contracts-table-actions">
+                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
+                                  <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract"><FontAwesomeIcon icon={faTrash} /></button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
                   )}
                 </div>
-                <div className="order-detail-table-section activity-log-section">
-                  <h3 className="section-title">Activity Log</h3>
-                  {activityLog.length > 0 ? (
-                    <div className="activity-log-container">
-                      <table className="activity-log-table">
-                        <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>User</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activityLog.map((entry) => (
-                            <tr key={entry.id}>
-                              <td>{entry.timestamp}</td>
-                              <td>{entry.action}</td>
-                              <td>{entry.user}</td>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('activityLog')}>
+                    <h3 className="section-title">Activity Log</h3>
+                    <span className={`collapse-arrow${!collapsedSections.activityLog ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.activityLog && (
+                    activityLog.length > 0 ? (
+                      <div className="activity-log-container">
+                        <table className="activity-log-table">
+                          <thead>
+                            <tr>
+                              <th>Timestamp</th>
+                              <th>Action</th>
+                              <th>User</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="activity-log-empty">No activity recorded yet.</p>
+                          </thead>
+                          <tbody>
+                            {activityLog.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>{entry.timestamp}</td>
+                                <td>{entry.action}</td>
+                                <td>{entry.user}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    )
                   )}
                 </div>
                 {contractToDelete && (
-                  <div className="modal-overlay" onClick={() => setContractToDelete(null)}>
+                  <div className="modal-overlay">
                     <div className="modal-content contract-delete-modal" onClick={(e) => e.stopPropagation()}>
                       <div className="modal-header">
                         <h3 className="modal-title">Delete contract</h3>
@@ -4151,74 +4223,64 @@ Techforce Team`
             {/* Installation stage: Products → Activity log → Invoice → Contracts */}
             {stage === 'Installation' && (
               <>
-                <div className="order-detail-table-section form-section">
-                  <h3 className="section-title">Products</h3>
-                  {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
-                    <div className="products-table-wrapper">
-                      <table className="products-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Serial Number</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => {
-                              const displayStatus = installationProductStatuses[product.id] ?? product.status ?? 'Pending';
-                              return (
-                                <tr key={product.id}>
-                                  <td>{product.productName}</td>
-                                  <td>{product.serialNumber || 'N/A'}</td>
-                                  <td>
-                                    <span className={`status-badge status-${(displayStatus || 'pending').toLowerCase().replace(/\s+/g, '-')}`}>
-                                      {displayStatus || 'Pending'}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="no-products">No products found for this order.</p>
-                  )}
-                </div>
-                <div className="order-detail-table-section activity-log-section">
-                  <h3 className="section-title">Activity Log</h3>
-                  {activityLog.length > 0 ? (
-                    <div className="activity-log-container">
-                      <table className="activity-log-table">
-                        <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>User</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activityLog.map((entry) => (
-                            <tr key={entry.id}>
-                              <td>{entry.timestamp}</td>
-                              <td>{entry.action}</td>
-                              <td>{entry.user}</td>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                    <h3 className="section-title">Products</h3>
+                    <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.products && (
+                    (orderProductsFromContract.length > 0 ? orderProductsFromContract : products).length > 0 ? (
+                      <div className="products-table-wrapper">
+                        <table className="products-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Serial Number</th>
+                              <th>Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="activity-log-empty">No activity recorded yet.</p>
+                          </thead>
+                          <tbody>
+                            {(orderProductsFromContract.length > 0 ? orderProductsFromContract : products).map((product) => {
+                                const displayStatus = installationProductStatuses[product.id] ?? product.status ?? 'Pending';
+                                return (
+                                  <tr key={product.id}>
+                                    <td>{product.productName}</td>
+                                    <td>{product.serialNumber || 'N/A'}</td>
+                                    <td>
+                                      <span className={`status-badge status-${(displayStatus || 'pending').toLowerCase().replace(/\s+/g, '-')}`}>
+                                        {displayStatus || 'Pending'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="no-products">No products found for this order.</p>
+                    )
                   )}
                 </div>
-                <div className="order-detail-table-section invoice-table-section">
-                  <h3 className="section-title">Invoice</h3>
-                  <div className="invoice-table-wrapper">
-                    {orderInvoicesLoading ? (
-                      <p className="invoice-table-empty">Loading invoices…</p>
-                    ) : (
-                      <>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header">
+                    <div className="collapsible-header-left" onClick={() => toggleSection('invoice')}>
+                      <h3 className="section-title">Invoice</h3>
+                      <span className={`collapse-arrow${!collapsedSections.invoice ? ' collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="section-header-btn"
+                      onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
+                    >
+                      + Upload PDF
+                    </button>
+                  </div>
+                  {!collapsedSections.invoice && (
+                    <div className="invoice-table-wrapper">
+                      {orderInvoicesLoading ? (
+                        <p className="invoice-table-empty">Loading invoices…</p>
+                      ) : (
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -4245,65 +4307,93 @@ Techforce Team`
                             )}
                           </tbody>
                         </table>
-                        <div style={{ marginTop: '0.75rem' }}>
-                          <button
-                            type="button"
-                            className="save-button"
-                            onClick={() => { setUploadPdfFile(null); setIsUploadPdfModalOpen(true); }}
-                          >
-                            Upload PDF
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="order-detail-table-section contracts-table-section">
-                  <h3 className="section-title">Contracts</h3>
-                  {contractsLoading ? (
-                    <p className="contracts-table-loading">Loading contracts…</p>
-                  ) : orderContracts.length === 0 ? (
-                    <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
-                  ) : (
-                    <div className="contracts-table-wrapper">
-                      <table className="contracts-table">
-                        <thead>
-                          <tr>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Generated</th>
-                            <th>Signed</th>
-                            <th>Link</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderContracts.map((c) => (
-                            <tr key={c.id}>
-                              <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
-                              <td>
-                                <span className={`contract-status contract-status-${c.status}`}>
-                                  {c.status === 'signed' ? 'Signed' : 'Pending'}
-                                </span>
-                              </td>
-                              <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
-                              <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
-                              <td>
-                                <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
-                              </td>
-                              <td className="contracts-table-actions">
-                                <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
-                                <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract">✕</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      )}
                     </div>
                   )}
                 </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('contracts')}>
+                    <h3 className="section-title">Contracts</h3>
+                    <span className={`collapse-arrow${!collapsedSections.contracts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.contracts && (
+                    contractsLoading ? (
+                      <p className="contracts-table-loading">Loading contracts…</p>
+                    ) : orderContracts.length === 0 ? (
+                      <p className="contracts-table-empty">No contracts yet. Generate a contract to create one.</p>
+                    ) : (
+                      <div className="contracts-table-wrapper">
+                        <table className="contracts-table">
+                          <thead>
+                            <tr>
+                              <th>Type</th>
+                              <th>Status</th>
+                              <th>Generated</th>
+                              <th>Signed</th>
+                              <th>Link</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderContracts.map((c) => (
+                              <tr key={c.id}>
+                                <td>{c.contract_type === 'trial' ? 'Trial' : 'Service'}</td>
+                                <td>
+                                  <span className={`contract-status contract-status-${c.status}`}>
+                                    {c.status === 'signed' ? 'Signed' : 'Pending'}
+                                  </span>
+                                </td>
+                                <td>{c.generated_at ? new Date(c.generated_at).toLocaleString() : '—'}</td>
+                                <td>{c.signed_at ? new Date(c.signed_at).toLocaleString() : '—'}</td>
+                                <td>
+                                  <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
+                                </td>
+                                <td className="contracts-table-actions">
+                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
+                                  <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract"><FontAwesomeIcon icon={faTrash} /></button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('activityLog')}>
+                    <h3 className="section-title">Activity Log</h3>
+                    <span className={`collapse-arrow${!collapsedSections.activityLog ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.activityLog && (
+                    activityLog.length > 0 ? (
+                      <div className="activity-log-container">
+                        <table className="activity-log-table">
+                          <thead>
+                            <tr>
+                              <th>Timestamp</th>
+                              <th>Action</th>
+                              <th>User</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activityLog.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>{entry.timestamp}</td>
+                                <td>{entry.action}</td>
+                                <td>{entry.user}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    )
+                  )}
+                </div>
                 {contractToDelete && (
-                  <div className="modal-overlay" onClick={() => setContractToDelete(null)}>
+                  <div className="modal-overlay">
                     <div className="modal-content contract-delete-modal" onClick={(e) => e.stopPropagation()}>
                       <div className="modal-header">
                         <h3 className="modal-title">Delete contract</h3>
@@ -4322,82 +4412,83 @@ Techforce Team`
 
             {stage !== 'Contract' && stage !== 'Delivery' && stage !== 'Installation' && (
               <>
-                <div className="activity-log-section">
-                  <h3 className="section-title">Activity Log</h3>
-                  {activityLog.length > 0 ? (
-                    <div className="activity-log-container">
-                      <table className="activity-log-table">
-                        <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>User</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activityLog.map((entry) => (
-                            <tr key={entry.id}>
-                              <td>{entry.timestamp}</td>
-                              <td>{entry.action}</td>
-                              <td>{entry.user}</td>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                    <h3 className="section-title">Products</h3>
+                    <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.products && (
+                    products.length > 0 ? (
+                      <div className="products-table-wrapper">
+                        <table className="products-table">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Serial Number</th>
+                              <th>Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="activity-log-empty">No activity recorded yet.</p>
+                          </thead>
+                          <tbody>
+                            {products.map((product) => (
+                              <tr key={product.id}>
+                                <td>{product.productName}</td>
+                                <td>{product.serialNumber || 'N/A'}</td>
+                                <td>
+                                  <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
+                                    {product.status || 'Pending'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="no-products">No products found for this order.</p>
+                    )
                   )}
                 </div>
-                <div className="form-section">
-                  <h3 className="section-title">Products</h3>
-                  {products.length > 0 ? (
-                    <div className="products-table-wrapper">
-                      <table className="products-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Serial Number</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products.map((product) => (
-                            <tr key={product.id}>
-                              <td>{product.productName}</td>
-                              <td>{product.serialNumber || 'N/A'}</td>
-                              <td>
-                                <span className={`status-badge status-${(product.status || 'pending').toLowerCase().replace(' ', '-')}`}>
-                                  {product.status || 'Pending'}
-                                </span>
-                              </td>
+                <div className="order-detail-table-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('activityLog')}>
+                    <h3 className="section-title">Activity Log</h3>
+                    <span className={`collapse-arrow${!collapsedSections.activityLog ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.activityLog && (
+                    activityLog.length > 0 ? (
+                      <div className="activity-log-container">
+                        <table className="activity-log-table">
+                          <thead>
+                            <tr>
+                              <th>Timestamp</th>
+                              <th>Action</th>
+                              <th>User</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="no-products">No products found for this order.</p>
+                          </thead>
+                          <tbody>
+                            {activityLog.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>{entry.timestamp}</td>
+                                <td>{entry.action}</td>
+                                <td>{entry.user}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    )
                   )}
                 </div>
               </>
             )}
 
-            <div className="order-detail-delete-section">
-              <button
-                type="button"
-                className="order-delete-button"
-                onClick={openDeleteOrderModal}
-              >
-                Delete order
-              </button>
-            </div>
           </div>
         </main>
       </div>
 
       {deleteOrderModalOpen && (
-        <div className="modal-overlay" onClick={closeDeleteOrderModal}>
+        <div className="modal-overlay">
           <div className="modal-content order-delete-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Delete order</h3>

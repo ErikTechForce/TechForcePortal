@@ -8,46 +8,9 @@ import { useAuth } from '../context/AuthContext';
 import { fetchTasks, updateTask, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchOrdersForUser, type OrderRow } from '../api/orderApi';
+import { TAG_PILL_COLORS, ROLE_LABELS as TAG_LABELS } from '../constants/taskTags';
 import './Page.css';
 import './TasksBoard.css';
-
-const TAG_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  accounting: 'Accounting',
-  sales: 'Sales',
-  marketing: 'Marketing',
-  engineers: 'Engineers',
-  installation: 'Installation',
-  logistics: 'Logistics',
-  corporate: 'Corporate',
-  r_d: 'R&D',
-  support: 'Support',
-  customer_service: 'Customer Service',
-  it: 'IT',
-  operations: 'Operations',
-  finances: 'Finances',
-  manufacturing: 'Manufacturing',
-  hr: 'HR',
-};
-
-const TAG_PILL_COLORS: Record<string, string> = {
-  admin: '#bef26480',           // Lime
-  accounting: '#34d39980',      // Medium Green
-  sales: '#fbbf2480',           // Amber/Gold
-  marketing: '#f472b680',       // Pink
-  engineers: '#3b82f680',       // Blue
-  installation: '#f59e0b80',    // Orange/Warning
-  logistics: '#2dd4bf80',       // Teal
-  corporate: '#94a3b880',       // Slate Grey
-  r_d: '#86efac80',             // Green
-  support: '#7dd3fc80',         // Light Blue
-  customer_service: '#6366f180',// Indigo
-  it: '#e879f980',              // Fuchsia
-  operations: '#d6d3d180',      // Stone
-  finances: '#05966980',        // Dark Green
-  manufacturing: '#22d3ee80',   // Cyan
-  hr: '#a78bfa80',              // Purple
-};
 
 function matchesSearch(task: TaskRow, search: string): boolean {
   if (!search.trim()) return true;
@@ -79,6 +42,12 @@ const TasksBoard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    assignedCompanies: false,
+    completedTasks: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   // Drag-and-drop state
   const [draggedTask, setDraggedTask] = useState<TaskRow | null>(null);
@@ -586,11 +555,15 @@ const TasksBoard: React.FC = () => {
                 </div>
 
                 <div className="assigned-companies-section">
-                  <h3 className="assigned-companies-title">Assigned Companies</h3>
+                  <div className="collapsible-header" onClick={() => toggleSection('assignedCompanies')}>
+                    <h3 className="assigned-companies-title">Assigned Companies</h3>
+                    <span className={`collapse-arrow${!collapsedSections.assignedCompanies ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.assignedCompanies && <>
                   <p className="page-subtitle" style={{ marginBottom: '0.75rem' }}>
                     Clients assigned to you
                   </p>
-                  <table className="assigned-companies-table">
+                  <div className="collapsible-table-wrapper"><table className="assigned-companies-table">
                     <thead>
                       <tr>
                         <th>Company Name</th>
@@ -619,15 +592,20 @@ const TasksBoard: React.FC = () => {
                         ))
                       )}
                     </tbody>
-                  </table>
+                  </table></div>
+                  </>}
                 </div>
 
                 <div className="completed-tasks-section">
-                  <h3 className="completed-tasks-title">Completed Tasks</h3>
+                  <div className="collapsible-header" onClick={() => toggleSection('completedTasks')}>
+                    <h3 className="completed-tasks-title">Completed Tasks</h3>
+                    <span className={`collapse-arrow${!collapsedSections.completedTasks ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.completedTasks && <>
                   <p className="page-subtitle" style={{ marginBottom: '0.75rem' }}>
                     Tasks assigned to you with status Completed
                   </p>
-                  <table className="completed-tasks-table">
+                  <div className="collapsible-table-wrapper"><table className="completed-tasks-table">
                     <thead>
                       <tr>
                         <th>Task #</th>
@@ -654,7 +632,8 @@ const TasksBoard: React.FC = () => {
                         ))
                       )}
                     </tbody>
-                  </table>
+                  </table></div>
+                  </>}
                 </div>
               </>
             )}

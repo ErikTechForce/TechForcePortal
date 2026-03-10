@@ -36,7 +36,7 @@ h4, label, th {
   font-weight: 500; /* Medium */
 }
 
-p, span, input, text, textarea, td {
+p, span, input, text, textarea, td, value {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 400; /* Regular */
@@ -52,12 +52,75 @@ html {
   overflow-x: hidden;
 }
 
+/* ── Shared scrollable table wrapper ───────────────────────────── */
+.collapsible-table-wrapper {
+  overflow-y: auto;
+  max-height: 320px;
+  border-radius: 8px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+}
+
+.collapsible-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #E9ECEF;
+}
+
+/* ── Shared collapsible section styles ─────────────────────────── */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapse-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #E48B52;
+  font-size: 0.95rem;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.collapse-arrow--open {
+  transform: rotate(90deg);
+}
+
+.collapsible-header:hover .collapse-arrow {
+  color: #2F6F44;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Update message slide animation ───────────────────────────────── */
+@keyframes slideInFromLeft {
+  from { transform: translateX(-24px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes slideOutToLeft {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-24px); opacity: 0; }
+}
+
+.update-message-banner {
+  max-width: 350px;
+  background-color: #A8F7A980;
+  border-left: 4px solid #3CA233;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  animation:
+    slideInFromLeft 0.3s ease forwards,
+    slideOutToLeft  0.3s ease 3.7s forwards;
 }
 
 /* Mobile: prevent input zoom on iOS when focusing inputs */

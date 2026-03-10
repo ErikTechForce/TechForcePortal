@@ -86,6 +86,7 @@ const Login: React.FC = () => {
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
+              className="form-input"
               type="email"
               id="email"
               value={email}
@@ -98,6 +99,7 @@ const Login: React.FC = () => {
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
+              className="form-input"
               type="password"
               id="password"
               value={password}

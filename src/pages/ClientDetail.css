@@ -1,12 +1,5 @@
 .client-detail-form {
-  margin-top: 2rem;
   max-width: 800px;
-}
-
-.form-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #8A8F93;
 }
 
 .form-section:last-of-type {
@@ -17,30 +10,12 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 1.5rem 0;
+  margin-top: 0;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
 }
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin-bottom: 0.5rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
-}
-
 .cancel-button,
 .update-button {
   padding: 0.75rem 1.5rem;
@@ -75,15 +50,33 @@
   transform: scale(0.98);
 }
 
+/* ── Page header with back button ─────────────────────────────────── */
+.task-detail-page-header .back-button {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  background-color: #8A8F93;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-detail-page-header .back-button:hover {
+  background-color: #E9ECEF;
+  color: #1B1C1E;
+}
+
 /* Client Information Card */
 .client-info-card {
-  background-color: white;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   padding: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-  border: 1px solid #8A8F93;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
   max-width: 900px;
   border-left: 4px solid #2F6F44;
 }
@@ -93,6 +86,91 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+}
+
+/* ── Icon action buttons (edit / delete) ──────────────────────────── */
+.client-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.client-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  position: relative;
+}
+
+.client-action-btn--edit {
+  background-color: #E48B52;
+  color: white;
+}
+
+.client-action-btn--edit:hover {
+  background-color: #c9703d;
+}
+
+.client-action-btn--delete {
+  background-color: #b91c1c;
+  color: white;
+}
+
+.client-action-btn--delete:hover {
+  background-color: #dc2626;
+}
+
+/* Tooltips */
+.client-action-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1B1C1E;
+  color: white;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.client-action-btn:hover::after {
+  opacity: 1;
+}
+
+/* Delete confirmation button */
+.client-delete-confirm-btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  background-color: #b91c1c;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.client-delete-confirm-btn:hover {
+  background-color: #dc2626;
+}
+
+.client-delete-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .client-info-grid {
@@ -108,7 +186,7 @@
 }
 
 .client-info-label {
-  font-size: 0.875rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #5A708D;
   margin-bottom: 0.5rem;
@@ -120,28 +198,9 @@
   font-size: 1rem;
   color: #1B1C1E;
   font-weight: 500;
+  font-family: var(--font-body);
 }
 
-.edit-client-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: white;
-  background-color: #2F6F44;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: auto;
-}
-
-.edit-client-button:hover {
-  background-color: #14532d;
-}
-
-.edit-client-button:active {
-  transform: scale(0.98);
-}
 
 /* Modal Styles */
 .modal-overlay {
@@ -226,11 +285,6 @@
 
   .client-info-card {
     padding: 1rem;
-  }
-
-  .form-section {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
   }
 
   /* Orders table card layout comes from Orders.css; ensure wrapper doesn't force width */

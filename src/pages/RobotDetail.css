@@ -31,12 +31,6 @@
   max-width: 900px;
 }
 
-.form-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #8A8F93;
-}
-
 .form-section:last-of-type {
   border-bottom: none;
 }
@@ -45,7 +39,6 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 1.5rem 0;
 }
 
 .robot-current-location {
@@ -75,14 +68,6 @@
 
 .form-group {
   margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin-bottom: 0.5rem;
 }
 
 .activity-log-container {
@@ -124,15 +109,6 @@
 
 .activity-log-table tbody tr:hover {
   background-color: #E9ECEF;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
 }
 
 .cancel-button,

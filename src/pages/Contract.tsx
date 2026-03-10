@@ -555,7 +555,6 @@ const Contract: React.FC = () => {
         <div className="contract-header">
           <img src="/images/branding-logo.svg" alt="TechForce Robotics" className="contract-branding-logo" />
           <h2 className="contract-title">{contractTitle}</h2>
-          <p className="contract-subtitle">Please review the contract below and sign to proceed</p>
         </div>
       
         {contractStatusLoading ? (

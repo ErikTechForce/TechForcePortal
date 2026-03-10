@@ -56,7 +56,8 @@
 
 .orders-company-link,
 .client-order-link {
-  color: #2563eb;
+  font-size: 1.25rem;
+  color: #2A425F;
   text-decoration: none;
   font-weight: 500;
 }
@@ -101,7 +102,7 @@
 }
 
 .create-order-error {
-  color: #b91c1c;
+  color: #B91C1C;
   font-size: 0.875rem;
   margin-bottom: 1rem;
 }
@@ -122,18 +123,55 @@
   width: 100%;
 }
 
+.orders-collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0.75rem;
+}
+
+.orders-collapsible-header:hover .orders-table-title {
+  color: #2F6F44;
+}
+
 .orders-table-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin-bottom: 1rem;
+  margin: 0;
+  transition: color 0.15s ease;
+}
+
+.orders-collapse-arrow {
+  font-size: 0.95rem;
+  color: #E48B52;
+  transition: transform 0.2s ease, color 0.15s ease;
+  display: inline-block;
+}
+
+.orders-collapsible-header:hover .orders-collapse-arrow {
+  color: #2F6F44;
+}
+
+.orders-collapse-arrow--open {
+  transform: rotate(90deg);
 }
 
 .orders-table-wrapper {
   background-color: white;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 320px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+}
+
+.orders-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #E9ECEF;
 }
 
 .orders-table {
@@ -193,7 +231,7 @@
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;

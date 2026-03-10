@@ -9,17 +9,16 @@
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1B1C1E;
-  background-color: #f3f4f6;
-  border: 1px solid #8A8F93;
+  color: #FFFFFF;
+  background-color:#8A8F93;;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .back-button:hover {
-  background-color: #8A8F93;
-  border-color: #E9ECEF;
+  background-color: #E9ECEF;
+  color: #1B1C1E;
 }
 
 .back-button:active {
@@ -35,21 +34,49 @@
 .order-detail-table-section {
   margin: 0 1rem 1.5rem;
   padding: 1rem;
-  background: #E9ECEF;
-  border-radius: 8px;
-  border: 1px solid #8A8F93;
 }
 
 .order-detail-table-section .section-title {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 0.75rem 0;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.section-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.section-header-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: white;
+  background-color: #2F6F44;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.section-header-btn:hover {
+  background-color: #14532d;
+}
+
+.section-header-btn:active {
+  transform: scale(0.98);
 }
 
 .form-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid #8A8F93;
 }
 
@@ -61,26 +88,17 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 1.5rem 0;
 }
 
 .form-group {
   margin-bottom: 1.5rem;
 }
 
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin-bottom: 0.5rem;
-}
-
 .form-input,
 .form-select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #E9ECEF;
+  border: 2px solid #8A8F93;
   border-radius: 6px;
   font-size: 0.95rem;
   color: #1B1C1E;
@@ -115,7 +133,9 @@
 .products-table-wrapper {
   background-color: white;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
@@ -126,6 +146,9 @@
 
 .products-table thead {
   background-color: #E9ECEF;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .products-table th {
@@ -175,7 +198,6 @@
   justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
 }
 
 .cancel-button,
@@ -277,7 +299,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background-color: #1d4ed8;
+  background-color: #2A425F;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -298,31 +320,51 @@
   border-radius: 8px;
 }
 
-.invoice-table-section .section-title {
-  margin-bottom: 0.75rem;
-}
-
 .invoice-table-wrapper {
+  background-color: white;
+  border-radius: 8px;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
 .invoice-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
 }
 
-.invoice-table th,
-.invoice-table td {
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #8A8F93;
+.invoice-table thead {
+  background-color: #E9ECEF;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .invoice-table th {
+  padding: 1rem;
+  text-align: left;
   font-weight: 600;
   color: #1B1C1E;
-  background: #f3f4f6;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #8A8F93;
+}
+
+.invoice-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
+  font-size: 0.95rem;
+}
+
+.invoice-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.invoice-table tbody tr:hover {
+  background-color: #E9ECEF;
 }
 
 .invoice-table-empty {
@@ -332,19 +374,11 @@
 }
 
 .invoice-view-pdf-link {
-  color: #2563eb;
+  color: #5A708D;
   text-decoration: none;
 }
 .invoice-view-pdf-link:hover {
   text-decoration: underline;
-}
-
-.contracts-table-section {
-  margin: 0 1rem 1.5rem;
-  padding: 1rem;
-  background: #E9ECEF;
-  border-radius: 8px;
-  border: 1px solid #8A8F93;
 }
 
 .contracts-table-title {
@@ -362,30 +396,50 @@
 }
 
 .contracts-table-wrapper {
+  background-color: white;
+  border-radius: 8px;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
 .contracts-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
 }
 
-.contracts-table th,
-.contracts-table td {
-  padding: 0.6rem 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #8A8F93;
+.contracts-table thead {
+  background-color: #E9ECEF;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .contracts-table th {
+  padding: 1rem;
+  text-align: left;
   font-weight: 600;
   color: #1B1C1E;
-  background: #f3f4f6;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #8A8F93;
+}
+
+.contracts-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #8A8F93;
+  color: #1B1C1E;
+  font-size: 0.95rem;
+}
+
+.contracts-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .contracts-table tbody tr:hover {
-  background: #f3f4f6;
+  background-color: #E9ECEF;
 }
 
 .contract-status {
@@ -407,40 +461,43 @@
 }
 
 .contract-view-pdf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
-  color: #2F6F44;
-  background: transparent;
-  border: 1px solid #2F6F44;
+  color: white;
+  background: #E48B52;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .contract-view-pdf-button:hover {
-  background: #2F6F44;
-  color: white;
+  background: #F4AC6A;
 }
 
 .contract-copy-link-button {
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
-  color: #1d4ed8;
+  color: #2A425F;
   background: transparent;
-  border: 1px solid #1d4ed8;
+  border: 1px solid #2A425F;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .contract-copy-link-button:hover {
-  background: #1d4ed8;
+  background: #2A425F;
   color: white;
 }
 
 .contracts-table-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
@@ -453,17 +510,16 @@
   padding: 0;
   font-size: 1rem;
   line-height: 1;
-  color: #b91c1c;
-  background: transparent;
-  border: 1px solid #b91c1c;
+  color: white;
+  background: #b91c1c;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .contract-delete-button:hover {
-  background: #b91c1c;
-  color: white;
+  background: #dc2626;
 }
 
 .contract-delete-modal {
@@ -489,28 +545,6 @@
   color: white;
 }
 
-.order-detail-delete-section {
-  margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid #8A8F93;
-}
-
-.order-delete-button {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #b91c1c;
-  background: transparent;
-  border: 1px solid #b91c1c;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.order-delete-button:hover {
-  background: #b91c1c;
-  color: white;
-}
 
 /* Delete order modal spacing */
 .order-delete-modal .order-delete-modal-body {
@@ -791,13 +825,6 @@
   gap: 0.35rem;
 }
 
-.contract-form-group .form-input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #E9ECEF;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
 .contract-form-actions {
   display: flex;
   gap: 0.75rem;
@@ -850,7 +877,7 @@
 }
 
 .contract-form-total {
-  background-color: #ecfdf5;
+  background-color: #73bf4333;
   font-weight: 500;
 }
 
@@ -923,7 +950,7 @@
   background-color: #14532d;
 }
 
-.signature-section {
+.order-detail-signature-section {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -949,13 +976,13 @@
   justify-content: flex-end;
 }
 
-.clear-signature-button {
+.order-detail-clear-signature-button {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
   color: #1B1C1E;
   background-color: #f3f4f6;
-  border: 1px solid #8A8F93;
+  border: 1px solid #8A8F9380;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1018,27 +1045,30 @@
 
 /* Order Information Card */
 .order-info-card {
-  background-color: white;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
   border-radius: 8px;
   padding: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-  border: 1px solid #8A8F93;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
   max-width: 900px;
-  border-left: 4px solid #5A708D;
+  border-left: 4px solid #2F6F44;
 }
 
 .order-info-card.stage-contract {
-  border-left-color: #3b82f6;
+  border-left-color: #2A425F;
 }
 
 .order-info-card.stage-delivery {
-  border-left-color: #f59e0b;
+  border-left-color: #F4AC6A;
 }
 
 .order-info-card.stage-installation {
-  border-left-color: #10b981;
+  border-left-color: #73BF43;
+}
+
+.order-info-card.stage-completed {
+  border-left-color: #2F6F44;
 }
 
 .order-info-header {
@@ -1061,7 +1091,7 @@
 }
 
 .order-info-label {
-  font-size: 0.875rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #5A708D;
   margin-bottom: 0.5rem;
@@ -1073,16 +1103,6 @@
   font-size: 1rem;
   color: #1B1C1E;
   font-weight: 500;
-}
-
-.order-info-value.clickable-company {
-  color: #2F6F44;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.order-info-value.clickable-company:hover {
-  color: #14532d;
 }
 
 .stage-badge {
@@ -1106,29 +1126,80 @@
 }
 
 .stage-badge.stage-installation {
+  background-color: #5E9A78BF;
+  color: #092214;
+}
+
+.stage-badge.stage-completed {
   background-color: #A8F7A9BF;
   color: #1F4B31;
 }
 
-.edit-order-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: white;
-  background-color: #2F6F44;
-  border: none;
-  border-radius: 6px;
+/* ── Order action icon buttons (Edit + Delete) ───────────── */
+.order-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.order-action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  width: auto;
+  font-size: 0.95rem;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
 }
 
-.edit-order-button:hover {
-  background-color: #14532d;
+.order-action-btn:active {
+  transform: scale(0.94);
 }
 
-.edit-order-button:active {
-  transform: scale(0.98);
+/* Tooltip */
+.order-action-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1B1C1E;
+  color: #fff;
+  padding: 0.3rem 0.65rem;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.order-action-btn:hover::after {
+  opacity: 1;
+}
+
+.order-action-btn--edit {
+  color: white;
+  background-color: #E48B52;
+  border: none;
+}
+
+.order-action-btn--edit:hover {
+  background-color: #F4AC6A;
+}
+
+.order-action-btn--delete {
+  color: white;
+  background: #b91c1c;
+  border: none;
+}
+
+.order-action-btn--delete:hover {
+  background: #dc2626;
 }
 
 /* Modal Styles */
@@ -1159,6 +1230,10 @@
 }
 
 .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1199,11 +1274,15 @@
 }
 
 .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: white;
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  padding: 1.5rem;
   border-top: 1px solid #8A8F93;
 }
 
@@ -1531,20 +1610,12 @@
   background: #E9ECEF;
 }
 
-/* Activity Log Styles */
-.activity-log-section {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-  border: 1px solid #8A8F93;
-  max-width: 900px;
-}
-
 .activity-log-container {
   margin-top: 1rem;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
+  border-radius: 8px;
 }
 
 .activity-log-table {
@@ -1554,6 +1625,9 @@
 
 .activity-log-table thead {
   background-color: #E9ECEF;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .activity-log-table th {
@@ -1587,6 +1661,72 @@
   font-style: italic;
   padding: 1rem 0;
   margin: 0;
+}
+
+/* ── Section dividers ─────────────────────────────────────── */
+.order-detail-table-section + .order-detail-table-section,
+.order-detail-table-section + .activity-log-section {
+  border-top: 1px solid #d1d5db;
+  margin-top: 1.75rem;
+  padding-top: 1.75rem;
+}
+
+/* ── Collapsible section headers ──────────────────────────── */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  user-select: none;
+}
+
+.collapsible-header:hover .section-title {
+  color: #2F6F44;
+}
+
+.collapsible-header .section-title {
+  margin-bottom: 0;
+}
+
+/* Left clickable zone inside Invoice header (title + arrow) */
+.collapsible-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.collapsible-header-left:hover .section-title {
+  color: #2F6F44;
+}
+
+.collapsible-header-left .section-title {
+  margin-bottom: 0;
+}
+
+/* Push Upload PDF button to the far right in Invoice header */
+.collapsible-header .section-header-btn {
+  margin-left: auto;
+}
+
+.collapse-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #E48B52;
+  font-size: 0.85rem;
+  transition: transform 0.2s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.collapse-arrow--open {
+  transform: rotate(90deg);
+}
+
+.collapsible-header:hover .collapse-arrow,
+.collapsible-header-left:hover .collapse-arrow {
+  color: #2F6F44;
 }
 
 

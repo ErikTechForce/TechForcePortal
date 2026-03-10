@@ -24,6 +24,16 @@ const Orders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [orderSearch, setOrderSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    contracts: false,
+    invoice: false,
+    installation: false,
+    completed: false,
+  });
+
+  const toggleSection = (key: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const companyToClientId = useMemo(() => {
     const map: Record<string, number> = {};
@@ -137,7 +147,7 @@ const Orders: React.FC = () => {
                 aria-label="Search orders"
               />
               <button type="button" className="page-toolbar-btn" onClick={() => setCreateModalOpen(true)}>
-                + Create New Order
+                + Add Order
               </button>
             </div>
 
@@ -147,23 +157,35 @@ const Orders: React.FC = () => {
               <>
                 <div className="orders-tables-container">
                   <div className="orders-table-section">
-                    <h3 className="orders-table-title">Contracts</h3>
-                    {renderTable(filteredContracts, 'No contract orders.')}
+                    <div className="orders-collapsible-header" onClick={() => toggleSection('contracts')}>
+                      <h3 className="orders-table-title">Contracts</h3>
+                      <span className={`orders-collapse-arrow${!collapsedSections.contracts ? ' orders-collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    {!collapsedSections.contracts && renderTable(filteredContracts, 'No contract orders.')}
                   </div>
 
                   <div className="orders-table-section">
-                    <h3 className="orders-table-title">Invoice</h3>
-                    {renderTable(filteredInventory, 'No invoice orders.')}
+                    <div className="orders-collapsible-header" onClick={() => toggleSection('invoice')}>
+                      <h3 className="orders-table-title">Invoice</h3>
+                      <span className={`orders-collapse-arrow${!collapsedSections.invoice ? ' orders-collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    {!collapsedSections.invoice && renderTable(filteredInventory, 'No invoice orders.')}
                   </div>
 
                   <div className="orders-table-section">
-                    <h3 className="orders-table-title">Installation</h3>
-                    {renderTable(filteredInstallation, 'No installation orders.')}
+                    <div className="orders-collapsible-header" onClick={() => toggleSection('installation')}>
+                      <h3 className="orders-table-title">Installation</h3>
+                      <span className={`orders-collapse-arrow${!collapsedSections.installation ? ' orders-collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    {!collapsedSections.installation && renderTable(filteredInstallation, 'No installation orders.')}
                   </div>
 
                   <div className="orders-table-section">
-                    <h3 className="orders-table-title">Completed Orders</h3>
-                    {renderTable(filteredCompleted, 'No completed orders.')}
+                    <div className="orders-collapsible-header" onClick={() => toggleSection('completed')}>
+                      <h3 className="orders-table-title">Completed Orders</h3>
+                      <span className={`orders-collapse-arrow${!collapsedSections.completed ? ' orders-collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    {!collapsedSections.completed && renderTable(filteredCompleted, 'No completed orders.')}
                   </div>
                 </div>
               </>

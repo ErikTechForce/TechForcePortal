@@ -104,6 +104,7 @@ const ResetPassword: React.FC = () => {
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm password</label>
             <input
+              className="form-input"
               type="password"
               id="confirmPassword"
               value={confirmPassword}

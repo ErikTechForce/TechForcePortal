@@ -166,22 +166,6 @@
   margin-bottom: 0.35rem;
 }
 
-.contract-billing-section .form-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #E9ECEF;
-  border-radius: 6px;
-  color: #1B1C1E;
-  background-color: white;
-}
-
-.contract-billing-section .form-input:focus {
-  outline: none;
-  border-color: #73BF43;
-  box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
-}
-
 @media (max-width: 640px) {
   .contract-billing-grid {
     grid-template-columns: 1fr;

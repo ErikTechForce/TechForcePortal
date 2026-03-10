@@ -12,36 +12,6 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin-bottom: 0.5rem;
-}
-
-.form-input,
-.form-select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #E9ECEF;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  color: #1B1C1E;
-  background-color: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-}
-
-.form-input:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
 }
 
 .cancel-button,

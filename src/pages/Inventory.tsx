@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
@@ -43,6 +45,12 @@ const Inventory: React.FC = () => {
   const [addInvModel, setAddInvModel] = useState('');
   const [addInvSerial, setAddInvSerial] = useState('');
   const [operationsEditIndex, setOperationsEditIndex] = useState<number | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    products: false,
+    ffeInventory: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   const [editProduct, setEditProduct] = useState('');
   const [editAvailable, setEditAvailable] = useState('');
   const [editReplacementCost, setEditReplacementCost] = useState('');
@@ -205,11 +213,15 @@ const Inventory: React.FC = () => {
   const operationsTotalValue = operationsRows.reduce((sum, r) => sum + parseValue(r.value), 0);
 
   const inventorySearchLower = inventorySearchQuery.trim().toLowerCase();
+  const isStarred = (name: string) => name === 'TIM-E Bot' || name === 'BIM-E';
+
   const filteredProducts = useMemo(() => {
-    if (!inventorySearchLower) return products;
-    return products.filter((p) => {
-      return [p.name, p.type, p.sku ?? ''].some((v) => v.toLowerCase().includes(inventorySearchLower));
-    });
+    const list = inventorySearchLower
+      ? products.filter((p) =>
+          [p.name, p.type, p.sku ?? ''].some((v) => v.toLowerCase().includes(inventorySearchLower))
+        )
+      : products;
+    return [...list].sort((a, b) => Number(isStarred(b.name)) - Number(isStarred(a.name)));
   }, [products, inventorySearchLower]);
 
   return (
@@ -239,53 +251,66 @@ const Inventory: React.FC = () => {
             </div>
 
             <div className="inventory-table-section">
-              <table className="inventory-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Type</th>
-                    <th>SKU Number</th>
-                    <th>Availability</th>
-                    <th>In-Use</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((item) => {
-                    const { availability, inUse } = getProductAvailabilityAndInUse(item.id);
-                    return (
-                      <tr
-                        key={item.id}
-                        onClick={() => handleProductClick(item.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td data-label="Product">
-                          {(item.name === 'TIM-E Bot' || item.name === 'BIM-E') && (
-                            <span className="inventory-product-star" aria-label="Featured">★ </span>
-                          )}
-                          {item.name}
-                        </td>
-                        <td data-label="Type">{item.type}</td>
-                        <td data-label="SKU">{item.sku || '—'}</td>
-                        <td data-label="Availability">{availability}</td>
-                        <td data-label="In-Use">{inUse}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {filteredProducts.length === 0 && products.length > 0 && (
-                <p className="page-subtitle">No inventory items match your search.</p>
+              <div className="collapsible-header" onClick={() => toggleSection('products')}>
+                <h3 className="inventory-section-title">Products</h3>
+                <span className={`collapse-arrow${!collapsedSections.products ? ' collapse-arrow--open' : ''}`}>▶</span>
+              </div>
+              {!collapsedSections.products && (
+                <>
+                  <div className="inventory-products-table-wrapper">
+                    <table className="inventory-table">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Type</th>
+                          <th>SKU Number</th>
+                          <th>Availability</th>
+                          <th>In-Use</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProducts.map((item) => {
+                          const { availability, inUse } = getProductAvailabilityAndInUse(item.id);
+                          return (
+                            <tr
+                              key={item.id}
+                              onClick={() => handleProductClick(item.id)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <td data-label="Product">
+                                {(item.name === 'TIM-E Bot' || item.name === 'BIM-E') && (
+                                  <span className="inventory-product-star" aria-label="Featured">★ </span>
+                                )}
+                                {item.name}
+                              </td>
+                              <td data-label="Type">{item.type}</td>
+                              <td data-label="SKU">{item.sku || '—'}</td>
+                              <td data-label="Availability">{availability}</td>
+                              <td data-label="In-Use">{inUse}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {filteredProducts.length === 0 && products.length > 0 && (
+                    <p className="page-subtitle">No inventory items match your search.</p>
+                  )}
+                </>
               )}
             </div>
 
             <div className="inventory-table-section">
               <div className="inventory-ffe-header">
-                <h3 className="inventory-section-title">Furniture, Fixtures, and Equipment Inventory</h3>
+                <div className="collapsible-header" onClick={() => toggleSection('ffeInventory')}>
+                  <h3 className="inventory-section-title">Furniture, Fixtures, and Equipment Inventory</h3>
+                  <span className={`collapse-arrow${!collapsedSections.ffeInventory ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
                 <button type="button" className="inventory-add-product-button inventory-add-ffe-button" onClick={handleAddFfeItem}>
-                  Add FF&E Item
+                  + Add FF&E Item
                 </button>
               </div>
-              <div className="inventory-table-wrapper inventory-list-table-wrapper">
+              {!collapsedSections.ffeInventory && <div className="inventory-table-wrapper inventory-list-table-wrapper">
                 <table className="inventory-table inventory-list-table inventory-table-fit">
                   <thead>
                     <tr>
@@ -314,7 +339,7 @@ const Inventory: React.FC = () => {
                     </tr>
                   </tbody>
                 </table>
-              </div>
+              </div>}
             </div>
           </div>
         </main>
@@ -429,13 +454,6 @@ const Inventory: React.FC = () => {
                 </form>
               )}
             </div>
-        {addModalChoice !== null && (
-          <div className="inventory-modal-back">
-            <button type="button" className="link-button" onClick={() => setAddModalChoice(null)}>
-              ← Back
-            </button>
-          </div>
-        )}
       </Modal>
 
       <Modal
@@ -522,9 +540,9 @@ const Inventory: React.FC = () => {
                             <td data-label="File name">{doc.fileName}</td>
                             <td data-label="Type">{doc.type === 'receipt' ? 'Receipt' : 'Warranty'}</td>
                             <td data-label="Actions">
-                              <a href={doc.dataUrl} download={doc.fileName} className="ffe-doc-link">Download</a>
+                              <a href={doc.dataUrl} download={doc.fileName} className="ffe-doc-link" title="Download"><FontAwesomeIcon icon={faDownload} /></a>
                               {' · '}
-                              <button type="button" className="ffe-doc-remove" onClick={() => removeFfeDoc(doc.id)}>Remove</button>
+                              <button title="Remove" type="button" className="ffe-doc-remove" onClick={() => removeFfeDoc(doc.id)}><FontAwesomeIcon icon={faTrash} /></button>
                             </td>
                           </tr>
                         ))

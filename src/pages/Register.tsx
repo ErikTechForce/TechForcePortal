@@ -125,7 +125,7 @@ const Register: React.FC = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter your full name"
-              className={errors.name ? 'error' : ''}
+              className={`form-input${errors.name ? ' error' : ''}`}
             />
             {errors.name && <p className="error-message">{errors.name}</p>}
           </div>
@@ -139,7 +139,7 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="you@techforcerobotics.com"
-              className={errors.email ? 'error' : ''}
+              className={`form-input${errors.email ? ' error' : ''}`}
             />
             {errors.email && <p className="error-message">{errors.email}</p>}
           </div>
@@ -153,7 +153,7 @@ const Register: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className={errors.password ? 'error' : ''}
+              className={`form-input${errors.password ? ' error' : ''}`}
             />
             {errors.password && <p className="error-message">{errors.password}</p>}
           </div>
@@ -167,7 +167,7 @@ const Register: React.FC = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
-              className={errors.confirmPassword ? 'error' : ''}
+              className={`form-input${errors.confirmPassword ? ' error' : ''}`}
             />
             {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
           </div>

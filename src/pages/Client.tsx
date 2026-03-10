@@ -19,6 +19,12 @@ const Client: React.FC = () => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    clients: false,
+    leads: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const [formType, setFormType] = useState<'client' | 'lead'>('client');
   const [formCompany, setFormCompany] = useState('');
@@ -204,8 +210,11 @@ const Client: React.FC = () => {
             ) : (
               <>
                 <div className="clients-section">
-                  <h3 className="clients-title">Clients</h3>
-                  <table className="clients-table">
+                  <div className="collapsible-header" onClick={() => toggleSection('clients')}>
+                    <h3 className="clients-title">Clients</h3>
+                    <span className={`collapse-arrow${!collapsedSections.clients ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.clients && <div className="collapsible-table-wrapper"><table className="clients-table">
                     <thead>
                       <tr>
                         <th>Company</th>
@@ -228,15 +237,18 @@ const Client: React.FC = () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
-                  {filteredClients.length === 0 && (
+                  </table></div>}
+                  {filteredClients.length === 0 && !collapsedSections.clients && (
                     <p className="page-subtitle">{apiClients.length === 0 ? 'No clients yet.' : 'No clients match your search.'}</p>
                   )}
                 </div>
 
                 <div className="leads-section">
-                  <h3 className="leads-title">Leads</h3>
-                  <table className="leads-table">
+                  <div className="collapsible-header" onClick={() => toggleSection('leads')}>
+                    <h3 className="leads-title">Leads</h3>
+                    <span className={`collapse-arrow${!collapsedSections.leads ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.leads && <div className="collapsible-table-wrapper"><table className="leads-table">
                     <thead>
                       <tr>
                         <th>Company Name</th>
@@ -259,8 +271,8 @@ const Client: React.FC = () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
-                  {filteredLeads.length === 0 && (
+                  </table></div>}
+                  {filteredLeads.length === 0 && !collapsedSections.leads && (
                     <p className="page-subtitle">{apiLeads.length === 0 ? 'No leads yet.' : 'No leads match your search.'}</p>
                   )}
                 </div>
@@ -271,7 +283,8 @@ const Client: React.FC = () => {
       </div>
 
       <Modal isOpen={addModalOpen} onClose={closeAddModal} title="Add Client or Lead" wide>
-        <form className="modal-form" onSubmit={handleAddSubmit}>
+        <form onSubmit={handleAddSubmit}>
+          <div className="modal-body">
               <div className="form-group">
                 <span className="form-label">Add as</span>
                 <div className="add-client-type-row">
@@ -435,15 +448,16 @@ const Client: React.FC = () => {
               {submitError && (
                 <p className="add-client-error" role="alert">{submitError}</p>
               )}
+          </div>
 
-              <div className="modal-actions">
-                <button type="button" className="cancel-button" onClick={closeAddModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="update-button" disabled={submitting}>
-                  {submitting ? 'Adding…' : 'Add'}
-                </button>
-              </div>
+          <div className="modal-actions">
+            <button type="button" className="cancel-button" onClick={closeAddModal}>
+              Cancel
+            </button>
+            <button type="submit" className="update-button" disabled={submitting}>
+              {submitting ? 'Adding…' : 'Add'}
+            </button>
+          </div>
         </form>
       </Modal>
     </div>

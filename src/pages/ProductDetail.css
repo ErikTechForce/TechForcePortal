@@ -61,8 +61,16 @@
 .product-table-wrapper {
   background-color: white;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 320px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+}
+
+.product-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #E9ECEF;
 }
 
 .product-inventory-list-table-wrapper {
@@ -190,7 +198,7 @@
 
 .product-inventory-edit-btn {
   background-color: #eff6ff;
-  color: #1d4ed8;
+  color: #2A425F;
   border-color: #bfdbfe;
 }
 
@@ -200,7 +208,7 @@
 
 .product-inventory-delete-btn {
   background-color: #fef2f2;
-  color: #b91c1c;
+  color: #B91C1C;
   border-color: #fecaca;
 }
 
@@ -255,16 +263,6 @@
 
 .product-table tbody tr:hover {
   background-color: #E9ECEF;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .status-active {

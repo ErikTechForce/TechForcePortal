@@ -22,6 +22,13 @@ const ProductDetail: React.FC = () => {
   const product = productId ? products.find((p) => p.id === productId) : null;
   const [units, setUnits] = useState(() => (productId ? getUnitsByProductId(productId) : []));
   const [addUnitOpen, setAddUnitOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    inventory: false,
+    timeeParts: false,
+    bimeParts: false,
+  });
+  const toggleSection = (key: string) =>
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   const [editingUnit, setEditingUnit] = useState<InventoryUnit | null>(null);
   const [countryOfOrigin, setCountryOfOrigin] = useState('');
   const [model, setModel] = useState('');
@@ -303,8 +310,11 @@ const ProductDetail: React.FC = () => {
             </div>
 
             <div className="product-table-section">
-              <h3 className="product-table-title">Inventory for this product</h3>
-              <div className="product-table-wrapper">
+              <div className="collapsible-header" onClick={() => toggleSection('inventory')}>
+                <h3 className="product-table-title">Inventory for this product</h3>
+                <span className={`collapse-arrow${!collapsedSections.inventory ? ' collapse-arrow--open' : ''}`}>▶</span>
+              </div>
+              {!collapsedSections.inventory && <div className="product-table-wrapper">
                 {units.length === 0 ? (
                   <p className="table-empty">No inventory units yet. Add inventory above.</p>
                 ) : (
@@ -373,13 +383,16 @@ const ProductDetail: React.FC = () => {
                     </tbody>
                   </table>
                 )}
-              </div>
+              </div>}
             </div>
 
             {product.name === 'TIM-E Bot' && (
               <div className="product-table-section">
-                <h3 className="product-table-title">TIM-E Parts Inventory</h3>
-                <div className="product-table-wrapper product-inventory-list-table-wrapper">
+                <div className="collapsible-header" onClick={() => toggleSection('timeeParts')}>
+                  <h3 className="product-table-title">TIM-E Parts Inventory</h3>
+                  <span className={`collapse-arrow${!collapsedSections.timeeParts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.timeeParts && <div className="product-table-wrapper product-inventory-list-table-wrapper">
                   <table className="product-table product-inventory-list-table">
                     <thead>
                       <tr>
@@ -422,14 +435,17 @@ const ProductDetail: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
-                </div>
+                </div>}
               </div>
             )}
 
             {product.name === 'BIM-E' && (
               <div className="product-table-section">
-                <h3 className="product-table-title">BIM-E Parts Inventory</h3>
-                <div className="product-table-wrapper product-inventory-list-table-wrapper">
+                <div className="collapsible-header" onClick={() => toggleSection('bimeParts')}>
+                  <h3 className="product-table-title">BIM-E Parts Inventory</h3>
+                  <span className={`collapse-arrow${!collapsedSections.bimeParts ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                {!collapsedSections.bimeParts && <div className="product-table-wrapper product-inventory-list-table-wrapper">
                   <table className="product-table product-inventory-list-table">
                     <thead>
                       <tr>
@@ -471,7 +487,7 @@ const ProductDetail: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
-                </div>
+                </div>}
               </div>
             )}
           </div>
@@ -479,7 +495,7 @@ const ProductDetail: React.FC = () => {
       </div>
 
       {addUnitOpen && (
-        <div className="modal-overlay" onClick={() => { setAddUnitOpen(false); setEditingUnit(null); }}>
+        <div className="modal-overlay">
           <div className="modal-content add-inventory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">{editingUnit ? `Edit inventory — ${displayName}` : `Add inventory — ${displayName}`}</h3>
@@ -684,7 +700,7 @@ const ProductDetail: React.FC = () => {
       )}
 
       {partsEditType && (
-        <div className="modal-overlay" onClick={closePartsEdit}>
+        <div className="modal-overlay">
           <div className="modal-content add-inventory-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Edit parts row — {partsEditType === 'tim-e' ? 'TIM-E' : 'BIM-E'}</h3>

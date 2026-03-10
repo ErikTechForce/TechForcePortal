@@ -27,6 +27,21 @@
   margin: 2rem 0;
 }
 
+.inventory-products-table-wrapper {
+  overflow-y: auto;
+  max-height: 320px;
+  border-radius: 8px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+  margin-top: 0.75rem;
+}
+
+.inventory-products-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #E9ECEF;
+}
+
 .inventory-table-section .inventory-table {
   width: 100%;
   border-collapse: collapse;
@@ -97,6 +112,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s ease;
+  width: 10rem;
 }
 
 .inventory-add-product-button:hover {
@@ -149,14 +165,6 @@
   font-size: 0.875rem;
 }
 
-.inventory-add-form .form-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #8A8F93;
-  border-radius: 6px;
-  font-size: 0.9375rem;
-}
-
 .inventory-add-form .modal-actions {
   display: flex;
   gap: 0.75rem;
@@ -189,8 +197,8 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin-bottom: 1rem;
-  margin-top: 2.5rem;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
 .inventory-ffe-header {
@@ -276,6 +284,7 @@
 .ffe-documents-table th {
   padding: 0.5rem 0.75rem;
   text-align: left;
+  font-size: 1rem;
   font-weight: 600;
   color: #1B1C1E;
   border-bottom: 1px solid #8A8F93;
@@ -299,8 +308,8 @@
 }
 
 .ffe-doc-link {
-  color: #2563eb;
-  text-decoration: none;
+  color: #1F4B31;
+  font-size: 1rem;
 }
 
 .ffe-doc-link:hover {
@@ -322,7 +331,17 @@
 
 .inventory-list-table-wrapper {
   width: 100%;
-  overflow: visible;
+  overflow-y: auto;
+  max-height: 320px;
+  border-radius: 8px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+}
+
+.inventory-list-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #E9ECEF;
 }
 
 .inventory-table-fit {

@@ -73,7 +73,6 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 1rem 0;
 }
 
 .clients-table {
@@ -153,7 +152,6 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin: 0 0 1rem 0;
 }
 
 .leads-table {
@@ -223,7 +221,7 @@
 }
 
 .add-client-error {
-  color: #b91c1c;
+  color: #B91C1C;
   font-size: 0.875rem;
   margin-bottom: 1rem;
 }

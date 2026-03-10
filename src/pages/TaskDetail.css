@@ -1,37 +1,39 @@
-.task-detail-form {
-  margin-top: 2rem;
-  max-width: 100%;
-  width: 100%;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin-bottom: 0.5rem;
-}
-
-.form-input:disabled {
-  background-color: #E9ECEF;
-  color: #5A708D;
-  cursor: not-allowed;
-  border-color: #8A8F93;
-}
-
-.form-actions {
+.task-detail-page-header {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
+  margin-bottom: 1.25rem;
 }
 
+.task-detail-page-header .page-title,
+.task-detail-page-header .page-subtitle {
+  margin-bottom: 0;
+}
+
+.task-detail-page-header .back-button {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  background-color: #8A8F93;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-detail-page-header .back-button:hover {
+  background-color: #E9ECEF;
+  color: #1B1C1E;
+}
+
+.task-detail-back-row {
+  margin-top: 0.5rem;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
 .cancel-button,
 .update-button {
   padding: 0.75rem 1.5rem;
@@ -66,23 +68,236 @@
   transform: scale(0.98);
 }
 
-.task-detail-cards {
-  max-width: 720px;
-}
-
-.task-detail-card {
-  background: #fff;
-  border: 1px solid #8A8F93;
+/* ── Info card ───────────────────────────────────────────────────── */
+.task-info-card {
+  background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(233,236,239,1) 100%);
   border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
+  border-left: 4px solid #2F6F44;
+  max-width: 900px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+.task-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.task-info-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.task-info-section:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.task-info-section-title {
+  font-weight: 600;
+  color: #1B1C1E;
+  margin: 0 0 1rem 0;
+}
+
+.task-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.task-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.task-info-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #5A708D;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.task-info-value {
+  font-size: 1rem;
+  color: #1B1C1E;
+}
+
+.task-info-notes {
+  font-size: 1rem;
+  color: #1B1C1E;
+  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Edit action button ──────────────────────────────────────────── */
+.task-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.task-action-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+  border: none;
+}
+
+.task-action-btn:active {
+  transform: scale(0.94);
+}
+
+.task-action-btn--edit {
+  color: white;
+  background-color: #E48B52;
+}
+
+.task-action-btn--edit:hover {
+  background-color: #F4AC6A;
+}
+
+.task-action-btn--delete {
+  color: white;
+  background-color: #b91c1c;
+}
+
+.task-action-btn--delete:hover {
+  background-color: #dc2626;
+}
+
+.task-delete-confirm-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  background-color: #b91c1c;
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+.task-delete-confirm-btn:hover {
+  background-color: #dc2626;
+}
+
+.task-delete-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tooltip */
+.task-action-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1B1C1E;
+  color: #fff;
+  padding: 0.3rem 0.65rem;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.task-action-btn:hover::after {
+  opacity: 1;
+}
+
+/* ── Status badge ────────────────────────────────────────────────── */
+.task-status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.task-status-unassigned {
+  background-color: #f3f4f6;
+  color: #5A708D;
+}
+
+.task-status-todo {
+  background-color: #dbeafe;
+  color: #2A425F;
+}
+
+.task-status-inprogress {
+  background-color: #F9C39DBF;
+  color: #7C3512;
+}
+
+.task-status-completed {
+  background-color: #bbf7d0;
+  color: #14532d;
+}
+
+/* ── Priority badge ──────────────────────────────────────────────── */
+.task-priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.task-priority-low    { background-color: #dcfce7; color: #14532d; }
+.task-priority-medium { background-color: #fef9c3; color: #713f12; }
+.task-priority-high   { background-color: #ffedd5; color: #7c2d12; }
+.task-priority-urgent { background-color: #fee2e2; color: #7f1d1d; }
+
+/* ── Role tag pills ──────────────────────────────────────────────── */
+.task-tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.task-tag-pill {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* ── Edit modal tag checkboxes ───────────────────────────────────── */
 .task-detail-tags {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .task-detail-tag-checkbox {
@@ -97,96 +312,10 @@
   margin: 0;
 }
 
-/* Task info card (order-detail style) */
-.task-info-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-  border: 1px solid #8A8F93;
-  max-width: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  border-left: 4px solid #2F6F44;
-}
-
-.task-info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.task-info-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #8A8F93;
-}
-
-.task-info-section:last-of-type {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.task-info-section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin: 0 0 1rem 0;
-}
-
-.task-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.task-info-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.task-info-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+.task-edit-required {
+  font-size: 0.8rem;
   color: #5A708D;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
-
-.task-info-value {
-  font-size: 1rem;
-  color: #1B1C1E;
-}
-
-.task-info-card .task-detail-tags {
-  margin-top: 0.5rem;
-}
-
-.task-info-card .form-actions {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #8A8F93;
-}
-
-.task-detail-notes-section {
-  margin-top: 1.5rem;
-  width: 100%;
-}
-
-.task-detail-notes-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1B1C1E;
-  margin: 0 0 0.75rem 0;
-}
-
-.task-detail-notes-input {
-  width: 100%;
-  min-height: 120px;
-}
-

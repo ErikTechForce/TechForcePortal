@@ -38,6 +38,10 @@
 }
 
 .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -89,11 +93,14 @@
 
 /* Footer action row (buttons) */
 .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: white;
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
+  padding: 1.25rem;
   border-top: 1px solid #e5e7eb;
 }
 

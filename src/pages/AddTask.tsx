@@ -1,32 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchableDropdown from '../components/SearchableDropdown';
+import TagSelector from '../components/TagSelector';
 import { useAuth } from '../context/AuthContext';
 import { createTask } from '../api/tasks';
 import { fetchVerifiedUsers, ROLE_OPTIONS } from '../api/users';
 import { fetchClients } from '../api/clients';
+import { TAG_PILL_COLORS, ROLE_LABELS } from '../constants/taskTags';
 import './AddTask.css';
 import './ClientDetail.css';
 import './TaskDetail.css';
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  accounting: 'Accounting',
-  sales: 'Sales',
-  marketing: 'Marketing',
-  engineers: 'Engineers',
-  installation: 'Installation',
-  logistics: 'Logistics',
-  corporate: 'Corporate',
-  r_d: 'R&D',
-  support: 'Support',
-  customer_service: 'Customer Service',
-  it: 'IT',
-  operations: 'Operations',
-  finances: 'Finances',
-  manufacturing: 'Manufacturing',
-  hr: 'HR',
-};
 
 interface AddTaskFormProps {
   onClose: () => void;
@@ -179,22 +162,17 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onClose }) => {
           <p className="page-subtitle" style={{ marginBottom: '0.75rem' }}>
             At least one tag required.
           </p>
-          <div className="task-detail-tags">
-            {ROLE_OPTIONS.map((r) => (
-              <label key={r} className="task-detail-tag-checkbox">
-                <input
-                  type="checkbox"
-                  checked={tags.includes(r)}
-                  onChange={() => toggleTag(r)}
-                />
-                <span>{ROLE_LABELS[r] ?? r}</span>
-              </label>
-            ))}
-          </div>
+          <TagSelector
+            options={ROLE_OPTIONS}
+            labels={ROLE_LABELS}
+            selected={tags}
+            onChange={setTags}
+            colors={TAG_PILL_COLORS}
+          />
         </div>
 
         <div className="form-section task-detail-card">
-          <h3 className="section-title">Dates &amp; priority</h3>
+          <h3 className="section-title">Dates &amp; Priority</h3>
           <div className="form-group">
             <label htmlFor="task-start" className="form-label">Start Date</label>
             <input

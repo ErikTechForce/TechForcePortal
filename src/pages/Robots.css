@@ -107,15 +107,6 @@
   margin: 0;
 }
 
-.activity-log-section {
-  margin-top: 2rem;
-  background-color: white;
-  border: 1px solid #8A8F93;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-}
-
 .activity-log-title {
   font-size: 1.25rem;
   font-weight: 600;
