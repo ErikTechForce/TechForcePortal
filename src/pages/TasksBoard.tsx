@@ -3,11 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { fetchTasks, type TaskRow } from '../api/tasks';
+import { fetchTasks, fetchAllTasks, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchOrdersForUser, type OrderRow } from '../api/orderApi';
 import './Page.css';
 import './TasksBoard.css';
+
+const STATUS_PILL_COLORS: Record<string, string> = {
+  Unassigned: '#e5e7eb',
+  'To-Do': '#bfdbfe',
+  'In Progress': '#fde68a',
+  Completed: '#bbf7d0',
+};
+
+const PRIORITY_PILL_COLORS: Record<string, string> = {
+  Low: '#d1fae5',
+  Medium: '#fef3c7',
+  High: '#fed7aa',
+  Urgent: '#fecaca',
+};
 
 const TAG_PILL_COLORS: Record<string, string> = {
   admin: '#fecaca',
@@ -55,6 +69,9 @@ const TasksBoard: React.FC = () => {
   const [taskSearch, setTaskSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [allTasks, setAllTasks] = useState<TaskRow[]>([]);
+
+  const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
   useEffect(() => {
     if (!user?.id) {
@@ -100,6 +117,22 @@ const TasksBoard: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!isAdmin || !user?.id) {
+      setAllTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setAllTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.id]);
 
   const handleAddTask = () => {
     navigate('/tasks/add');
@@ -302,6 +335,75 @@ const TasksBoard: React.FC = () => {
                     + Add New Task
                   </button>
                 </div>
+
+                {isAdmin && (
+                  <div className="dashboard-admin-tasks-section">
+                    <h3 className="dashboard-admin-tasks-title">All tasks</h3>
+                    <div className="dashboard-admin-tasks-table-wrapper">
+                      <table className="dashboard-admin-tasks-table">
+                        <thead>
+                          <tr>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Roles</th>
+                            <th>Assigned to</th>
+                            <th>Company</th>
+                            <th>Due date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allTasks.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="dashboard-admin-tasks-empty">No tasks.</td>
+                            </tr>
+                          ) : (
+                            allTasks.map((task) => (
+                              <tr key={task.id} className="dashboard-admin-tasks-row" onClick={() => handleTaskClick(task.id)}>
+                                <td>{task.name}</td>
+                                <td>
+                                  <span
+                                    className="dashboard-pill"
+                                    style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
+                                  >
+                                    {task.status}
+                                  </span>
+                                </td>
+                                <td>
+                                  {task.priority ? (
+                                    <span
+                                      className="dashboard-pill"
+                                      style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                                    >
+                                      {task.priority}
+                                    </span>
+                                  ) : '—'}
+                                </td>
+                                <td>
+                                  <div className="dashboard-admin-tasks-tags">
+                                    {(task.tags?.length ? task.tags : []).map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="dashboard-pill"
+                                        style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                                      >
+                                        {tag.replace(/_/g, ' ')}
+                                      </span>
+                                    ))}
+                                    {(!task.tags || task.tags.length === 0) && '—'}
+                                  </div>
+                                </td>
+                                <td>{task.assigned_to_name ?? '—'}</td>
+                                <td>{task.client_company ?? '—'}</td>
+                                <td>{task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 <div className="assigned-companies-section">
                   <h3 className="assigned-companies-title">Assigned Companies</h3>

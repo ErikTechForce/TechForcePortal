@@ -7,7 +7,7 @@ import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
 import LowStockInventory from '../components/LowStockInventory';
 import { fetchClients, type ClientRow } from '../api/clients';
-import { fetchTasks, type TaskRow } from '../api/tasks';
+import { fetchTasks, fetchAllTasks, type TaskRow } from '../api/tasks';
 import { fetchSalesProductCounts, fetchSiteActivity, type SalesProductCounts, type SiteActivityEntry } from '../api/orderApi';
 import { useAuth } from '../context/AuthContext';
 import { getRobotFleetStats } from '../data/inventory';
@@ -27,13 +27,35 @@ const PRIORITY_PILL_COLORS: Record<string, string> = {
   Urgent: '#fecaca',
 };
 
+const TAG_PILL_COLORS: Record<string, string> = {
+  admin: '#fecaca',
+  accounting: '#bbf7d0',
+  sales: '#bfdbfe',
+  marketing: '#fde68a',
+  engineers: '#ddd6fe',
+  installation: '#fed7aa',
+  logistics: '#a5f3fc',
+  corporate: '#fbcfe8',
+  r_d: '#d1fae5',
+  support: '#e0e7ff',
+  customer_service: '#fef3c7',
+  it: '#c7d2fe',
+  operations: '#fcd5b0',
+  finances: '#b8e0d2',
+  manufacturing: '#e9d5ff',
+  hr: '#fed7e2',
+};
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
   const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
+  const [allTasks, setAllTasks] = useState<TaskRow[]>([]);
   const [salesData, setSalesData] = useState<SalesProductCounts | null>(null);
   const [siteActivity, setSiteActivity] = useState<SiteActivityEntry[]>([]);
+
+  const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +116,22 @@ const Dashboard: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin || !user?.id) {
+      setAllTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setAllTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.id]);
 
   // Sales chart data from completed orders (TIM-E Bot, BIM-E), or fallback zeros
   const defaultSalesPeriod = {
@@ -246,6 +284,75 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="dashboard-admin-tasks-section">
+                <h3 className="dashboard-admin-tasks-title">All tasks</h3>
+                <div className="dashboard-admin-tasks-table-wrapper">
+                  <table className="dashboard-admin-tasks-table">
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Roles</th>
+                        <th>Assigned to</th>
+                        <th>Company</th>
+                        <th>Due date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTasks.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="dashboard-admin-tasks-empty">No tasks.</td>
+                        </tr>
+                      ) : (
+                        allTasks.map((task) => (
+                          <tr key={task.id} className="dashboard-admin-tasks-row" onClick={() => handleTaskClick(task.id)}>
+                            <td>{task.name}</td>
+                            <td>
+                              <span
+                                className="dashboard-pill"
+                                style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
+                              >
+                                {task.status}
+                              </span>
+                            </td>
+                            <td>
+                              {task.priority ? (
+                                <span
+                                  className="dashboard-pill"
+                                  style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                                >
+                                  {task.priority}
+                                </span>
+                              ) : '—'}
+                            </td>
+                            <td>
+                              <div className="dashboard-admin-tasks-tags">
+                                {(task.tags?.length ? task.tags : []).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="dashboard-pill"
+                                    style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                                  >
+                                    {tag.replace(/_/g, ' ')}
+                                  </span>
+                                ))}
+                                {(!task.tags || task.tags.length === 0) && '—'}
+                              </div>
+                            </td>
+                            <td>{task.assigned_to_name ?? '—'}</td>
+                            <td>{task.client_company ?? '—'}</td>
+                            <td>{task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="activity-log-section">
               <h3 className="activity-log-title">Activity Log</h3>

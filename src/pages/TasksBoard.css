@@ -356,5 +356,74 @@
   }
 }
 
+/* Admin-only "All tasks" table (shared with Dashboard) */
+.dashboard-admin-tasks-section {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-admin-tasks-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.dashboard-admin-tasks-table-wrapper {
+  overflow-x: auto;
+}
+
+.dashboard-admin-tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dashboard-admin-tasks-table th,
+.dashboard-admin-tasks-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dashboard-admin-tasks-table th {
+  font-weight: 600;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+.dashboard-admin-tasks-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dashboard-admin-tasks-row:hover {
+  background-color: #f3f4f6;
+}
+
+.dashboard-admin-tasks-empty {
+  color: #6b7280;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.dashboard-admin-tasks-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dashboard-pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  color: #1f2937;
+}
+
 
 

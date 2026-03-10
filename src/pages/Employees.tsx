@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -37,12 +37,30 @@ const Employees: React.FC = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [editUserId, setEditUserId] = useState<number | null>(null);
   const [editRoles, setEditRoles] = useState<string[]>([]);
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
+
+  const searchLower = searchQuery.trim().toLowerCase();
+  const filteredUsers = useMemo(() => {
+    if (!searchLower) return users;
+    return users.filter((u) => {
+      const username = (u.username ?? '').toLowerCase();
+      const email = (u.email ?? '').toLowerCase();
+      const roleLabels = getUserRoles(u).map((r) => (ROLE_LABELS[r] ?? r).toLowerCase());
+      const roleKeys = getUserRoles(u).map((r) => r.toLowerCase());
+      return (
+        username.includes(searchLower) ||
+        email.includes(searchLower) ||
+        roleLabels.some((l) => l.includes(searchLower)) ||
+        roleKeys.some((k) => k.includes(searchLower))
+      );
+    });
+  }, [users, searchLower]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -119,23 +137,36 @@ const Employees: React.FC = () => {
             {loading ? (
               <p className="page-subtitle">Loading…</p>
             ) : (
-              <div className="employees-table-wrapper">
-                <table className="employees-table">
-                  <thead>
-                    <tr>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Roles</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.length === 0 ? (
+              <>
+                <div className="employees-search-row">
+                  <input
+                    type="search"
+                    className="employees-search-input"
+                    placeholder="Search by name, email, or role..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search employees"
+                  />
+                </div>
+                <div className="employees-table-wrapper">
+                  <table className="employees-table">
+                    <thead>
                       <tr>
-                        <td colSpan={4} className="employees-empty">No users found.</td>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Actions</th>
                       </tr>
-                    ) : (
-                      users.map((u) => (
+                    </thead>
+                    <tbody>
+                      {filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="employees-empty">
+                            {users.length === 0 ? 'No users found.' : 'No employees match your search.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsers.map((u) => (
                         <tr key={u.id}>
                           <td>{u.username}</td>
                           <td>{u.email}</td>
@@ -158,11 +189,12 @@ const Employees: React.FC = () => {
                             </button>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
 
             {editUserId !== null && (

@@ -1,6 +1,31 @@
+.employees-search-row {
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.employees-search-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.employees-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.employees-search-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
 .employees-table-wrapper {
   overflow-x: auto;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .employees-table {

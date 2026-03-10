@@ -1024,6 +1024,49 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
+// GET /api/tasks/all?admin_user_id=1 — admin only: all tasks (for dashboard table)
+app.get('/api/tasks/all', async (req, res) => {
+  try {
+    const adminUserId = req.query.admin_user_id != null ? Number(req.query.admin_user_id) : NaN;
+    if (!Number.isInteger(adminUserId) || adminUserId < 1) {
+      return res.status(400).json({ error: 'Valid admin_user_id query is required.' });
+    }
+    const adminRoles = await pool.query(
+      'SELECT array_agg(role) AS roles FROM user_roles WHERE user_id = $1',
+      [adminUserId]
+    );
+    const rolesRow = adminRoles.rows[0] as { roles: string[] | null } | undefined;
+    const hasAdmin = (rolesRow?.roles ?? []).filter(Boolean).includes('admin');
+    if (!hasAdmin) return res.status(403).json({ error: 'Only admins can view all tasks.' });
+
+    const baseTaskQuery = `
+      SELECT t.id, t.name, t.status, t.assigned_to_id, t.client_id, t.start_date, t.due_date, t.notes, t.priority, t.created_at, t.updated_at,
+             e.name AS assigned_to_name,
+             e.user_id AS assigned_to_user_id,
+             c.company AS client_company
+      FROM tasks t
+      LEFT JOIN employees e ON e.id = t.assigned_to_id
+      LEFT JOIN clients c ON c.id = t.client_id
+      ORDER BY t.updated_at DESC
+    `;
+    const result = await pool.query(baseTaskQuery);
+    const taskIds = (result.rows as { id: number }[]).map((r) => r.id);
+    const tagsByTaskId = new Map<number, string[]>();
+    for (const taskId of taskIds) {
+      const tagRes = await pool.query('SELECT role FROM task_tags WHERE task_id = $1 ORDER BY role', [taskId]);
+      tagsByTaskId.set(taskId, (tagRes.rows as { role: string }[]).map((r) => r.role));
+    }
+    const tasks = (result.rows as Record<string, unknown>[]).map((row) => {
+      const taskId = Number(row.id);
+      return taskRowToJson(row, tagsByTaskId.get(taskId) ?? []);
+    });
+    res.json({ tasks });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch tasks.' });
+  }
+});
+
 // GET /api/tasks/:id — one task with tags
 app.get('/api/tasks/:id', async (req, res) => {
   try {
