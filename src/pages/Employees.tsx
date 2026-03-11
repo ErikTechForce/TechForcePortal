@@ -214,7 +214,7 @@ const Employees: React.FC = () => {
                               className="update-button employees-edit-btn"
                               onClick={() => openEdit(u)}
                             >
-                              Edit roles
+                              Edit Roles
                             </button>
                           </td>
                         </tr>
