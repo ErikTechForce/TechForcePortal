@@ -129,3 +129,13 @@
   border-top-color: #1B1C1E;
 }
 
+.sales-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted, #8A8F93);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+

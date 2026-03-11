@@ -161,6 +161,16 @@ export async function updateClientNote(
   return data;
 }
 
+export async function deleteClientNote(clientId: number, noteId: number, userId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/clients/${clientId}/notes/${noteId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || 'Failed to delete note');
+}
+
 export interface CreateClientPayload {
   company: string;
   type: 'client' | 'lead';

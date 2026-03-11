@@ -1717,6 +1717,25 @@ app.patch('/api/clients/:id/notes/:noteId', async (req, res) => {
   }
 });
 
+// DELETE /api/clients/:id/notes/:noteId — delete a note (only the user who created it)
+app.delete('/api/clients/:id/notes/:noteId', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const noteId = Number(req.params.noteId);
+    const { user_id } = req.body as { user_id?: number };
+    if (!id || !noteId) return res.status(400).json({ error: 'Client id and note id required.' });
+    const noteRow = await pool.query('SELECT id, user_id FROM client_notes WHERE id = $1 AND client_id = $2', [noteId, id]);
+    const note = noteRow.rows[0] as { id?: number; user_id?: number } | undefined;
+    if (!note) return res.status(404).json({ error: 'Note not found.' });
+    if (user_id && note.user_id !== user_id) return res.status(403).json({ error: 'Not authorized to delete this note.' });
+    await pool.query('DELETE FROM client_notes WHERE id = $1', [noteId]);
+    res.json({ success: true });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to delete note.' });
+  }
+});
+
 // GET /api/orders/:orderNumber/activity-log — activity log for this order (one log per order, persisted)
 app.get('/api/orders/:orderNumber/activity-log', async (req, res) => {
   try {

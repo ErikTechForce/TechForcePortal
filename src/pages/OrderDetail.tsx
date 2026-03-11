@@ -3179,11 +3179,16 @@ Techforce Team`
                         ? verifiedUsers.find((u) => u.username === editInstallationEmployee.trim())?.id
                         : undefined;
                       const taskName = `Installation: ${orderData?.companyName || orderNumber}${fullSiteLocation ? ` - ${fullSiteLocation.split('\n')[0].trim()}` : ''}`;
+                      const today = new Date().toISOString().split('T')[0];
                       await createTask({
                         name: taskName,
+                        status: assigneeUserId ? 'To-Do' : 'Unassigned',
                         tags: ['installation'],
                         assigned_to_user_id: assigneeUserId,
+                        client_id: apiClient?.id ?? undefined,
+                        start_date: today,
                         due_date: editInstallationDate || undefined,
+                        priority: 'Medium',
                         notes: orderNumber ? `Order: ${orderNumber}` : undefined,
                       });
                       addActivityLog('Installation task created and assigned', employee || 'System');

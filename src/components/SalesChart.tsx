@@ -141,6 +141,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
 
   // Total product sales for the current period, used to compute per-product proportions
   const totalProductSales = currentProductData.reduce((sum, p) => sum + p.sales, 0);
+  const hasNoSalesData = totalProductSales === 0;
 
   // Generate 4-5 "nice" round tick values for a given max
   const getNiceTicks = (maxValue: number): number[] => {
@@ -418,8 +419,12 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
         </div>
       </div>
       <div className="chart-container" ref={containerRef}>
-        {viewType === 'Product' ? renderProductChart() : renderTotalChart()}
-        {hoveredBar !== null && tooltipPosition && viewType === 'Product' && (
+        {hasNoSalesData ? (
+          <div className="sales-chart-empty">
+            <span>No completed sales for this period</span>
+          </div>
+        ) : viewType === 'Product' ? renderProductChart() : renderTotalChart()}
+        {!hasNoSalesData && hoveredBar !== null && tooltipPosition && viewType === 'Product' && (
           <div
             className="sales-tooltip"
             style={{
@@ -430,7 +435,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
             {currentProductData[hoveredBar].sales} units
           </div>
         )}
-        {hoveredPoint !== null && tooltipPosition && viewType === 'Total' && (() => {
+        {!hasNoSalesData && hoveredPoint !== null && tooltipPosition && viewType === 'Total' && (() => {
           const { monthIndex, productIndex } = hoveredPoint;
           const item = currentTotalData[monthIndex];
           const product = currentProductData[productIndex];
