@@ -41,6 +41,14 @@ export async function fetchTasks(userId: number): Promise<TasksSections> {
   };
 }
 
+/** Admin only: fetch all tasks (for dashboard table). */
+export async function fetchAllTasks(adminUserId: number): Promise<TaskRow[]> {
+  const res = await fetch(`${API_BASE}/api/tasks/all?admin_user_id=${encodeURIComponent(adminUserId)}`);
+  if (!res.ok) throw new Error('Failed to fetch all tasks');
+  const data = await res.json();
+  return data.tasks ?? [];
+}
+
 export async function fetchTask(id: number): Promise<TaskRow | null> {
   const res = await fetch(`${API_BASE}/api/tasks/${id}`);
   if (res.status === 404) return null;

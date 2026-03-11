@@ -5,8 +5,9 @@ import PageHeader from '../components/PageHeader';
 import Pending from '../components/Pending';
 import SalesChart from '../components/SalesChart';
 import PieChart from '../components/PieChart';
+import LowStockInventory from '../components/LowStockInventory';
 import { fetchClients, type ClientRow } from '../api/clients';
-import { fetchTasks, type TaskRow } from '../api/tasks';
+import { fetchTasks, fetchAllTasks, type TaskRow } from '../api/tasks';
 import { fetchSalesProductCounts, fetchSiteActivity, type SalesProductCounts, type SiteActivityEntry } from '../api/orderApi';
 import { useAuth } from '../context/AuthContext';
 import { getRobotFleetStats } from '../data/inventory';
@@ -23,10 +24,29 @@ const STATUS_PILL_COLORS: Record<string, string> = {
 };
 
 const PRIORITY_PILL_COLORS: Record<string, string> = {
-  Low: '#A8F7A9BF',
-  Medium: '#F9C39DBF',
-  High: '#fed7aa',
-  Urgent: '#fecaca',
+  Low: '#73BF4380',
+  Medium: '#FFC10780',
+  High: '#E48B5280',
+  Urgent: '#ef444480',
+};
+
+const TAG_PILL_COLORS: Record<string, string> = {
+  admin: '#fecaca',
+  accounting: '#bbf7d0',
+  sales: '#bfdbfe',
+  marketing: '#fde68a',
+  engineers: '#ddd6fe',
+  installation: '#fed7aa',
+  logistics: '#a5f3fc',
+  corporate: '#fbcfe8',
+  r_d: '#d1fae5',
+  support: '#e0e7ff',
+  customer_service: '#fef3c7',
+  it: '#c7d2fe',
+  operations: '#fcd5b0',
+  finances: '#b8e0d2',
+  manufacturing: '#e9d5ff',
+  hr: '#fed7e2',
 };
 
 const Dashboard: React.FC = () => {
@@ -34,9 +54,11 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [apiLeads, setApiLeads] = useState<ClientRow[]>([]);
   const [dashboardTasks, setDashboardTasks] = useState<TaskRow[]>([]);
+  const [allTasks, setAllTasks] = useState<TaskRow[]>([]);
   const [salesData, setSalesData] = useState<SalesProductCounts | null>(null);
   const [siteActivity, setSiteActivity] = useState<SiteActivityEntry[]>([]);
   const [taskStatusFilter, setTaskStatusFilter] = useState<StatusFilter>('To-Do');
+  const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +118,37 @@ const Dashboard: React.FC = () => {
         if (!cancelled) setSiteActivity([]);
       });
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin || !user?.id) {
+      setAllTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setAllTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.id]);
+
+  useEffect(() => {
+    const cards = document.querySelectorAll<HTMLElement>('.dashboard-card');
+    const cleanups: (() => void)[] = [];
+    cards.forEach((card) => {
+      const handler = (e: MouseEvent) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      };
+      card.addEventListener('mousemove', handler);
+      cleanups.push(() => card.removeEventListener('mousemove', handler));
+    });
+    return () => cleanups.forEach((fn) => fn());
   }, []);
 
   // Sales chart data from completed orders (TIM-E Bot, BIM-E), or fallback zeros
@@ -193,19 +246,14 @@ const Dashboard: React.FC = () => {
           <div className="dashboard-content">
             <div className="dashboard-grid">
 
-              {/* div1 — Pending chart */}
-              <div className="dash-pending">
-                <Pending />
-              </div>
-
-              {/* div2 — Sales chart */}
-              <div className="dash-sales dashboard-chart-card">
+              {/* div1 — Sales */}
+              <div className="dash-sales dashboard-card dashboard-chart-card">
                 <SalesChart productData={salesProductData} totalData={salesTotalData} />
               </div>
 
-              {/* div3 — Robots Online pie chart */}
-              <div className="dash-robots dashboard-chart-card">
-                <h3 className="chart-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/robots')}>Robots Online</h3>
+              {/* div2 — Robots Online */}
+              <div className="dash-robots dashboard-card dashboard-chart-card">
+                <h3 className="chart-title">Robots Online</h3>
                 <div className="robots-legend">
                   {robotsData.map((item) => (
                     <div key={item.label} className="robots-legend-item">
@@ -215,52 +263,18 @@ const Dashboard: React.FC = () => {
                   ))}
                 </div>
                 <div className="robots-chart-wrapper">
-                  <PieChart data={robotsData} size={200} />
+                  <PieChart data={robotsData} size={180} />
                 </div>
               </div>
 
-              {/* div4 — Activity Log */}
-              <div className="dash-activity">
-                <h3 className="activity-log-title">Activity Log</h3>
-                <div className="activity-log-content">
-                  <div className="activity-log-list">
-                    {siteActivity.length === 0 ? (
-                      <p className="activity-log-empty">No activity recorded yet.</p>
-                    ) : (
-                      siteActivity.map((entry) => (
-                        <div key={entry.id} className="activity-log-item">
-                          <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
-                          {entry.action}
-                          {entry.user && entry.user !== 'System' && (
-                            <span className="activity-log-user"> — {entry.user}</span>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+              {/* div3 — Low Stock Inventory */}
+              <div className="dash-inventory">
+                <LowStockInventory />
               </div>
 
-              {/* div5 — Leads */}
-              <div className="dash-leads dashboard-card">
-                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
-                <div className="card-content">
-                  {apiLeads.length === 0 ? (
-                    <p className="page-subtitle" style={{ margin: 0 }}>No leads</p>
-                  ) : (
-                    apiLeads.map((lead) => (
-                      <div key={lead.id} className="dash-list-item" onClick={() => handleLeadClick(lead.id)}>
-                        <span className="dash-list-item-primary">{lead.company}</span>
-                        <span className="dash-list-item-secondary">{lead.point_of_contact}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* div6 — Tasks */}
+              {/* div4 — Tasks */}
               <div className="dash-tasks dashboard-card">
-                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Tasks</h3>
+                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Your Tasks</h3>
                 <div className="dash-tasks-filter-bar">
                   {STATUS_FILTER_ORDER.map((status) => (
                     <button
@@ -294,6 +308,50 @@ const Dashboard: React.FC = () => {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+
+              {/* div5 — Pending / Orders */}
+              <div className="dash-pending dashboard-card">
+                <Pending />
+              </div>
+
+              {/* div6 — Leads */}
+              <div className="dash-leads dashboard-card">
+                <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
+                <div className="card-content">
+                  {apiLeads.length === 0 ? (
+                    <p className="page-subtitle" style={{ margin: 0 }}>No leads</p>
+                  ) : (
+                    apiLeads.map((lead) => (
+                      <div key={lead.id} className="dash-list-item" onClick={() => handleLeadClick(lead.id)}>
+                        <span className="dash-list-item-primary">{lead.company}</span>
+                        <span className="dash-list-item-secondary">{lead.point_of_contact}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* div7 — Activity Log */}
+              <div className="dash-activity dashboard-card">
+                <h3 className="activity-log-title">Activity Log</h3>
+                <div className="activity-log-content">
+                  <div className="activity-log-list">
+                    {siteActivity.length === 0 ? (
+                      <p className="activity-log-empty">No activity recorded yet.</p>
+                    ) : (
+                      siteActivity.map((entry) => (
+                        <div key={entry.id} className="activity-log-item">
+                          <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
+                          {entry.action}
+                          {entry.user && entry.user !== 'System' && (
+                            <span className="activity-log-user"> — {entry.user}</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
 

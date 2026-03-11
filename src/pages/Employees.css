@@ -1,0 +1,156 @@
+.employees-search-row {
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.employees-search-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.employees-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.employees-search-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.employees-table-wrapper {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.employees-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.employees-table th,
+.employees-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.employees-table th {
+  font-weight: 600;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+.employees-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.employees-empty {
+  color: #6b7280;
+  padding: 2rem;
+  text-align: center;
+}
+
+.employees-roles-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.employees-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  color: #1B1C1E;
+  font-family: inherit;
+}
+
+.employees-edit-btn {
+  font-size: 0.875rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.employees-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.employees-modal {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  max-width: 520px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.employees-modal--warn {
+  border-top: 4px solid #f59e0b;
+}
+
+.employees-revoke-admin-btn {
+  padding: 0.5rem 1.1rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.employees-revoke-admin-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.employees-revoke-admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.employees-role-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.employees-role-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  border: 2px solid #e5e7eb;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  font-family: inherit;
+}
+
+.employees-role-pill-btn--selected {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #1B1C1E;
+}
+
+.employees-role-pill-btn:hover {
+  opacity: 0.8;
+}

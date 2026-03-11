@@ -23,6 +23,7 @@ import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import VerifyEmailRequired from './pages/VerifyEmailRequired';
 import Settings from './pages/Settings';
+import Employees from './pages/Employees';
 import './App.css';
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
             <Route path="/orders/new" element={<Navigate to="/orders" replace />} />
             <Route path="/orders/:orderNumber" element={<OrderDetail />} />
             <Route path="/robots" element={<Robots />} />
+            <Route path="/employees" element={<Employees />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

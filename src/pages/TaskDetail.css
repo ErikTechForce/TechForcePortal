@@ -45,11 +45,6 @@
   border: none;
 }
 
-.cancel-button {
-  background-color: #f3f4f6;
-  color: #1B1C1E;
-}
-
 .cancel-button:hover {
   background-color: #8A8F93;
 }
@@ -276,10 +271,10 @@
   width: fit-content;
 }
 
-.task-priority-low    { background-color: #dcfce7; color: #14532d; }
-.task-priority-medium { background-color: #fef9c3; color: #713f12; }
-.task-priority-high   { background-color: #ffedd5; color: #7c2d12; }
-.task-priority-urgent { background-color: #fee2e2; color: #7f1d1d; }
+.task-priority-low    { background-color: #73BF4380; color: #14532d; }
+.task-priority-medium { background-color: #FFC10780; color: #713f12; }
+.task-priority-high   { background-color: #E48B5280; color: #7c2d12; }
+.task-priority-urgent { background-color: #ef444480; color: #7f1d1d; }
 
 /* ── Role tag pills ──────────────────────────────────────────────── */
 .task-tag-pills {
@@ -290,12 +285,14 @@
 
 .task-tag-pill {
   display: inline-block;
-  padding: 0.2rem 0.65rem;
+  padding: 0.25rem 0.7rem;
   background-color: #e0f2fe;
   color: #0369a1;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* ── Edit modal tag checkboxes ───────────────────────────────────── */

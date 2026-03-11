@@ -421,14 +421,17 @@ const Client: React.FC = () => {
 
             <hr style={{ margin: '1.25rem 0', borderColor: '#e5e7eb' }} />
 
-            <div className="form-group">
-              <label htmlFor="add-notes" className="form-label">Notes</label>
-              <textarea
-                id="add-notes" className="form-textarea"
-                value={formNotes} onChange={(e) => setFormNotes(e.target.value)}
-                rows={3} placeholder="Additional notes..."
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="add-notes" className="form-label">Notes</label>
+                <textarea
+                  id="add-notes"
+                  className="form-textarea"
+                  value={formNotes}
+                  onChange={(e) => setFormNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Notes..."
+                />
+              </div>
 
             {submitError && (
               <p className="add-client-error" role="alert">{submitError}</p>

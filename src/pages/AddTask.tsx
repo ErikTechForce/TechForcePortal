@@ -117,7 +117,14 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onClose }) => {
               id="task-status"
               className="form-select"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => {
+                const newStatus = e.target.value;
+                setStatus(newStatus);
+                if (newStatus === 'Unassigned') {
+                  setAssignedToUserId(null);
+                  setAssignedToDisplay('');
+                }
+              }}
             >
               <option value="Unassigned">Unassigned</option>
               <option value="To-Do">To-Do</option>
@@ -137,7 +144,13 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ onClose }) => {
               onChange={(display) => {
                 setAssignedToDisplay(display);
                 const u = verifiedUsers.find((x) => x.username === display);
-                setAssignedToUserId(u ? u.id : null);
+                const userId = u ? u.id : null;
+                setAssignedToUserId(userId);
+                if (userId !== null && status === 'Unassigned') {
+                  setStatus('To-Do');
+                } else if (userId === null) {
+                  setStatus('Unassigned');
+                }
               }}
               placeholder="Select user (optional)"
             />

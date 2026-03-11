@@ -293,6 +293,27 @@ const SELF_ASSIGNABLE_ROLES = [
   'corporate', 'r_d', 'support', 'customer_service', 'it', 'operations', 'finances', 'manufacturing', 'hr',
 ] as const;
 
+// GET /api/users/me?userId=1 — get current user profile with fresh roles (for syncing after role changes)
+app.get('/api/users/me', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string, 10);
+    if (!Number.isInteger(userId) || userId < 1) return res.status(400).json({ error: 'Valid userId required.' });
+    const result = await pool.query(
+      `SELECT u.id, u.username, u.email,
+        (SELECT COALESCE(array_agg(ur.role ORDER BY ur.role), ARRAY[]::text[]) FROM user_roles ur WHERE ur.user_id = u.id) AS roles
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    );
+    const row = result.rows[0] as { id: number; username: string; email: string; roles?: string[] } | undefined;
+    if (!row) return res.status(404).json({ error: 'User not found.' });
+    const roles = Array.isArray(row.roles) && row.roles.length > 0 ? row.roles : ['sales'];
+    res.json({ user: { id: row.id, username: row.username, email: row.email, roles } });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch user.' });
+  }
+});
+
 // GET /api/users/verified — list verified users (for employee assignment dropdowns)
 app.get('/api/users/verified', async (req, res) => {
   try {
@@ -345,6 +366,49 @@ app.patch('/api/users/me', async (req, res) => {
       );
     }
     res.json({ success: true, roles });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to update roles.' });
+  }
+});
+
+// PATCH /api/users/:id/roles — admin only: set another user's roles (body: { admin_user_id: number, roles: string[] })
+app.patch('/api/users/:id/roles', async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id, 10);
+    if (!Number.isInteger(targetId) || targetId < 1) return res.status(400).json({ error: 'Invalid user id.' });
+    const body = req.body as { admin_user_id?: number; roles?: string[] };
+    const adminUserId = body.admin_user_id != null ? Number(body.admin_user_id) : NaN;
+    if (!Number.isInteger(adminUserId) || adminUserId < 1) return res.status(400).json({ error: 'admin_user_id is required.' });
+    const adminRoles = await pool.query(
+      'SELECT array_agg(role) AS roles FROM user_roles WHERE user_id = $1',
+      [adminUserId]
+    );
+    const adminRolesRow = adminRoles.rows[0] as { roles: string[] | null } | undefined;
+    const hasAdmin = (adminRolesRow?.roles ?? []).filter(Boolean).includes('admin');
+    if (!hasAdmin) return res.status(403).json({ error: 'Only admins can update user roles.' });
+    const rawRoles = Array.isArray(body.roles) ? body.roles : [];
+    const roles = rawRoles.map((r) => String(r).trim().toLowerCase()).filter(Boolean);
+    for (const role of roles) {
+      if (!ALLOWED_ROLES.includes(role as typeof ALLOWED_ROLES[number])) {
+        return res.status(400).json({ error: `Invalid role: ${role}.` });
+      }
+    }
+    const userExists = await pool.query('SELECT id FROM users WHERE id = $1', [targetId]);
+    if (userExists.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+    await pool.query('DELETE FROM user_roles WHERE user_id = $1', [targetId]);
+    if (roles.length > 0) {
+      await pool.query(
+        `INSERT INTO user_roles (user_id, role) SELECT $1, unnest($2::text[]) ON CONFLICT (user_id, role) DO NOTHING`,
+        [targetId, roles]
+      );
+    }
+    const updated = await pool.query(
+      'SELECT COALESCE(array_agg(role ORDER BY role), ARRAY[]::text[]) AS roles FROM user_roles WHERE user_id = $1',
+      [targetId]
+    );
+    const rolesResult = (updated.rows[0] as { roles: string[] })?.roles ?? [];
+    res.json({ success: true, roles: rolesResult });
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to update roles.' });
@@ -960,6 +1024,49 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
+// GET /api/tasks/all?admin_user_id=1 — admin only: all tasks (for dashboard table)
+app.get('/api/tasks/all', async (req, res) => {
+  try {
+    const adminUserId = req.query.admin_user_id != null ? Number(req.query.admin_user_id) : NaN;
+    if (!Number.isInteger(adminUserId) || adminUserId < 1) {
+      return res.status(400).json({ error: 'Valid admin_user_id query is required.' });
+    }
+    const adminRoles = await pool.query(
+      'SELECT array_agg(role) AS roles FROM user_roles WHERE user_id = $1',
+      [adminUserId]
+    );
+    const rolesRow = adminRoles.rows[0] as { roles: string[] | null } | undefined;
+    const hasAdmin = (rolesRow?.roles ?? []).filter(Boolean).includes('admin');
+    if (!hasAdmin) return res.status(403).json({ error: 'Only admins can view all tasks.' });
+
+    const baseTaskQuery = `
+      SELECT t.id, t.name, t.status, t.assigned_to_id, t.client_id, t.start_date, t.due_date, t.notes, t.priority, t.created_at, t.updated_at,
+             e.name AS assigned_to_name,
+             e.user_id AS assigned_to_user_id,
+             c.company AS client_company
+      FROM tasks t
+      LEFT JOIN employees e ON e.id = t.assigned_to_id
+      LEFT JOIN clients c ON c.id = t.client_id
+      ORDER BY t.updated_at DESC
+    `;
+    const result = await pool.query(baseTaskQuery);
+    const taskIds = (result.rows as { id: number }[]).map((r) => r.id);
+    const tagsByTaskId = new Map<number, string[]>();
+    for (const taskId of taskIds) {
+      const tagRes = await pool.query('SELECT role FROM task_tags WHERE task_id = $1 ORDER BY role', [taskId]);
+      tagsByTaskId.set(taskId, (tagRes.rows as { role: string }[]).map((r) => r.role));
+    }
+    const tasks = (result.rows as Record<string, unknown>[]).map((row) => {
+      const taskId = Number(row.id);
+      return taskRowToJson(row, tagsByTaskId.get(taskId) ?? []);
+    });
+    res.json({ tasks });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch tasks.' });
+  }
+});
+
 // GET /api/tasks/:id — one task with tags
 app.get('/api/tasks/:id', async (req, res) => {
   try {
@@ -1460,6 +1567,153 @@ app.get('/api/clients/:id/invoices', async (req, res) => {
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to fetch invoices.' });
+  }
+});
+
+// GET /api/clients/:id/tasks — tasks for this client (for notes task dropdown)
+app.get('/api/clients/:id/tasks', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const result = await pool.query(
+      `SELECT t.id, t.name, t.status
+       FROM tasks t
+       WHERE t.client_id = $1
+       ORDER BY t.updated_at DESC`,
+      [id]
+    );
+    res.json({ tasks: result.rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch tasks.' });
+  }
+});
+
+// GET /api/clients/:id/notes — notes table for client (user, date/time, note, optional task)
+app.get('/api/clients/:id/notes', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const result = await pool.query(
+      `SELECT n.id, n.client_id, n.user_id, n.note, n.created_at, n.task_id,
+              u.username AS submitted_by,
+              t.name AS task_name
+       FROM client_notes n
+       LEFT JOIN users u ON u.id = n.user_id
+       LEFT JOIN tasks t ON t.id = n.task_id
+       WHERE n.client_id = $1
+       ORDER BY n.created_at DESC`,
+      [id]
+    );
+    res.json({ notes: result.rows });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch notes.' });
+  }
+});
+
+// POST /api/clients/:id/notes — add a note (body: { note: string, user_id: number, task_id?: number })
+app.post('/api/clients/:id/notes', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid client id.' });
+    const body = req.body as { note?: string; user_id?: number; task_id?: number };
+    const note = typeof body.note === 'string' ? body.note.trim() : '';
+    if (!note) return res.status(400).json({ error: 'note is required.' });
+    const clientExists = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientExists.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    const user_id = body.user_id != null && Number.isInteger(body.user_id) && body.user_id > 0 ? body.user_id : null;
+    let task_id: number | null = null;
+    if (body.task_id != null && Number.isInteger(body.task_id) && body.task_id > 0) {
+      const taskRow = await pool.query('SELECT id, client_id FROM tasks WHERE id = $1', [body.task_id]);
+      const task = taskRow.rows[0] as { id: number; client_id: number | null } | undefined;
+      if (task && task.client_id === id) task_id = task.id;
+    }
+    const insert = await pool.query(
+      `INSERT INTO client_notes (client_id, user_id, note, task_id) VALUES ($1, $2, $3, $4)
+       RETURNING id, client_id, user_id, note, task_id, created_at`,
+      [id, user_id, note, task_id]
+    );
+    const row = insert.rows[0] as { id: number; user_id: number | null; task_id: number | null; created_at: string };
+    const username = user_id
+      ? (await pool.query('SELECT username FROM users WHERE id = $1', [user_id]).then(r => (r.rows[0] as { username?: string } | undefined)?.username ?? null))
+      : null;
+    const task_name = row.task_id
+      ? (await pool.query('SELECT name FROM tasks WHERE id = $1', [row.task_id]).then(r => (r.rows[0] as { name?: string } | undefined)?.name ?? null))
+      : null;
+    res.status(201).json({
+      id: row.id,
+      client_id: id,
+      user_id: row.user_id,
+      submitted_by: username,
+      note,
+      task_id: row.task_id,
+      task_name,
+      created_at: row.created_at,
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to add note.' });
+  }
+});
+
+// PATCH /api/clients/:id/notes/:noteId — update a note (only the user who created it)
+app.patch('/api/clients/:id/notes/:noteId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const noteId = parseInt(req.params.noteId, 10);
+    if (Number.isNaN(id) || Number.isNaN(noteId)) return res.status(400).json({ error: 'Invalid client or note id.' });
+        const body = req.body as { note?: string, user_id?: number, task_id?: number };
+    const noteText = typeof body.note === 'string' ? body.note.trim() : '';
+    if (!noteText) return res.status(400).json({ error: 'note is required.' });
+    const editorUserId = body.user_id != null && Number.isInteger(body.user_id) && body.user_id > 0 ? body.user_id : null;
+    if (editorUserId == null) return res.status(400).json({ error: 'user_id is required.' });
+
+    const existing = await pool.query(
+      'SELECT id, client_id, user_id, task_id FROM client_notes WHERE id = $1',
+      [noteId]
+    );
+    const row = existing.rows[0] as { id: number; client_id: number; user_id: number | null; task_id: number | null } | undefined;
+    if (!row || row.client_id !== id) return res.status(404).json({ error: 'Note not found.' });
+    if (row.user_id !== editorUserId) return res.status(403).json({ error: 'Only the note creator can edit it.' });
+
+    let task_id: number | null = null;
+    if (body.task_id != null && Number.isInteger(body.task_id) && body.task_id > 0) {
+      const taskRow = await pool.query('SELECT id, client_id FROM tasks WHERE id = $1', [body.task_id]);
+      const task = taskRow.rows[0] as { id: number; client_id: number | null } | undefined;
+      if (task && task.client_id === id) task_id = task.id;
+    }
+
+    await pool.query(
+      'UPDATE client_notes SET note = $1, task_id = $2 WHERE id = $3',
+      [noteText, task_id, noteId]
+    );
+    const userRow = await pool.query('SELECT username FROM users WHERE id = $1', [editorUserId]);
+    const username = (userRow.rows[0] as { username?: string } | undefined)?.username ?? null;
+    let task_name: string | null = null;
+    if (task_id) {
+      const taskRow = await pool.query('SELECT name FROM tasks WHERE id = $1', [task_id]);
+      task_name = (taskRow.rows[0] as { name?: string } | undefined)?.name ?? null;
+    }
+    const createdRow = await pool.query('SELECT created_at FROM client_notes WHERE id = $1', [noteId]);
+    const created_at = (createdRow.rows[0] as { created_at?: string } | undefined)?.created_at ?? null;
+    res.json({
+      id: noteId,
+      client_id: id,
+      user_id: editorUserId,
+      submitted_by: username,
+      note: noteText,
+      task_id,
+      task_name,
+      created_at,
+    });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to update note.' });
   }
 });
 

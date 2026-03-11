@@ -6,8 +6,9 @@ import Modal from '../components/Modal';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow } from '../api/clients';
+import { fetchClientById, fetchClientOrders, fetchClientContracts, fetchClientInvoices, fetchClientNotes, fetchClientTasks, createClientNote, updateClientNote, updateClient, deleteClient, type ClientRow, type OrderRow, type ContractRow, type InvoiceRow, type ClientNoteRow, type ClientTaskOption } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
+import { useAuth } from '../context/AuthContext';
 import { INDUSTRIES } from '../constants/industries';
 import './Page.css';
 import './ClientDetail.css';
@@ -15,6 +16,7 @@ import './Orders.css';
 
 const ClientDetail: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { clientId } = useParams<{ clientId: string }>();
   const clientIdNum = clientId ? parseInt(clientId, 10) : null;
 
@@ -22,6 +24,8 @@ const ClientDetail: React.FC = () => {
   const [clientOrders, setClientOrders] = useState<OrderRow[]>([]);
   const [clientContracts, setClientContracts] = useState<ContractRow[]>([]);
   const [clientInvoices, setClientInvoices] = useState<InvoiceRow[]>([]);
+  const [clientNotes, setClientNotes] = useState<ClientNoteRow[]>([]);
+  const [clientTasks, setClientTasks] = useState<ClientTaskOption[]>([]);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -33,6 +37,15 @@ const ClientDetail: React.FC = () => {
   });
   const toggleSection = (key: string) =>
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  const [newNote, setNewNote] = useState('');
+  const [newNoteTaskId, setNewNoteTaskId] = useState<number | ''>('');
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
+  const [noteError, setNoteError] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editNoteText, setEditNoteText] = useState('');
+  const [editNoteTaskId, setEditNoteTaskId] = useState<number | ''>('');
+  const [noteEditError, setNoteEditError] = useState('');
+  const [noteUpdating, setNoteUpdating] = useState(false);
 
   const clientData = apiClient;
 
@@ -130,15 +143,19 @@ const ClientDetail: React.FC = () => {
           return;
         }
         setApiClient(c);
-        const [orders, contracts, invoices] = await Promise.all([
+        const settled = await Promise.allSettled([
           fetchClientOrders(clientIdNum),
           fetchClientContracts(clientIdNum),
           fetchClientInvoices(clientIdNum),
+          fetchClientNotes(clientIdNum),
+          fetchClientTasks(clientIdNum),
         ]);
         if (!cancelled) {
-          setClientOrders(orders);
-          setClientContracts(contracts);
-          setClientInvoices(invoices);
+          setClientOrders(settled[0].status === 'fulfilled' ? settled[0].value : []);
+          setClientContracts(settled[1].status === 'fulfilled' ? settled[1].value : []);
+          setClientInvoices(settled[2].status === 'fulfilled' ? settled[2].value : []);
+          setClientNotes(settled[3].status === 'fulfilled' ? settled[3].value : []);
+          setClientTasks(settled[4].status === 'fulfilled' ? settled[4].value : []);
         }
       } catch {
         if (!cancelled) {
@@ -147,6 +164,8 @@ const ClientDetail: React.FC = () => {
           setClientOrders([]);
           setClientContracts([]);
           setClientInvoices([]);
+          setClientNotes([]);
+          setClientTasks([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -592,7 +611,243 @@ const ClientDetail: React.FC = () => {
               </div>
             )}
 
+            {/* Notes Section — table of notes with submitter, date/time, task, and note */}
+            <div className="form-section">
+              <h3 className="section-title">Notes</h3>
+              <div className="client-notes-table-wrapper">
+                <table className="client-notes-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Date &amp; Time</th>
+                      <th>Task</th>
+                      <th>Note</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientNotes.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="client-notes-empty">No notes yet.</td>
+                      </tr>
+                    ) : (
+                      clientNotes.map((n) => (
+                        <tr key={n.id}>
+                          <td>{n.submitted_by ?? '—'}</td>
+                          <td>{n.created_at ? new Date(n.created_at).toLocaleString() : '—'}</td>
+                          {editingNoteId === n.id ? (
+                            <>
+                              <td>
+                                <select
+                                  className="form-select"
+                                  value={editNoteTaskId}
+                                  onChange={(e) => setEditNoteTaskId(e.target.value === '' ? '' : Number(e.target.value))}
+                                  disabled={noteUpdating}
+                                >
+                                  <option value="">None</option>
+                                  {clientTasks.map((t) => (
+                                    <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="client-notes-note-cell">
+                                <textarea
+                                  className="form-textarea"
+                                  value={editNoteText}
+                                  onChange={(e) => { setEditNoteText(e.target.value); setNoteEditError(''); }}
+                                  rows={2}
+                                  disabled={noteUpdating}
+                                />
+                                {noteEditError && <p className="create-order-error" role="alert" style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>{noteEditError}</p>}
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="update-button"
+                                  disabled={noteUpdating || !editNoteText.trim()}
+                                  onClick={async () => {
+                                    if (!clientIdNum || !user) return;
+                                    setNoteEditError('');
+                                    setNoteUpdating(true);
+                                    try {
+                                      const taskId = editNoteTaskId === '' ? undefined : editNoteTaskId;
+                                      const updated = await updateClientNote(clientIdNum, n.id, editNoteText.trim(), user.id, taskId);
+                                      setClientNotes((prev) => prev.map((note) => (note.id === n.id ? updated : note)));
+                                      setEditingNoteId(null);
+                                      setEditNoteText('');
+                                      setEditNoteTaskId('');
+                                    } catch (err) {
+                                      setNoteEditError(err instanceof Error ? err.message : 'Failed to update note.');
+                                    } finally {
+                                      setNoteUpdating(false);
+                                    }
+                                  }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  className="cancel-button"
+                                  disabled={noteUpdating}
+                                  style={{ marginLeft: '0.5rem' }}
+                                  onClick={() => {
+                                    setEditingNoteId(null);
+                                    setEditNoteText('');
+                                    setEditNoteTaskId('');
+                                    setNoteEditError('');
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td>{n.task_id && n.task_name ? <Link to={`/tasks/${n.task_id}`}>{n.task_name}</Link> : '—'}</td>
+                              <td className="client-notes-note-cell">{n.note}</td>
+                              <td>
+                                {user && n.user_id === user.id ? (
+                                  <button
+                                    type="button"
+                                    className="update-button"
+                                    onClick={() => {
+                                      setEditingNoteId(n.id);
+                                      setEditNoteText(n.note);
+                                      setEditNoteTaskId(n.task_id ?? '');
+                                      setNoteEditError('');
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                ) : null}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label htmlFor="new-note" className="form-label">Add a note</label>
+                <textarea
+                  id="new-note"
+                  className="form-textarea"
+                  value={newNote}
+                  onChange={(e) => { setNewNote(e.target.value); setNoteError(''); }}
+                  rows={3}
+                  placeholder="Enter a note..."
+                  disabled={noteSubmitting}
+                />
+                <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                  <label htmlFor="new-note-task" className="form-label">Attach to task (optional)</label>
+                  <select
+                    id="new-note-task"
+                    className="form-select"
+                    value={newNoteTaskId}
+                    onChange={(e) => setNewNoteTaskId(e.target.value === '' ? '' : Number(e.target.value))}
+                    disabled={noteSubmitting}
+                  >
+                    <option value="">None</option>
+                    {clientTasks.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.status})</option>
+                    ))}
+                  </select>
+                  {clientTasks.length === 0 && (
+                    <p className="form-hint" style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>
+                      No tasks linked to this client. Link a task to this client from the task&apos;s page to see it here.
+                    </p>
+                  )}
+                </div>
+                {noteError && <p className="create-order-error" role="alert" style={{ marginTop: '0.5rem' }}>{noteError}</p>}
+                <button
+                  type="button"
+                  className="update-button"
+                  disabled={noteSubmitting || !newNote.trim() || !user}
+                  style={{ marginTop: '0.5rem' }}
+                  onClick={async () => {
+                    if (!clientIdNum || !user) return;
+                    setNoteError('');
+                    setNoteSubmitting(true);
+                    try {
+                      const taskId = newNoteTaskId === '' ? undefined : newNoteTaskId;
+                      const created = await createClientNote(clientIdNum, newNote.trim(), user.id, taskId);
+                      setClientNotes((prev) => [created, ...prev]);
+                      setNewNote('');
+                      setNewNoteTaskId('');
+                    } catch (err) {
+                      setNoteError(err instanceof Error ? err.message : 'Failed to add note.');
+                    } finally {
+                      setNoteSubmitting(false);
+                    }
+                  }}
+                >
+                  {noteSubmitting ? 'Submitting…' : 'Submit note'}
+                </button>
+              </div>
+            </div>
 
+            <div className="form-actions">
+              {saveError && <p className="create-order-error" style={{ marginBottom: '1rem' }} role="alert">{saveError}</p>}
+              <button type="button" className="cancel-button" onClick={() => navigate('/client')}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="update-button"
+                disabled={saving || !clientIdNum}
+                onClick={async () => {
+                  if (!clientIdNum) { navigate('/client'); return; }
+                  setSaveError('');
+                  setSaving(true);
+                  try {
+                    await updateClient(clientIdNum, {
+                      employee_name: employee.trim() || null,
+                      start_date: startDate.trim() || null,
+                      point_of_contact: pointOfContact.trim(),
+                      contact_email: contactEmail.trim() || null,
+                      contact_phone: contactPhone.trim() || null,
+                      billing_address: billingAddress.trim() || null,
+                      site_location: siteLocationAddress.trim() || null,
+                    });
+                    navigate('/client');
+                  } catch (err) {
+                    setSaveError(err instanceof Error ? err.message : 'Failed to update client.');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                {saving ? 'Saving…' : 'Update'}
+              </button>
+            </div>
+
+            {/* Delete client */}
+            {clientIdNum && (
+              <div className="form-section" style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color, #e5e7eb)', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="cancel-button"
+                  disabled={deleting}
+                  style={{ background: 'var(--danger-color, #dc2626)', color: '#fff', border: 'none' }}
+                  onClick={async () => {
+                    if (!window.confirm('Are you sure you want to delete this client? This cannot be undone.')) return;
+                    setDeleting(true);
+                    try {
+                      await deleteClient(clientIdNum);
+                      navigate('/client');
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : 'Failed to delete client.');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                >
+                  {deleting ? 'Deleting…' : 'Delete client'}
+                </button>
+              </div>
+            )}
           </div>
         </main>
       </div>

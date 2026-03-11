@@ -183,6 +183,20 @@ export function getProductAvailabilityAndInUse(productId: string): { availabilit
   return { availability, inUse };
 }
 
+/** Products with units available < 25 (for dashboard low-stock widget). Sorted by availability ascending. */
+export function getLowStockProducts(): { product: InventoryProduct; availability: number }[] {
+  const products = getInventoryProducts();
+  const result: { product: InventoryProduct; availability: number }[] = [];
+  for (const product of products) {
+    const { availability } = getProductAvailabilityAndInUse(product.id);
+    if (availability < 25) {
+      result.push({ product, availability });
+    }
+  }
+  result.sort((a, b) => a.availability - b.availability);
+  return result;
+}
+
 /** Robot fleet stats from TIM-E and BIM-E bot units in inventory (for Dashboard and Robots page). Excludes TIM-E Charger. */
 export function getRobotFleetStats(): { deployed: number; inStorage: number; needsMaintenance: number } {
   const products = getInventoryProducts().filter((p) => p.type === 'Robot' && p.name !== 'TIM-E Charger');

@@ -151,6 +151,12 @@ export interface ContractFormData {
   discountValue: string;
   /** TechForce signature data URL; included in link so client sees it on the PDF */
   techForceSignature?: string;
+  /** Trial agreement only: scope / description text */
+  scopeText?: string;
+  /** Trial agreement only: quantity of bins */
+  qtyBinsTrial?: string;
+  /** Trial agreement only: quantity of bases */
+  qtyBasesTrial?: string;
 }
 
 /** Monthly unit prices for calculating Monthly Robotic Service Cost */
@@ -209,6 +215,8 @@ const CONTRACT_QTY_TO_PRODUCT_NAME: Record<string, string> = {
   qtyPlasticBags: 'Plastic Bags',
   qtyDoorOpenerHardwareOneTime: 'Door Opener Hardware',
   qtyHandheldTablet: 'Handheld Tablet w/ App',
+  qtyBinsTrial: 'Bins (Trial)',
+  qtyBasesTrial: 'Bases (Trial)',
 };
 
 function buildOrderProductsFromContractForm(orderNumber: string, formData: Record<string, string>): OrderProduct[] {
@@ -360,7 +368,7 @@ const OrderDetail: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isContractModalFullscreen, setIsContractModalFullscreen] = useState(false);
-  const [contractModalStep, setContractModalStep] = useState<'choose' | 'form' | 'form2' | 'signature' | 'link'>('choose');
+  const [contractModalStep, setContractModalStep] = useState<'choose' | 'form' | 'form2' | 'inventory_trial' | 'scope' | 'signature' | 'link'>('choose');
   const contractModalBodyRef = React.useRef<HTMLDivElement>(null);
   const [selectedContractType, setSelectedContractType] = useState<'service' | 'trial' | null>(null);
   const [orderContracts, setOrderContracts] = useState<ContractRow[]>([]);
@@ -708,6 +716,9 @@ const OrderDetail: React.FC = () => {
       discountTarget: '',
       discountType: 'flat',
       discountValue: '',
+      scopeText: '',
+      qtyBinsTrial: '',
+      qtyBasesTrial: '',
     };
   }, [orderData, apiClient, siteLocation]);
 
@@ -1277,8 +1288,39 @@ Techforce Team`
     implementationCostPage2: { x: 281, y: 429, fontSize: 10, pageIndex: 1 },
     totalMonthlyCost: { x: 281, y: 391, fontSize: 10, pageIndex: 1 },
     implementationCostDue: { x: 281, y: 314, fontSize: 10, pageIndex: 1 },
-    /** TechForce signature on last page (page 2) */
-    techforceSignature: { x: 100, y: 105, width: 180, height: 54, pageIndex: 1 },
+    /** TechForce signature on page 5 */
+    techforceSignature: { x: 100, y: 105, width: 180, height: 54, pageIndex: 4 },
+  };
+
+  /** Convert number to spelled-out word for contract (0–99). */
+  const numberToWords = (n: number): string => {
+    if (!Number.isInteger(n) || n < 0 || n > 99) return '';
+    const ones = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    if (n < 20) return ones[n];
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    return tens[t] + (o ? '-' + ones[o] : '');
+  };
+
+  /** Trial agreement PDF: client/agreement (no term start), inventory (TIM-E, bins, BIM-E), scope. Coordinates for trialagreement.pdf. */
+  const TRIAL_TEXT_PLACEMENTS: Record<string, { x: number; y: number; fontSize?: number; width?: number; height?: number; pageIndex?: number }> = {
+    effectiveDate: { x: 498, y: 615, fontSize: 10 },
+    businessName: { x: 213, y: 560, fontSize: 10 },
+    serviceAddress: { x: 213, y: 527, fontSize: 10 },
+    cityStateZip: { x: 213, y: 502, fontSize: 10 },
+    locationContactNamePhone: { x: 213, y: 472, fontSize: 10 },
+    locationContactEmail: { x: 213, y: 441, fontSize: 10 },
+    authorizedPersonName: { x: 213, y: 407, fontSize: 10 },
+    authorizedPersonTitle: { x: 213, y: 378, fontSize: 10 },
+    authorizedPersonEmail: { x: 213, y: 350, fontSize: 10 },
+    authorizedPersonPhone: { x: 213, y: 305, fontSize: 10 },
+    qtyTimEBot: { x: 317, y: 681, fontSize: 10, pageIndex: 1 },
+    qtyBinsTrial: { x: 480, y: 681, fontSize: 10, pageIndex: 1 },
+    qtyBasesTrial: { x: 135, y: 666, fontSize: 10, pageIndex: 1 },
+    qtyBIME: { x: 404, y: 666, fontSize: 10, pageIndex: 1 },
+    scopeText: { x: 100, y: 580, fontSize: 9, pageIndex: 1 },
+    techforceSignature: { x: 110, y: 360, width: 180, height: 54, pageIndex: 5 },
   };
 
   /** Generate a filled copy of the contract PDF with form data (for preview and for client view). Optionally place TechForce signature on last page. */
@@ -1290,9 +1332,10 @@ Techforce Team`
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const placements = contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS;
 
       const placeText = (key: string, value: string | undefined) => {
-        const placement = TEXT_PLACEMENTS[key];
+        const placement = placements[key];
         if (!placement || !('fontSize' in placement)) return;
         const text = String(value ?? '').trim();
         if (!text) return;
@@ -1307,57 +1350,126 @@ Techforce Team`
         });
       };
 
-      placeText('effectiveDate', payload.effectiveDate);
-      placeText('businessName', payload.businessName);
-      placeText('serviceAddress', payload.serviceAddress);
-      placeText('cityStateZip', payload.cityStateZip ?? '');
-      placeText('locationContactNamePhone', payload.locationContactNamePhone ?? '');
-      placeText('locationContactEmail', payload.locationContactEmail);
-      placeText('authorizedPersonName', payload.authorizedPersonName);
-      placeText('authorizedPersonTitle', payload.authorizedPersonTitle);
-      placeText('authorizedPersonEmail', payload.authorizedPersonEmail);
-      placeText('authorizedPersonPhone', payload.authorizedPersonPhone);
-      placeText('termStartDate', payload.termStartDate);
-      placeText('implementationCost', payload.implementationCost);
-      placeText('shippingFee', payload.shippingFee);
-      placeText('qtyTimEBot', payload.qtyTimEBot);
-      placeText('qtyTimECharger', payload.qtyTimECharger);
-      placeText('qtyBaseMetalMonthly', payload.qtyBaseMetalMonthly);
-      placeText('qtyInsulatedFoodTransportMonthly', payload.qtyInsulatedFoodTransportMonthly);
-      placeText('qtyWheeledBinMonthly', payload.qtyWheeledBinMonthly);
-      placeText('qtyUniversalPlatformMonthly', payload.qtyUniversalPlatformMonthly);
-      placeText('qtyDoorOpenersMonthly', payload.qtyDoorOpenersMonthly);
-      placeText('qtyNeuralTechBrainMonthly', payload.qtyNeuralTechBrainMonthly);
-      placeText('qtyElevatorHardwareMonthly', payload.qtyElevatorHardwareMonthly);
-      placeText('qtyLuggageCartMonthly', payload.qtyLuggageCartMonthly);
-      placeText('qtyConcessionBinTall', payload.qtyConcessionBinTall);
-      placeText('qtyStackingChairCart', payload.qtyStackingChairCart);
-      placeText('qtyCargoCart', payload.qtyCargoCart);
-      placeText('qtyHousekeepingCart', payload.qtyHousekeepingCart);
-      placeText('qtyBIME', payload.qtyBIME);
-      placeText('qtyMobileBIME', payload.qtyMobileBIME);
-      placeText('monthlyRoboticServiceCost', payload.monthlyRoboticServiceCost);
-      placeText('qtyBaseMetalOneTime', payload.qtyBaseMetalOneTime);
-      placeText('qtyInsulatedFoodTransportOneTime', payload.qtyInsulatedFoodTransportOneTime);
-      placeText('qtyWheeledBinOneTime', payload.qtyWheeledBinOneTime);
-      placeText('qtyUniversalPlatformOneTime', payload.qtyUniversalPlatformOneTime);
-      placeText('qtyPlasticBags', payload.qtyPlasticBags);
-      placeText('qtyDoorOpenerHardwareOneTime', payload.qtyDoorOpenerHardwareOneTime);
-      placeText('qtyHandheldTablet', payload.qtyHandheldTablet);
-      placeText('additionalAccessoriesCost', payload.additionalAccessoriesCost);
-      placeText('implementationCostPage2', payload.implementationCost);
-      placeText('totalMonthlyCost', payload.totalMonthlyCost);
-      placeText('implementationCostDue', payload.implementationCostDue);
+      const placeScopeMultiline = (scope: string) => {
+        const placement = TRIAL_TEXT_PLACEMENTS.scopeText;
+        if (!placement || !placement.fontSize) return;
+        const lines = scope.split(/\r?\n/).filter(Boolean);
+        const lineHeight = (placement.fontSize ?? 9) + 2;
+        const page = pages[placement.pageIndex ?? 0] ?? firstPage;
+        let y = placement.y;
+        for (const line of lines.slice(0, 20)) {
+          if (y < 50) break;
+          page.drawText(line.slice(0, 80), {
+            x: placement.x,
+            y,
+            size: placement.fontSize ?? 9,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+          y -= lineHeight;
+        }
+      };
+
+      const SPELLED_OUT_OFFSET = 25;
+      const placeQuantityWithSpelledOut = (key: string, value: string | undefined) => {
+        const placement = placements[key];
+        if (!placement || !('fontSize' in placement)) return;
+        const text = String(value ?? '').trim();
+        if (!text) return;
+        const pageIndex = 'pageIndex' in placement ? (placement as { pageIndex?: number }).pageIndex ?? 0 : 0;
+        const page = pages[pageIndex] ?? firstPage;
+        page.drawText(text, {
+          x: placement.x,
+          y: placement.y,
+          size: placement.fontSize ?? 10,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+        const num = parseInt(text, 10);
+        if (!Number.isNaN(num)) {
+          const word = numberToWords(num);
+          if (word) {
+            page.drawText(word, {
+              x: placement.x + SPELLED_OUT_OFFSET,
+              y: placement.y,
+              size: placement.fontSize ?? 10,
+              font: helveticaFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+      };
+
+      if (contractType === 'trial') {
+        placeText('effectiveDate', payload.effectiveDate);
+        placeText('businessName', payload.businessName);
+        placeText('serviceAddress', payload.serviceAddress);
+        placeText('cityStateZip', payload.cityStateZip ?? '');
+        placeText('locationContactNamePhone', payload.locationContactNamePhone ?? '');
+        placeText('locationContactEmail', payload.locationContactEmail);
+        placeText('authorizedPersonName', payload.authorizedPersonName);
+        placeText('authorizedPersonTitle', payload.authorizedPersonTitle);
+        placeText('authorizedPersonEmail', payload.authorizedPersonEmail);
+        placeText('authorizedPersonPhone', payload.authorizedPersonPhone);
+        placeQuantityWithSpelledOut('qtyTimEBot', payload.qtyTimEBot);
+        placeQuantityWithSpelledOut('qtyBinsTrial', payload.qtyBinsTrial);
+        placeQuantityWithSpelledOut('qtyBasesTrial', payload.qtyBasesTrial);
+        placeQuantityWithSpelledOut('qtyBIME', payload.qtyBIME);
+        if (payload.scopeText) placeScopeMultiline(payload.scopeText);
+      } else {
+        placeText('effectiveDate', payload.effectiveDate);
+        placeText('businessName', payload.businessName);
+        placeText('serviceAddress', payload.serviceAddress);
+        placeText('cityStateZip', payload.cityStateZip ?? '');
+        placeText('locationContactNamePhone', payload.locationContactNamePhone ?? '');
+        placeText('locationContactEmail', payload.locationContactEmail);
+        placeText('authorizedPersonName', payload.authorizedPersonName);
+        placeText('authorizedPersonTitle', payload.authorizedPersonTitle);
+        placeText('authorizedPersonEmail', payload.authorizedPersonEmail);
+        placeText('authorizedPersonPhone', payload.authorizedPersonPhone);
+        placeText('termStartDate', payload.termStartDate);
+        placeText('implementationCost', payload.implementationCost);
+        placeText('shippingFee', payload.shippingFee);
+        placeText('qtyTimEBot', payload.qtyTimEBot);
+        placeText('qtyTimECharger', payload.qtyTimECharger);
+        placeText('qtyBaseMetalMonthly', payload.qtyBaseMetalMonthly);
+        placeText('qtyInsulatedFoodTransportMonthly', payload.qtyInsulatedFoodTransportMonthly);
+        placeText('qtyWheeledBinMonthly', payload.qtyWheeledBinMonthly);
+        placeText('qtyUniversalPlatformMonthly', payload.qtyUniversalPlatformMonthly);
+        placeText('qtyDoorOpenersMonthly', payload.qtyDoorOpenersMonthly);
+        placeText('qtyNeuralTechBrainMonthly', payload.qtyNeuralTechBrainMonthly);
+        placeText('qtyElevatorHardwareMonthly', payload.qtyElevatorHardwareMonthly);
+        placeText('qtyLuggageCartMonthly', payload.qtyLuggageCartMonthly);
+        placeText('qtyConcessionBinTall', payload.qtyConcessionBinTall);
+        placeText('qtyStackingChairCart', payload.qtyStackingChairCart);
+        placeText('qtyCargoCart', payload.qtyCargoCart);
+        placeText('qtyHousekeepingCart', payload.qtyHousekeepingCart);
+        placeText('qtyBIME', payload.qtyBIME);
+        placeText('qtyMobileBIME', payload.qtyMobileBIME);
+        placeText('monthlyRoboticServiceCost', payload.monthlyRoboticServiceCost);
+        placeText('qtyBaseMetalOneTime', payload.qtyBaseMetalOneTime);
+        placeText('qtyInsulatedFoodTransportOneTime', payload.qtyInsulatedFoodTransportOneTime);
+        placeText('qtyWheeledBinOneTime', payload.qtyWheeledBinOneTime);
+        placeText('qtyUniversalPlatformOneTime', payload.qtyUniversalPlatformOneTime);
+        placeText('qtyPlasticBags', payload.qtyPlasticBags);
+        placeText('qtyDoorOpenerHardwareOneTime', payload.qtyDoorOpenerHardwareOneTime);
+        placeText('qtyHandheldTablet', payload.qtyHandheldTablet);
+        placeText('additionalAccessoriesCost', payload.additionalAccessoriesCost);
+        placeText('implementationCostPage2', payload.implementationCost);
+        placeText('totalMonthlyCost', payload.totalMonthlyCost);
+        placeText('implementationCostDue', payload.implementationCostDue);
+      }
 
       const lastPage = pages[pages.length - 1];
-      if (techForceSignature && lastPage) {
-        const placement = TEXT_PLACEMENTS.techforceSignature as { x: number; y: number; width?: number; height?: number; pageIndex?: number } | undefined;
-        if (placement && 'width' in placement) {
+      const sigPlacement = (contractType === 'trial' ? TRIAL_TEXT_PLACEMENTS : TEXT_PLACEMENTS).techforceSignature as { x: number; y: number; width?: number; height?: number; pageIndex?: number } | undefined;
+      if (techForceSignature && lastPage && sigPlacement && 'width' in sigPlacement) {
+        const sigPage = sigPlacement.pageIndex !== undefined ? pages[sigPlacement.pageIndex] : lastPage;
+        if (sigPage) {
           const imageBytes = await fetch(techForceSignature).then((r) => r.arrayBuffer());
           const img = await pdfDoc.embedPng(imageBytes);
-          const w = placement.width ?? 180;
-          const h = placement.height ?? 54;
-          lastPage.drawImage(img, { x: placement.x, y: placement.y, width: w, height: h });
+          const w = sigPlacement.width ?? 180;
+          const h = sigPlacement.height ?? 54;
+          sigPage.drawImage(img, { x: sigPlacement.x, y: sigPlacement.y, width: w, height: h });
         }
       }
 
@@ -1545,10 +1657,20 @@ Techforce Team`
 
   const handleContractFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setContractModalStep('form2');
+    setContractModalStep(selectedContractType === 'trial' ? 'inventory_trial' : 'form2');
   };
 
   const handleContractForm2Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setContractModalStep('signature');
+  };
+
+  const handleContractInventoryTrialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setContractModalStep('scope');
+  };
+
+  const handleContractScopeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setContractModalStep('signature');
   };
@@ -1831,7 +1953,7 @@ Techforce Team`
   };
 
   useEffect(() => {
-    if (contractModalStep === 'form2' || contractModalStep === 'signature') {
+    if (['form2', 'inventory_trial', 'scope', 'signature'].includes(contractModalStep)) {
       contractModalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [contractModalStep]);
@@ -3427,6 +3549,8 @@ Techforce Team`
                       {contractModalStep === 'choose' && 'Choose Contract Type'}
                       {contractModalStep === 'form' && 'Client & Agreement Details'}
                       {contractModalStep === 'form2' && 'Costs & Inventory'}
+                      {contractModalStep === 'inventory_trial' && 'Inventory'}
+                      {contractModalStep === 'scope' && 'Scope'}
                       {contractModalStep === 'signature' && 'TechForce Signature'}
                       {contractModalStep === 'link' && 'Generate Contract'}
                     </h3>
@@ -3612,16 +3736,18 @@ Techforce Team`
                                 placeholder="MM/DD/YYYY"
                               />
                             </div>
-                            <div className="contract-form-group">
-                              <label className="form-label">Term Start Date</label>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={contractFormData.termStartDate}
-                                onChange={(e) => setContractFormData(prev => ({ ...prev, termStartDate: e.target.value }))}
-                                placeholder="MM/DD/YYYY"
-                              />
-                            </div>
+                            {selectedContractType !== 'trial' && (
+                              <div className="contract-form-group">
+                                <label className="form-label">Term Start Date</label>
+                                <input
+                                  type="text"
+                                  className="form-input"
+                                  value={contractFormData.termStartDate}
+                                  onChange={(e) => setContractFormData(prev => ({ ...prev, termStartDate: e.target.value }))}
+                                  placeholder="MM/DD/YYYY"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="contract-form-actions">
@@ -3629,7 +3755,93 @@ Techforce Team`
                             Back
                           </button>
                           <button type="submit" className="generate-link-button">
-                            Next: Costs & Inventory
+                            {selectedContractType === 'trial' ? 'Next: Inventory' : 'Next: Costs & Inventory'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {contractModalStep === 'inventory_trial' && (
+                      <form className="contract-form" onSubmit={handleContractInventoryTrialSubmit}>
+                        <div className="contract-form-section">
+                          <h4 className="contract-form-section-title">Trial Inventory</h4>
+                          <p className="contract-form-section-desc">Enter quantities for the trial agreement.</p>
+                          <div className="contract-form-grid contract-form-grid-3">
+                            <div className="contract-form-group">
+                              <label className="form-label">Quantity of TIM-E robots</label>
+                              <input
+                                type="text"
+                                className="form-input form-input-qty"
+                                value={contractFormData.qtyTimEBot}
+                                onChange={(e) => setContractFormData(prev => ({ ...prev, qtyTimEBot: e.target.value }))}
+                                placeholder="Qty"
+                              />
+                            </div>
+                            <div className="contract-form-group">
+                              <label className="form-label">Quantity of bins</label>
+                              <input
+                                type="text"
+                                className="form-input form-input-qty"
+                                value={contractFormData.qtyBinsTrial ?? ''}
+                                onChange={(e) => setContractFormData(prev => ({ ...prev, qtyBinsTrial: e.target.value }))}
+                                placeholder="Qty"
+                              />
+                            </div>
+                            <div className="contract-form-group">
+                              <label className="form-label">Quantity of bases</label>
+                              <input
+                                type="text"
+                                className="form-input form-input-qty"
+                                value={contractFormData.qtyBasesTrial ?? ''}
+                                onChange={(e) => setContractFormData(prev => ({ ...prev, qtyBasesTrial: e.target.value }))}
+                                placeholder="Qty"
+                              />
+                            </div>
+                            <div className="contract-form-group">
+                              <label className="form-label">Quantity of BIM-E robots</label>
+                              <input
+                                type="text"
+                                className="form-input form-input-qty"
+                                value={contractFormData.qtyBIME}
+                                onChange={(e) => setContractFormData(prev => ({ ...prev, qtyBIME: e.target.value }))}
+                                placeholder="Qty"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="contract-form-actions">
+                          <button type="button" className="cancel-button" onClick={() => setContractModalStep('form')}>
+                            Back
+                          </button>
+                          <button type="submit" className="generate-link-button">
+                            Next: Scope
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {contractModalStep === 'scope' && (
+                      <form className="contract-form" onSubmit={handleContractScopeSubmit}>
+                        <div className="contract-form-section">
+                          <h4 className="contract-form-section-title">Scope</h4>
+                          <p className="contract-form-section-desc">Describe the scope of the trial agreement.</p>
+                          <div className="contract-form-group">
+                            <label className="form-label">Scope / Description</label>
+                            <textarea
+                              className="form-input contract-scope-textarea"
+                              value={contractFormData.scopeText ?? ''}
+                              onChange={(e) => setContractFormData(prev => ({ ...prev, scopeText: e.target.value }))}
+                              placeholder="Enter scope and description..."
+                              rows={8}
+                            />
+                          </div>
+                        </div>
+                        <div className="contract-form-actions">
+                          <button type="button" className="cancel-button" onClick={() => setContractModalStep('inventory_trial')}>
+                            Back
+                          </button>
+                          <button type="submit" className="generate-link-button">
+                            Next: Signature
                           </button>
                         </div>
                       </form>
@@ -3770,7 +3982,7 @@ Techforce Team`
                           </div>
                         </div>
                         <div className="contract-form-actions">
-                          <button type="button" className="cancel-button" onClick={() => { setSignature(null); setContractModalStep('form2'); }}>
+                          <button type="button" className="cancel-button" onClick={() => { setSignature(null); setContractModalStep(selectedContractType === 'trial' ? 'scope' : 'form2'); }}>
                             Back
                           </button>
                           <button

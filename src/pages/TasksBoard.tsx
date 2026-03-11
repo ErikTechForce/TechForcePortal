@@ -1,16 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import AddTaskForm from './AddTask';
 import { useAuth } from '../context/AuthContext';
-import { fetchTasks, updateTask, type TaskRow } from '../api/tasks';
+import { fetchTasks, fetchAllTasks, updateTask, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchOrdersForUser, type OrderRow } from '../api/orderApi';
 import { TAG_PILL_COLORS, ROLE_LABELS as TAG_LABELS } from '../constants/taskTags';
 import './Page.css';
 import './TasksBoard.css';
+
+const STATUS_PILL_COLORS: Record<string, string> = {
+  Unassigned: '#e5e7eb',
+  'To-Do': '#bfdbfe',
+  'In Progress': '#fde68a',
+  Completed: '#bbf7d0',
+};
+
+const PRIORITY_PILL_COLORS: Record<string, string> = {
+  Low: '#73BF4380',
+  Medium: '#FFC10780',
+  High: '#E48B5280',
+  Urgent: '#ef444480',
+};
+
 
 function matchesSearch(task: TaskRow, search: string): boolean {
   if (!search.trim()) return true;
@@ -45,6 +60,7 @@ const TasksBoard: React.FC = () => {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     assignedCompanies: false,
     completedTasks: false,
+    allTasks: false,
   });
   const toggleSection = (key: string) =>
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -66,6 +82,54 @@ const TasksBoard: React.FC = () => {
 
   // Drag error
   const [dragError, setDragError] = useState('');
+  const [allTasks, setAllTasks] = useState<TaskRow[]>([]);
+
+  // All Tasks column filters
+  const [allTasksFilters, setAllTasksFilters] = useState<Record<string, string[]>>({
+    status: [], priority: [], tags: [], assigned_to: [], company: [],
+  });
+  const [openFilterCol, setOpenFilterCol] = useState<string | null>(null);
+  const [filterDropdownPos, setFilterDropdownPos] = useState<{ top: number; left: number } | null>(null);
+
+  const toggleFilterValue = (col: string, value: string) =>
+    setAllTasksFilters((prev) => {
+      const cur = prev[col];
+      return { ...prev, [col]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value] };
+    });
+
+  const allTasksUniqueValues = useMemo(() => ({
+    status: Array.from(new Set(allTasks.map((t) => t.status))).sort(),
+    priority: Array.from(new Set(allTasks.map((t) => t.priority ?? '—'))).filter(Boolean).sort(),
+    tags: Array.from(new Set(allTasks.flatMap((t) => t.tags ?? []))).sort(),
+    assigned_to: Array.from(new Set(allTasks.map((t) => t.assigned_to_name ?? '—'))).sort(),
+    company: Array.from(new Set(allTasks.map((t) => t.client_company ?? '—'))).sort(),
+  }), [allTasks]);
+
+  const filteredAllTasks = useMemo(() => {
+    const { status, priority, tags, assigned_to, company } = allTasksFilters;
+    return allTasks.filter((task) => {
+      if (status.length > 0 && !status.includes(task.status)) return false;
+      if (priority.length > 0 && !priority.includes(task.priority ?? '—')) return false;
+      if (tags.length > 0 && !tags.some((t) => (task.tags ?? []).includes(t))) return false;
+      if (assigned_to.length > 0 && !assigned_to.includes(task.assigned_to_name ?? '—')) return false;
+      if (company.length > 0 && !company.includes(task.client_company ?? '—')) return false;
+      return true;
+    });
+  }, [allTasks, allTasksFilters]);
+
+  const handleFilterBtnClick = (col: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (openFilterCol === col) {
+      setOpenFilterCol(null);
+      setFilterDropdownPos(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setFilterDropdownPos({ top: rect.bottom + 6, left: rect.left });
+    setOpenFilterCol(col);
+  };
+
+  const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
   useEffect(() => {
     if (!user?.id) {
@@ -111,6 +175,44 @@ const TasksBoard: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!isAdmin || !user?.id) {
+      setAllTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setAllTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.id]);
+
+  useEffect(() => {
+    if (!openFilterCol) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.closest('.all-tasks-filter-btn') && !target.closest('.all-tasks-filter-dropdown')) {
+        setOpenFilterCol(null);
+        setFilterDropdownPos(null);
+      }
+    };
+    const closeOnScroll = (e: Event) => {
+      if ((e.target as Element)?.closest?.('.all-tasks-filter-dropdown')) return;
+      setOpenFilterCol(null);
+      setFilterDropdownPos(null);
+    };
+    document.addEventListener('mousedown', close);
+    window.addEventListener('scroll', closeOnScroll, true);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', closeOnScroll, true);
+    };
+  }, [openFilterCol]);
 
   const handleAddTask = () => {
     setAddTaskModalOpen(true);
@@ -385,7 +487,15 @@ const TasksBoard: React.FC = () => {
             <span className="tasks-item-drag-handle" aria-hidden="true">⠿</span>
             <div className="tasks-item-body">
               <span className="tasks-item-name">
-                {task.name} <span className="tasks-item-id">#{task.id}</span>
+                {task.name}
+                {task.priority && (
+                  <span
+                    className="tasks-tag-pill"
+                    style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                  >
+                    {task.priority}
+                  </span>
+                )}
               </span>
               {task.tags?.length > 0 && (
                 <span className="tasks-item-tags">
@@ -508,6 +618,7 @@ const TasksBoard: React.FC = () => {
                   <p className="tasks-drag-error" role="alert">{dragError}</p>
                 )}
 
+                <h3 className="completed-tasks-title">Your Task Board</h3>
                 <div className="tasks-board-cards">
                   <div
                     className={`tasks-board-card${dragOverColumn === 'todo' ? ' tasks-board-card--drag-over' : ''}`}
@@ -556,7 +667,7 @@ const TasksBoard: React.FC = () => {
 
                 <div className="completed-tasks-section">
                   <div className="collapsible-header" onClick={() => toggleSection('completedTasks')}>
-                    <h3 className="completed-tasks-title">Completed Tasks</h3>
+                    <h3 className="completed-tasks-title">Your Completed Tasks</h3>
                     <span className={`collapse-arrow${!collapsedSections.completedTasks ? ' collapse-arrow--open' : ''}`}>▶</span>
                   </div>
                   {!collapsedSections.completedTasks && <>
@@ -582,7 +693,16 @@ const TasksBoard: React.FC = () => {
                           >
                             <td data-label="Task #">#{task.id}</td>
                             <td data-label="Task Name">{task.name}</td>
-                            <td data-label="Priority">{task.priority ?? '—'}</td>
+                            <td data-label="Priority">
+                              {task.priority ? (
+                                <span
+                                  className="tasks-tag-pill"
+                                  style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                                >
+                                  {task.priority}
+                                </span>
+                              ) : '—'}
+                            </td>
                           </tr>
                         ))
                       )}
@@ -590,6 +710,95 @@ const TasksBoard: React.FC = () => {
                   </table></div>
                   </>}
                 </div>
+
+                {isAdmin && (
+                  <div className="all-tasks-section">
+                    <div className="collapsible-header" onClick={() => toggleSection('allTasks')}>
+                      <h3 className="all-tasks-title">All Tasks</h3>
+                      <span className={`collapse-arrow${!collapsedSections.allTasks ? ' collapse-arrow--open' : ''}`}>▶</span>
+                    </div>
+                    {!collapsedSections.allTasks && (
+                      <div className="collapsible-table-wrapper">
+                        <table className="all-tasks-table">
+                          <thead>
+                            <tr>
+                              <th>Task</th>
+                              {(['status', 'priority', 'tags', 'assigned_to', 'company'] as const).map((col) => {
+                                const labels: Record<string, string> = { status: 'Status', priority: 'Priority', tags: 'Roles', assigned_to: 'Assigned to', company: 'Company' };
+                                const isActive = allTasksFilters[col].length > 0;
+                                return (
+                                  <th key={col}>
+                                    <div className="all-tasks-th-content">
+                                      {labels[col]}
+                                      <button
+                                        className={`all-tasks-filter-btn${isActive ? ' active' : ''}`}
+                                        onClick={(e) => handleFilterBtnClick(col, e)}
+                                        title={`Filter by ${labels[col]}`}
+                                      >
+                                        ▾
+                                      </button>
+                                    </div>
+                                  </th>
+                                );
+                              })}
+                              <th>Due date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredAllTasks.length === 0 ? (
+                              <tr>
+                                <td colSpan={7} data-label="">
+                                  {allTasks.length === 0 ? 'No tasks.' : 'No tasks match the current filters.'}
+                                </td>
+                              </tr>
+                            ) : (
+                              filteredAllTasks.map((task) => (
+                                <tr key={task.id} className="all-tasks-row" onClick={() => handleTaskClick(task.id)}>
+                                  <td data-label="Task">{task.name}</td>
+                                  <td data-label="Status">
+                                    <span
+                                      className="dashboard-pill"
+                                      style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
+                                    >
+                                      {task.status}
+                                    </span>
+                                  </td>
+                                  <td data-label="Priority">
+                                    {task.priority ? (
+                                      <span
+                                        className="dashboard-pill"
+                                        style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                                      >
+                                        {task.priority}
+                                      </span>
+                                    ) : '—'}
+                                  </td>
+                                  <td data-label="Roles">
+                                    <div className="dashboard-admin-tasks-tags">
+                                      {(task.tags?.length ? task.tags : []).map((tag) => (
+                                        <span
+                                          key={tag}
+                                          className="dashboard-pill"
+                                          style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                                        >
+                                          {TAG_LABELS[tag] ?? tag.replace(/_/g, ' ')}
+                                        </span>
+                                      ))}
+                                      {(!task.tags || task.tags.length === 0) && '—'}
+                                    </div>
+                                  </td>
+                                  <td data-label="Assigned to">{task.assigned_to_name ?? '—'}</td>
+                                  <td data-label="Company">{task.client_company ?? '—'}</td>
+                                  <td data-label="Due date">{task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}</td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="assigned-companies-section">
                   <div className="collapsible-header" onClick={() => toggleSection('assignedCompanies')}>
@@ -666,6 +875,39 @@ const TasksBoard: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* All Tasks column filter dropdown (fixed, escapes table overflow) */}
+      {openFilterCol && filterDropdownPos && (() => {
+        const col = openFilterCol;
+        const vals = allTasksUniqueValues[col as keyof typeof allTasksUniqueValues] ?? [];
+        const active = allTasksFilters[col] ?? [];
+        return (
+          <div
+            className="all-tasks-filter-dropdown"
+            style={{ top: filterDropdownPos.top, left: filterDropdownPos.left }}
+          >
+            {vals.length === 0 && <span className="all-tasks-filter-empty">No options</span>}
+            {vals.map((val) => (
+              <label key={val} className="all-tasks-filter-option">
+                <input
+                  type="checkbox"
+                  checked={active.includes(val)}
+                  onChange={() => toggleFilterValue(col, val)}
+                />
+                {col === 'tags' ? (TAG_LABELS[val] ?? val.replace(/_/g, ' ')) : val}
+              </label>
+            ))}
+            {active.length > 0 && (
+              <button
+                className="all-tasks-filter-clear"
+                onClick={() => setAllTasksFilters((p) => ({ ...p, [col]: [] }))}
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Confirm unassign modal: shown when dropping a task back onto Unassigned */}
       <Modal

@@ -56,7 +56,7 @@ html {
 .collapsible-table-wrapper {
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 320px;
+  max-height: 514px;
   border-radius: 8px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }

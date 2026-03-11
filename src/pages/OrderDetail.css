@@ -883,6 +883,18 @@
   margin: 0 0 0.75rem 0;
 }
 
+.contract-form-section-desc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem 0;
+}
+
+.contract-scope-textarea {
+  min-height: 10rem;
+  resize: vertical;
+  width: 100%;
+}
+
 .contract-form-grid-3 {
   grid-template-columns: repeat(3, 1fr);
 }

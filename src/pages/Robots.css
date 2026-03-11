@@ -266,14 +266,6 @@
   margin: 0;
 }
 
-.activity-log-list {
-  display: flex;
-  flex-direction: column;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 0.75rem;
-}
-
 .robot-activity-item {
   display: flex;
   align-items: center;
