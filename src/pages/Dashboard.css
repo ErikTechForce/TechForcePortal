@@ -604,8 +604,8 @@
   background: #8A8F93;
 }
 
-/* Grid collapses to single column at 1330px */
-@media (max-width: 1460px) {
+/* Grid collapses to single column at 1540px */
+@media (max-width: 1540px) {
   .dashboard-content {
     padding: 1rem;
     max-width: 100%;
@@ -622,6 +622,7 @@
     grid-auto-rows: auto;
   }
 
+  /* reset explicit placement so items stack in a single column */
   .dash-pending,
   .dash-sales,
   .dash-robots,
@@ -629,6 +630,10 @@
   .dash-activity,
   .dash-leads,
   .dash-tasks {
+    grid-column: auto;
+    grid-column-start: auto;
+    grid-row: auto;
+    grid-row-start: auto;
     overflow: hidden;
   }
 
@@ -696,6 +701,100 @@
     padding-top: calc(3.5rem + 1rem);
     overflow-x: hidden;
     max-width: 100%;
+  }
+
+  .dashboard-content {
+    padding: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.4rem;
+  }
+
+  /* single-column grid with auto heights */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+
+  /* reset all explicit placement so every card stacks naturally */
+  .dash-sales,
+  .dash-robots,
+  .dash-inventory,
+  .dash-tasks,
+  .dash-pending,
+  .dash-leads,
+  .dash-activity {
+    grid-column: auto;
+    grid-column-start: auto;
+    grid-row: auto;
+    grid-row-start: auto;
+    overflow: hidden;
+  }
+
+  /* meaningful min-heights for each card in single-column view */
+  .dash-sales,
+  .dash-robots,
+  .dash-inventory {
+    min-height: 320px;
+  }
+
+  .dash-tasks,
+  .dash-activity {
+    min-height: 380px;
+  }
+
+  .dash-pending {
+    min-height: 280px;
+  }
+
+  .dash-leads {
+    min-height: 240px;
+  }
+
+  /* stacking order */
+  .dash-sales      { order: 1; }
+  .dash-robots     { order: 2; }
+  .dash-inventory  { order: 3; }
+  .dash-tasks      { order: 4; }
+  .dash-pending    { order: 5; }
+  .dash-leads      { order: 6; }
+  .dash-activity   { order: 7; }
+
+  /* leads & tasks: fill the fixed card height */
+  .dash-leads.dashboard-card,
+  .dash-tasks.dashboard-card {
+    height: auto;
+  }
+
+  .dash-leads .card-content,
+  .dash-tasks .card-content {
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* list items wrap to column */
+  .dash-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .dash-list-item .dashboard-task-pills {
+    width: 100%;
+  }
+
+  /* tighter tab/button sizing */
+  .pending-tab {
+    padding: 0.6rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .dash-tasks-filter-btn {
+    padding: 0.6rem 0.1rem;
+    font-size: 0.75rem;
   }
 }
 

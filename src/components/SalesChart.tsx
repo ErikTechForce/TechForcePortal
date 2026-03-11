@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SalesChart.css';
 
 type ViewType = 'Total' | 'Product';
@@ -34,6 +34,21 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<{ monthIndex: number; productIndex: number } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(380);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w > 0) setContainerWidth(w);
+    });
+    ro.observe(el);
+    if (el.clientWidth > 0) setContainerWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
   
   const timePeriodConfigs: Record<TimePeriod, TimePeriodConfig> = {
     '1month': { label: '1 month', months: 1 },
@@ -57,27 +72,29 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
   
   const chartHeight = 200;
   const chartPadding = 30;
-  const labelBottomPadding = 20; // Extra space for two-line labels
-  
-  // For product view
-  const maxProductSales = Math.max(...currentProductData.map(d => d.sales), 1);
-  const barWidth = 45;
-  const barSpacing = 15;
-  const productChartWidth = currentProductData.length * (barWidth + barSpacing) - barSpacing;
-  
-  // For total view
-  const maxTotalSales = Math.max(...currentTotalData.map(d => d.total), 1);
-  const yAxisWidth = 38; // space reserved on the left for Y-axis labels (shared by both charts)
+  const labelBottomPadding = 20;
+
+  const yAxisWidth = 38;
   const chartPaddingRight = 10;
   const totalBarSpacing = 10;
-  const availableWidth = 450 - yAxisWidth - chartPaddingRight;
-  
-  // Target bar width similar to 6 months view (~65px)
+  const availableWidth = Math.max(80, containerWidth - yAxisWidth - chartPaddingRight);
+
+  // For product view — bar width scales with available space
+  const maxProductSales = Math.max(...currentProductData.map(d => d.sales), 1);
+  const numProductBars = currentProductData.length;
+  const minProductSpacing = 8;
+  const maxProductSpacing = 22; // cap so sparse bar counts don't drift apart
+  const barWidth = Math.max(18, Math.min(55, (availableWidth - minProductSpacing * Math.max(0, numProductBars - 1)) / numProductBars));
+  const barSpacing = numProductBars > 1
+    ? Math.min(maxProductSpacing, Math.max(minProductSpacing, (availableWidth - barWidth * numProductBars) / (numProductBars - 1)))
+    : 0;
+  const productChartWidth = numProductBars * barWidth + Math.max(0, numProductBars - 1) * barSpacing;
+
+  // For total view
+  const maxTotalSales = Math.max(...currentTotalData.map(d => d.total), 1);
   const targetBarWidth = 65;
   const maxBarWidth = targetBarWidth;
   const minBarWidth = 25;
-  
-  // Calculate bar width, but cap it for 1 month and 3 months to match 6 months visually
   const calculatedBarWidth = (availableWidth - (currentTotalData.length - 1) * totalBarSpacing) / currentTotalData.length;
   const totalBarWidth = Math.max(minBarWidth, Math.min(maxBarWidth, calculatedBarWidth));
   const totalChartWidth = yAxisWidth + (totalBarWidth * currentTotalData.length) + (totalBarSpacing * (currentTotalData.length - 1)) + chartPaddingRight;
@@ -400,7 +417,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ productData, totalData }) => {
           </button>
         </div>
       </div>
-      <div className="chart-container">
+      <div className="chart-container" ref={containerRef}>
         {viewType === 'Product' ? renderProductChart() : renderTotalChart()}
         {hoveredBar !== null && tooltipPosition && viewType === 'Product' && (
           <div
