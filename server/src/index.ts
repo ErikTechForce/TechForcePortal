@@ -1188,7 +1188,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
         const assigneeName = row.assigned_to_name != null ? String(row.assigned_to_name) : null;
         const siteAction = body.assigned_to_user_id !== undefined && assigneeName
           ? `User ${assigneeName} assigned to task: ${taskName}`
-          : `Task updated: ${taskName}`;
+          : `Task updated successfully: ${taskName}`;
         await pool.query(
           `INSERT INTO site_activity (action, "user") VALUES ($1, 'System')`,
           [siteAction]
@@ -1277,6 +1277,8 @@ app.patch('/api/clients/:id', async (req, res) => {
       site_location?: string | null;
       notes?: string | null;
       industry?: string | null;
+      source?: string | null;
+      product?: string | null;
     };
     const existing = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
     if (existing.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
@@ -1334,6 +1336,14 @@ app.patch('/api/clients/:id', async (req, res) => {
     if (body.industry !== undefined) {
       updates.push(`industry = $${paramIndex++}`);
       values.push(body.industry?.trim() || null);
+    }
+    if (body.source !== undefined) {
+      updates.push(`source = $${paramIndex++}`);
+      values.push(body.source?.trim() || null);
+    }
+    if (body.product !== undefined) {
+      updates.push(`product = $${paramIndex++}`);
+      values.push(body.product?.trim() || null);
     }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update.' });

@@ -1,5 +1,5 @@
 .client-search-row {
-  margin: 2rem 0;
+  margin: 1rem 0;
 }
 
 .client-search-bar {
@@ -23,76 +23,56 @@
   color: #8A8F93;
 }
 
-.clients-section {
-  margin: 2rem 0;
+
+/* ── Tables container (matches orders-tables-container spacing) ──── */
+.clients-tables-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-/* Responsive: card layout on mobile so no horizontal scroll */
-@media (max-width: 768px) {
-  .clients-table thead,
-  .leads-table thead {
-    display: none;
-  }
-
-  .clients-table tbody tr,
-  .leads-table tbody tr {
-    display: block;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border: 1px solid #8A8F93;
-    border-radius: 8px;
-    background: #E9ECEF;
-  }
-
-  .clients-table tbody tr:hover,
-  .leads-table tbody tr:hover {
-    background: #f3f4f6;
-  }
-
-  .clients-table td,
-  .leads-table td {
-    display: block;
-    padding: 0.35rem 0;
-    border: none;
-  }
-
-  .clients-table td::before,
-  .leads-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    font-size: 0.75rem;
-    color: #5A708D;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: block;
-    margin-bottom: 0.15rem;
-  }
+.clients-section,
+.leads-section {
+  margin: 0;
 }
 
-.clients-title {
+/* Collapsible header: matches orders-collapsible-header */
+.clients-section .collapsible-header,
+.leads-section .collapsible-header {
+  margin-bottom: 0.75rem;
+}
+
+.clients-title,
+.leads-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1B1C1E;
+  margin: 0;
+  transition: color 0.15s ease;
+}
+
+.clients-section .collapsible-header:hover .clients-title,
+.leads-section .collapsible-header:hover .leads-title {
+  color: #2F6F44;
 }
 
 .clients-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+  min-width: 500px;
 }
 
 .clients-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .clients-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -144,34 +124,23 @@
   transform: scale(0.98);
 }
 
-.leads-section {
-  margin-top: 2rem;
-}
-
-.leads-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1B1C1E;
-}
 
 .leads-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+  min-width: 500px;
 }
 
 .leads-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .leads-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;

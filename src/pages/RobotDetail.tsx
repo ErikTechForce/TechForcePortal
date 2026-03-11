@@ -186,7 +186,7 @@ const RobotDetail: React.FC = () => {
             <div className="page-content">
               <p>Product not found.</p>
               <button type="button" className="back-button" onClick={() => navigate('/inventory')}>
-                ← Back to Inventory
+                Back to Inventory
               </button>
             </div>
           </main>
@@ -205,7 +205,7 @@ const RobotDetail: React.FC = () => {
               <div className="robot-detail-header">
                 <h2 className="page-title">Robot not found</h2>
                 <button type="button" className="back-button" onClick={handleBack}>
-                  ← Back to {decodedProductName}
+                  Back to {decodedProductName}
                 </button>
               </div>
               <p className="page-subtitle">No unit with this serial number in {decodedProductName} inventory.</p>
@@ -225,7 +225,7 @@ const RobotDetail: React.FC = () => {
             <div className="robot-detail-header">
               <h2 className="page-title">Robot — {serialNumber.trim() || 'No serial'}</h2>
               <button type="button" className="back-button" onClick={handleBack}>
-                ← Back to {decodedProductName}
+                Back to {decodedProductName}
               </button>
             </div>
             <p className="page-subtitle">Manage robot information and location history</p>

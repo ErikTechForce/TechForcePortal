@@ -1,50 +1,192 @@
-.product-detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.back-button {
+/* ── Page header with back button ─────────────────────────────────── */
+.task-detail-page-header .product-back-button {
+  flex-shrink: 0;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1B1C1E;
-  background-color: #f3f4f6;
-  border: 1px solid #8A8F93;
+  color: #FFFFFF;
+  background-color: #8A8F93;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.back-button:hover {
-  background-color: #8A8F93;
-  border-color: #E9ECEF;
+.task-detail-page-header .product-back-button:hover {
+  background-color: #E9ECEF;
+  color: #1B1C1E;
 }
 
-.back-button:active {
-  transform: scale(0.98);
+/* ── Product info card ────────────────────────────────────────────── */
+.product-info-card {
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
+  max-width: 900px;
+  border-left: 4px solid #2F6F44;
 }
 
-.product-detail-actions {
-  margin-bottom: 1.5rem;
+.product-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
 }
 
-.product-detail-actions .save-button {
-  padding: 0.5rem 1rem;
+.product-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.product-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-info-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5A708D;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.product-info-value {
+  font-size: 1rem;
+  color: #1B1C1E;
+  font-weight: 500;
+}
+
+/* Table section collapsible header: only the left part is clickable */
+.product-table-section .collapsible-header {
+  cursor: default;
+}
+
+/* Add Inventory button (inline with table section header, pushed to right) */
+.product-table-section .collapsible-header .product-add-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.product-add-btn {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: white;
+  background-color: #2F6F44;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.product-add-btn:hover {
+  background-color: #14532d;
+}
+
+/* Table row icon action buttons */
+.product-row-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-row-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.18s ease, color 0.18s ease;
+  background: transparent;
+}
+
+.product-row-btn--edit {
+  background-color: #E48B52;
+  color: white;
+}
+
+.product-row-btn--edit:hover {
+  background-color: #E48B52BF;
+}
+
+.product-row-btn--delete {
+  background-color: #b91c1c;
+  color: white;
+}
+
+.product-row-btn--delete:hover {
+  background-color: #b91c1cBF;
+}
+
+.product-row-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.product-row-btn[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* Delete button in modal footer */
+.product-row-btn.modal-delete-btn {
+  width: auto;
+  height: auto;
+  padding: 0.45rem 1rem;
+  gap: 0.4rem;
+  background-color: #b91c1c;
+  color: white;
   font-size: 0.875rem;
 }
 
+.product-row-btn.modal-delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* Section title (shared with ClientDetail) */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1B1C1E;
+  margin: 0;
+}
+
 .product-tables-container {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 .product-table-section {
   width: 100%;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .product-table-section:first-of-type {
@@ -52,43 +194,91 @@
 }
 
 .product-table-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #1B1C1E;
-  margin-bottom: 1rem;
+  transition: color 0.15s ease;
+}
+
+.collapsible-header:hover .product-table-title {
+  color: #2F6F44;
+}
+
+.product-table-section .table-empty {
+  color: #5A708D;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.75rem 0;
+  text-align: left;
 }
 
 .product-table-wrapper {
   background-color: white;
   border-radius: 8px;
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 320px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
-.product-table-wrapper thead th {
+.product-table-wrapper thead {
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .product-inventory-list-table-wrapper {
-  width: 100%;
-  overflow: visible;
+  background-color: white;
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
+}
+
+.product-inventory-list-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #2A425F;
 }
 
 .product-inventory-list-table {
   width: 100%;
-  table-layout: fixed;
+  border-collapse: collapse;
 }
 
 .product-inventory-list-table th,
 .product-inventory-list-table td {
-  padding: 0.5rem 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  border-bottom: 1px solid #8A8F93;
+}
+
+.product-inventory-list-table th {
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #8A8F93;
+}
+
+.product-inventory-list-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.product-inventory-list-table tbody tr:hover {
+  background-color: #E9ECEF;
+}
+
+.product-inventory-list-table-wrapper tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
 .product-inventory-total-row {
@@ -98,7 +288,7 @@
 }
 
 .product-inventory-total-row td {
-  padding: 0.75rem;
+  padding: 1rem;
 }
 
 .add-inventory-modal {
@@ -108,8 +298,6 @@
 
 .add-inventory-modal .modal-body {
   padding: 1.5rem 2rem;
-  max-height: 85vh;
-  overflow-y: auto;
 }
 
 .add-inventory-modal .form-group {
@@ -118,10 +306,6 @@
 
 /* Card layout for inventory edit modal */
 .inventory-modal-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 
@@ -164,18 +348,6 @@
   margin-bottom: 1rem;
 }
 
-.add-inventory-modal .modal-actions {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.add-inventory-modal .modal-actions .modal-delete-btn {
-  margin-right: auto;
-}
 
 .product-table-actions-header {
   width: 1%;
@@ -227,24 +399,20 @@
 .product-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.product-table th,
-.product-table td {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .product-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .product-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;

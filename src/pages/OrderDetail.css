@@ -107,10 +107,20 @@
   box-sizing: border-box;
 }
 
+.form-textarea {
+  padding: 1rem;
+  border: 2px solid #8A8F93;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1B1C1E;
+  background-color: white;
+}
+
 .form-input:focus,
-.form-select:focus {
+.form-select:focus,
+.form-textarea:focus {
   outline: none;
-  border-color: #2F6F44;
+  border-color: #73BF43;
   box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
@@ -145,7 +155,7 @@
 }
 
 .products-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -155,7 +165,7 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -189,7 +199,9 @@
 .no-products {
   color: #5A708D;
   font-style: italic;
-  padding: 1rem 0;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
+  margin: 0;
 }
 
 .form-actions {
@@ -335,7 +347,7 @@
 }
 
 .invoice-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -345,7 +357,7 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -370,10 +382,13 @@
 .invoice-table-empty {
   color: #5A708D;
   font-style: italic;
-  padding: 1rem !important;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
+  margin: 0;
 }
 
 .invoice-view-pdf-link {
+  font-size: 1rem;
   color: #5A708D;
   text-decoration: none;
 }
@@ -390,9 +405,11 @@
 
 .contracts-table-loading,
 .contracts-table-empty {
-  margin: 0;
   color: #5A708D;
+  font-style: italic;
   font-size: 0.9rem;
+  padding: 0.75rem 0;
+  margin: 0;
 }
 
 .contracts-table-wrapper {
@@ -410,7 +427,7 @@
 }
 
 .contracts-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -420,7 +437,7 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -464,18 +481,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.85rem;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 0.875rem;
   color: white;
-  background: #E48B52;
+  background-color: #E48B52;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .contract-view-pdf-button:hover {
-  background: #F4AC6A;
+  background-color: #F4AC6A;
 }
 
 .contract-copy-link-button {
@@ -497,7 +516,7 @@
 .contracts-table-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 
@@ -559,8 +578,8 @@
 }
 
 .order-delete-modal-actions {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   padding-left: 0;
   padding-right: 0;
   border-top: 1px solid #8A8F93;
@@ -1215,6 +1234,8 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .modal-content {
@@ -1281,8 +1302,7 @@
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   border-top: 1px solid #8A8F93;
 }
 
@@ -1624,7 +1644,7 @@
 }
 
 .activity-log-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -1634,7 +1654,7 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1657,9 +1677,10 @@
 }
 
 .activity-log-empty {
-  color: #8A8F93;
+  color: #5A708D;
   font-style: italic;
-  padding: 1rem 0;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
   margin: 0;
 }
 
@@ -1681,10 +1702,6 @@
   user-select: none;
 }
 
-.collapsible-header:hover .section-title {
-  color: #2F6F44;
-}
-
 .collapsible-header .section-title {
   margin-bottom: 0;
 }
@@ -1695,10 +1712,6 @@
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
-}
-
-.collapsible-header-left:hover .section-title {
-  color: #2F6F44;
 }
 
 .collapsible-header-left .section-title {

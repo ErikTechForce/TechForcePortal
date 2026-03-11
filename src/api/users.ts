@@ -31,8 +31,8 @@ export const ROLE_OPTIONS = [
   'hr',
 ] as const;
 
-/** Roles a user can assign to themselves in Settings (no admin). */
-export const SELF_ASSIGNABLE_ROLES: readonly string[] = ROLE_OPTIONS;
+/** Roles a user can assign to themselves in Settings (admin excluded — only existing admins can grant/revoke admin). */
+export const SELF_ASSIGNABLE_ROLES: readonly string[] = ROLE_OPTIONS.filter((r) => r !== 'admin');
 
 export async function fetchVerifiedUsers(): Promise<VerifiedUser[]> {
   const res = await fetch(`${API_BASE}/api/users/verified`);

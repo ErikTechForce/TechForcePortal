@@ -1,20 +1,39 @@
-.lead-detail-form {
+/* ── Lead info card (mirrors client-info-card with amber accent) ──── */
+.lead-info-card {
+  background: linear-gradient(135deg,rgba(255, 255, 255, 1) 0%, rgba(233, 236, 239, 1) 100%);
+  border-radius: 8px;
+  padding: 1.5rem;
   margin-top: 2rem;
-  max-width: 800px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.3);
+  max-width: 900px;
+  border-left: 4px solid #E48B52;
 }
 
-.form-section:last-of-type {
-  border-bottom: none;
+/* ── Back button (scoped to page header) ─────────────────────────── */
+.task-detail-page-header .back-button {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  background-color: #8A8F93;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
+.task-detail-page-header .back-button:hover {
+  background-color: #E9ECEF;
+  color: #1B1C1E;
 }
 
+/* ── Shared button styles (in case not provided by another import) ── */
 .cancel-button,
 .update-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -40,12 +59,8 @@
   background-color: #14532d;
 }
 
-.update-button:active,
-.cancel-button:active {
-  transform: scale(0.98);
+.update-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
-
-
-
-
-

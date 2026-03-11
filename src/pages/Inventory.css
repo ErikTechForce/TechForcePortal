@@ -28,6 +28,7 @@
 }
 
 .inventory-products-table-wrapper {
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 320px;
   border-radius: 8px;
@@ -39,28 +40,25 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .inventory-table-section .inventory-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
-  table-layout: fixed;
+  min-width: 500px;
 }
 
 .inventory-table-section .inventory-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .inventory-table-section .inventory-table th {
   padding: 0.6rem 0.75rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -73,7 +71,6 @@
   padding: 0.6rem 0.75rem;
   border-bottom: 1px solid #8A8F93;
   color: #1B1C1E;
-  font-size: 0.875rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -139,9 +136,9 @@
   padding: 0.75rem 1.25rem;
   font-size: 1rem;
   font-weight: 500;
-  color: #2F6F44;
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  color: #1B1C1E;
+  background-color: #73bf4380;
+  border: 1px solid #73BF4380;
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
@@ -149,8 +146,8 @@
 }
 
 .inventory-add-choice-button:hover {
-  background-color: #dcfce7;
-  border-color: #86efac;
+  background-color: #73bf4333;
+  border-color: #3CA23333;
 }
 
 .inventory-add-form .form-group {
@@ -165,12 +162,11 @@
   font-size: 0.875rem;
 }
 
-.inventory-add-form .modal-actions {
+.inventory-add-form {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid #8A8F93;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .inventory-modal-back {
@@ -275,7 +271,7 @@
 }
 
 .ffe-documents-table thead {
-  background: #E9ECEF;
+  background-color: #2A425F;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -286,7 +282,7 @@
   text-align: left;
   font-size: 1rem;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   border-bottom: 1px solid #8A8F93;
 }
 
@@ -331,6 +327,7 @@
 
 .inventory-list-table-wrapper {
   width: 100%;
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 320px;
   border-radius: 8px;
@@ -341,7 +338,13 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #E9ECEF;
+  background-color: #2A425F;
+}
+
+.inventory-list-table-wrapper tfoot tr {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
 .inventory-table-fit {
@@ -351,8 +354,6 @@
 
 .inventory-list-table th,
 .inventory-list-table td {
-  padding: 0.5rem 0.6rem;
-  font-size: 0.8125rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -387,51 +388,14 @@
 }
 
 .inventory-table th,
-.inventory-table td {
+.inventory-table td,
+.inventory-table-section .inventory-table th,
+.inventory-table-section .inventory-table td {
   word-wrap: break-word;
   overflow-wrap: break-word;
+  padding: 1rem;
 }
 
-@media (max-width: 768px) {
-  .inventory-table-section .inventory-table thead,
-  .inventory-table.inventory-list-table thead {
-    display: none;
-  }
-
-  .inventory-table-section .inventory-table tbody tr,
-  .inventory-table.inventory-list-table tbody tr {
-    display: block;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border: 1px solid #8A8F93;
-    border-radius: 8px;
-    background: #E9ECEF;
-  }
-
-  .inventory-table-section .inventory-table tbody tr:hover,
-  .inventory-table.inventory-list-table tbody tr:hover {
-    background: #f3f4f6;
-  }
-
-  .inventory-table-section .inventory-table td,
-  .inventory-table.inventory-list-table td {
-    display: block;
-    padding: 0.35rem 0;
-    border: none;
-  }
-
-  .inventory-table-section .inventory-table td::before,
-  .inventory-table.inventory-list-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    font-size: 0.75rem;
-    color: #5A708D;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: block;
-    margin-bottom: 0.15rem;
-  }
-}
 
 
 

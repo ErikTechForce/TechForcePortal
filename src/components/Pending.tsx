@@ -58,7 +58,7 @@ const Pending: React.FC = () => {
 
   return (
     <div className="pending-component">
-      <h3 className="pending-header-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/orders')}>Pending Orders</h3>
+      <h3 className="pending-header-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/orders')}>Orders</h3>
       <div className="pending-tabs">
         <button
           className={`pending-tab ${activeTab === 'Contracts' ? 'active' : ''}`}

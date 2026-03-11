@@ -179,3 +179,24 @@
     padding: 0.75rem 1.5rem;
   }
 }
+
+/* ── Logout confirmation modal buttons ── */
+.sidebar-logout-confirm-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background-color: #b91c1c;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-logout-confirm-btn:hover {
+  background-color: #dc2626;
+}
+
+.sidebar-logout-confirm-btn:active {
+  transform: scale(0.98);
+}

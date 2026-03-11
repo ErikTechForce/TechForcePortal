@@ -132,6 +132,12 @@
   color: #1B1C1E;
 }
 
+.task-info-name-value {
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: #1B1C1E;
+}
+
 .task-info-notes {
   font-size: 1rem;
   color: #1B1C1E;

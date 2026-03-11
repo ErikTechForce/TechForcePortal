@@ -151,6 +151,13 @@
   opacity: 1;
 }
 
+/* Card internal divider & subsection title */
+.client-info-divider {
+  border: none;
+  border-top: 1px solid #E9ECEF;
+  margin: 1.25rem 0;
+}
+
 /* Delete confirmation button */
 .client-delete-confirm-btn {
   padding: 0.6rem 1.25rem;
@@ -215,6 +222,8 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .modal-content {
@@ -273,8 +282,7 @@
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  padding-top: 1rem;
   border-top: 1px solid #8A8F93;
 }
 
@@ -287,10 +295,6 @@
     padding: 1rem;
   }
 
-  /* Orders table card layout comes from Orders.css; ensure wrapper doesn't force width */
-  .orders-table-wrapper {
-    overflow: visible;
-  }
 
   .modal-content {
     max-height: 85vh;

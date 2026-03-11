@@ -16,17 +16,17 @@ const Robots: React.FC = () => {
     {
       label: 'Deployed',
       value: robotStats.deployed,
-      color: '#4ade80'
+      color: '#73BF43'
     },
     {
       label: 'In Storage',
       value: robotStats.inStorage,
-      color: '#5A708D'
+      color: '#8A8F93'
     },
     {
       label: 'In Need of Maintenance',
       value: robotStats.needsMaintenance,
-      color: '#dc2626'
+      color: '#E48B52'
     }
   ];
 
@@ -57,43 +57,51 @@ const Robots: React.FC = () => {
               />
             </div>
 
-            <div className="robots-stats-row">
-              <div className="pie-chart-wrapper">
-                <PieChart data={pieChartData} size={250} />
+            <div className="robots-grid">
+
+              {/* div1 — Pie chart */}
+              <div className="robots-grid-div1">
+                <PieChart data={pieChartData} size={290} />
               </div>
-              
-              <div className="robots-stats-card">
+
+              {/* div2 — Robot Status */}
+              <div className="robots-grid-div2 robots-stats-card">
                 <h3 className="robots-stats-title">Robot Status</h3>
-                <div className="robots-stats-item">
-                  <span className="robots-stats-indicator robots-stats-indicator-online"></span>
-                  <span className="robots-stats-percentage">{deployedPercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.deployed} Deployed)</span>
-                </div>
-                <div className="robots-stats-item">
-                  <span className="robots-stats-indicator robots-stats-indicator-offline"></span>
-                  <span className="robots-stats-percentage">{inStoragePercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.inStorage} In Storage)</span>
-                </div>
-                <div className="robots-stats-item">
-                  <span className="robots-stats-indicator robots-stats-indicator-service"></span>
-                  <span className="robots-stats-percentage">{needsMaintenancePercentage}%</span>
-                  <span className="robots-stats-label">({robotStats.needsMaintenance} In Need of Maintenance)</span>
+                <div className="robots-stats-body">
+                  <div className="robots-stats-item">
+                    <span className="robots-stats-indicator robots-stats-indicator-online"></span>
+                    <span className="robots-stats-percentage">{deployedPercentage}%</span>
+                    <span className="robots-stats-label">({robotStats.deployed} Deployed)</span>
+                  </div>
+                  <div className="robots-stats-item">
+                    <span className="robots-stats-indicator robots-stats-indicator-service"></span>
+                    <span className="robots-stats-percentage">{needsMaintenancePercentage}%</span>
+                    <span className="robots-stats-label">({robotStats.needsMaintenance} In Need of Maintenance)</span>
+                  </div>
+                  <div className="robots-stats-item">
+                    <span className="robots-stats-indicator robots-stats-indicator-offline"></span>
+                    <span className="robots-stats-percentage">{inStoragePercentage}%</span>
+                    <span className="robots-stats-label">({robotStats.inStorage} In Storage)</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="alerts-section">
-              <h3 className="alerts-title">Alerts</h3>
-              <div className="alerts-content">
-                <p className="alerts-empty">No alerts</p>
+              {/* div3 — Alerts */}
+              <div className="robots-grid-div3 alerts-section">
+                <h3 className="alerts-title">Alerts</h3>
+                <div className="alerts-body">
+                  <p className="alerts-empty">No alerts</p>
+                </div>
               </div>
-            </div>
 
-            <div className="activity-log-section">
-              <h3 className="activity-log-title">Activity Log</h3>
-              <div className="activity-log-content">
-                <p className="activity-log-empty">No recent activity</p>
+              {/* div4 — Activity Log */}
+              <div className="robots-grid-div4 activity-log-section">
+                <h3 className="activity-log-title">Activity Log</h3>
+                <div className="activity-log-body">
+                  <p className="activity-log-empty">No recent activity</p>
+                </div>
               </div>
+
             </div>
           </div>
         </main>

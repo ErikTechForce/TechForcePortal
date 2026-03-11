@@ -141,6 +141,8 @@ export interface UpdateClientPayload {
   site_location?: string | null;
   notes?: string | null;
   industry?: string | null;
+  source?: string | null;
+  product?: string | null;
 }
 
 export async function updateClient(id: number, payload: UpdateClientPayload): Promise<ClientRow> {

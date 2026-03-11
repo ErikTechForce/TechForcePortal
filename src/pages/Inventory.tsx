@@ -12,6 +12,8 @@ import {
   addInventoryUnit,
   type InventoryProduct,
   type ProductType,
+  type InventoryUnitStatus,
+  type InventoryUnitCondition,
 } from '../data/inventory';
 import {
   getOperationsInventory,
@@ -40,10 +42,21 @@ const Inventory: React.FC = () => {
   const [addModalChoice, setAddModalChoice] = useState<'new-product' | 'add-inventory' | null>(null);
   const [newProductName, setNewProductName] = useState('');
   const [newProductType, setNewProductType] = useState<ProductType>('Accessory');
+  const [newProductSku, setNewProductSku] = useState('');
   const [addInvProductId, setAddInvProductId] = useState('');
   const [addInvCountry, setAddInvCountry] = useState('');
   const [addInvModel, setAddInvModel] = useState('');
   const [addInvSerial, setAddInvSerial] = useState('');
+  const [addInvManufacturer, setAddInvManufacturer] = useState('');
+  const [addInvLocation, setAddInvLocation] = useState('');
+  const [addInvBusiness, setAddInvBusiness] = useState('');
+  const [addInvInstallDate, setAddInvInstallDate] = useState('');
+  const [addInvStatus, setAddInvStatus] = useState<InventoryUnitStatus | ''>('');
+  const [addInvCondition, setAddInvCondition] = useState<InventoryUnitCondition | ''>('');
+  const [addInvTrashBins, setAddInvTrashBins] = useState('');
+  const [addInvLinenBins, setAddInvLinenBins] = useState('');
+  const [addInvRollingBases, setAddInvRollingBases] = useState('');
+  const [addInvStaticBases, setAddInvStaticBases] = useState('');
   const [operationsEditIndex, setOperationsEditIndex] = useState<number | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     products: false,
@@ -91,10 +104,21 @@ const Inventory: React.FC = () => {
     setAddModalChoice(null);
     setNewProductName('');
     setNewProductType('Accessory');
+    setNewProductSku('');
     setAddInvProductId('');
     setAddInvCountry('');
     setAddInvModel('');
     setAddInvSerial('');
+    setAddInvManufacturer('');
+    setAddInvLocation('');
+    setAddInvBusiness('');
+    setAddInvInstallDate('');
+    setAddInvStatus('');
+    setAddInvCondition('');
+    setAddInvTrashBins('');
+    setAddInvLinenBins('');
+    setAddInvRollingBases('');
+    setAddInvStaticBases('');
   };
 
   const closeAddModal = () => {
@@ -105,15 +129,32 @@ const Inventory: React.FC = () => {
   const handleAddNewProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProductName.trim()) return;
-    addProduct(newProductName.trim(), newProductType);
+    addProduct(newProductName.trim(), newProductType, newProductSku);
     refreshProducts();
     closeAddModal();
   };
 
   const handleAddInventory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addInvProductId || !addInvSerial.trim()) return;
-    addInventoryUnit(addInvProductId, addInvCountry.trim(), addInvModel.trim(), addInvSerial.trim());
+    if (!addInvProductId) return;
+    addInventoryUnit(
+      addInvProductId,
+      addInvCountry.trim(),
+      addInvModel.trim(),
+      addInvSerial.trim(),
+      {
+        manufacturer: addInvManufacturer.trim() || undefined,
+        location: addInvLocation.trim() || undefined,
+        business: addInvBusiness.trim() || undefined,
+        installationDate: addInvInstallDate || undefined,
+        status: (addInvStatus as InventoryUnitStatus) || undefined,
+        condition: (addInvCondition as InventoryUnitCondition) || undefined,
+        trashBins: addInvTrashBins !== '' ? parseInt(addInvTrashBins, 10) : undefined,
+        linenBins: addInvLinenBins !== '' ? parseInt(addInvLinenBins, 10) : undefined,
+        rollingBases: addInvRollingBases !== '' ? parseInt(addInvRollingBases, 10) : undefined,
+        staticBases: addInvStaticBases !== '' ? parseInt(addInvStaticBases, 10) : undefined,
+      }
+    );
     refreshProducts();
     closeAddModal();
   };
@@ -333,11 +374,13 @@ const Inventory: React.FC = () => {
                         <td data-label="Value">{row.value || '—'}</td>
                       </tr>
                     ))}
+                  </tbody>
+                  <tfoot>
                     <tr className="inventory-list-total-row">
                       <td colSpan={3}>Total</td>
                       <td>{formatCurrency(operationsTotalValue)}</td>
                     </tr>
-                  </tbody>
+                  </tfoot>
                 </table>
               </div>}
             </div>
@@ -347,8 +390,8 @@ const Inventory: React.FC = () => {
 
       {/* Add Product / Add Inventory modal */}
       <Modal isOpen={addModalOpen} onClose={closeAddModal} title="Add Product">
-        <div className="modal-body">
               {addModalChoice === null && (
+                <div className="modal-body">
                 <div className="inventory-add-choices">
                   <p className="inventory-add-prompt">What would you like to do?</p>
                   <button
@@ -366,10 +409,12 @@ const Inventory: React.FC = () => {
                     Add inventory
                   </button>
                 </div>
+                </div>
               )}
 
               {addModalChoice === 'new-product' && (
                 <form onSubmit={handleAddNewProduct} className="inventory-add-form">
+                  <div className="modal-body">
                   <div className="form-group">
                     <label className="form-label">Name</label>
                     <input
@@ -393,6 +438,17 @@ const Inventory: React.FC = () => {
                       <option value="Accessory">Accessory</option>
                     </select>
                   </div>
+                  <div className="form-group">
+                    <label className="form-label">SKU <span style={{ fontWeight: 400, color: '#8A8F93' }}>(optional)</span></label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={newProductSku}
+                      onChange={(e) => setNewProductSku(e.target.value)}
+                      placeholder="e.g. TIM-E-001"
+                    />
+                  </div>
+                  </div>
                   <div className="modal-actions">
                     <button type="button" className="cancel-button" onClick={closeAddModal}>Cancel</button>
                     <button type="submit" className="save-button">Add Product</button>
@@ -400,60 +456,125 @@ const Inventory: React.FC = () => {
                 </form>
               )}
 
-              {addModalChoice === 'add-inventory' && (
-                <form onSubmit={handleAddInventory} className="inventory-add-form">
-                  <div className="form-group">
-                    <label className="form-label">Product</label>
-                    <select
-                      className="form-input"
-                      value={addInvProductId}
-                      onChange={(e) => setAddInvProductId(e.target.value)}
-                      required
-                    >
-                      <option value="">Select product</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name} ({p.type})</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Country of origin</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={addInvCountry}
-                      onChange={(e) => setAddInvCountry(e.target.value)}
-                      placeholder="e.g. United States"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Model</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={addInvModel}
-                      onChange={(e) => setAddInvModel(e.target.value)}
-                      placeholder="Model"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Serial number</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={addInvSerial}
-                      onChange={(e) => setAddInvSerial(e.target.value)}
-                      placeholder="Serial number"
-                      required
-                    />
-                  </div>
-                  <div className="modal-actions">
-                    <button type="button" className="cancel-button" onClick={closeAddModal}>Cancel</button>
-                    <button type="submit" className="save-button">Add Inventory</button>
-                  </div>
-                </form>
-              )}
-            </div>
+              {addModalChoice === 'add-inventory' && (() => {
+                const selectedProduct = products.find((p) => p.id === addInvProductId);
+                const isFullProduct = !!selectedProduct && (selectedProduct.name === 'TIM-E Bot' || selectedProduct.name === 'BIM-E');
+                return (
+                  <form onSubmit={handleAddInventory} className="inventory-add-form">
+                    <div className="modal-body">
+                    <div className="inventory-modal-card">
+                      <h4 className="inventory-modal-card-title">Product</h4>
+                      <div className="inventory-modal-card-fields">
+                        <div className="form-group">
+                          <label className="form-label">Product</label>
+                          <select
+                            className="form-input"
+                            value={addInvProductId}
+                            onChange={(e) => setAddInvProductId(e.target.value)}
+                            required
+                          >
+                            <option value="">Select product</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name} ({p.type})</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {isFullProduct && (
+                      <>
+                        <div className="inventory-modal-card">
+                          <h4 className="inventory-modal-card-title">Location &amp; status</h4>
+                          <div className="inventory-modal-card-fields">
+                            <div className="form-group">
+                              <label className="form-label">Location</label>
+                              <input type="text" className="form-input" value={addInvLocation} onChange={(e) => setAddInvLocation(e.target.value)} placeholder="City / location" />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Business</label>
+                              <input type="text" className="form-input" value={addInvBusiness} onChange={(e) => setAddInvBusiness(e.target.value)} placeholder="Business" />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Installation Date</label>
+                              <input type="date" className="form-input" value={addInvInstallDate} onChange={(e) => setAddInvInstallDate(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Status</label>
+                              <select className="form-input" value={addInvStatus} onChange={(e) => setAddInvStatus(e.target.value as InventoryUnitStatus | '')}>
+                                <option value="">—</option>
+                                <option value="Deployed">Deployed</option>
+                                <option value="In Storage">In Storage</option>
+                                <option value="Repair">Repair</option>
+                                <option value="Out of Order">Out of Order</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Condition</label>
+                              <select className="form-input" value={addInvCondition} onChange={(e) => setAddInvCondition(e.target.value as InventoryUnitCondition | '')}>
+                                <option value="">—</option>
+                                <option value="Working">Working</option>
+                                <option value="Broken">Broken</option>
+                                <option value="Storage">Storage</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="inventory-modal-card">
+                          <h4 className="inventory-modal-card-title">Equipment counts</h4>
+                          <div className="inventory-modal-card-fields inventory-modal-card-grid">
+                            <div className="form-group">
+                              <label className="form-label">Trash bins</label>
+                              <input type="number" min={0} className="form-input" value={addInvTrashBins} onChange={(e) => setAddInvTrashBins(e.target.value)} placeholder="0" />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Linen bins</label>
+                              <input type="number" min={0} className="form-input" value={addInvLinenBins} onChange={(e) => setAddInvLinenBins(e.target.value)} placeholder="0" />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Rolling bases</label>
+                              <input type="number" min={0} className="form-input" value={addInvRollingBases} onChange={(e) => setAddInvRollingBases(e.target.value)} placeholder="0" />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Static bases</label>
+                              <input type="number" min={0} className="form-input" value={addInvStaticBases} onChange={(e) => setAddInvStaticBases(e.target.value)} placeholder="0" />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="inventory-modal-card">
+                      <h4 className="inventory-modal-card-title">Product details</h4>
+                      <div className="inventory-modal-card-fields">
+                        <div className="form-group">
+                          <label className="form-label">Manufacturer</label>
+                          <input type="text" className="form-input" value={addInvManufacturer} onChange={(e) => setAddInvManufacturer(e.target.value)} placeholder="Manufacturer" />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Country of origin</label>
+                          <input type="text" className="form-input" value={addInvCountry} onChange={(e) => setAddInvCountry(e.target.value)} placeholder="e.g. United States" />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Model</label>
+                          <input type="text" className="form-input" value={addInvModel} onChange={(e) => setAddInvModel(e.target.value)} placeholder="Model" />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Serial number</label>
+                          <input type="text" className="form-input" value={addInvSerial} onChange={(e) => setAddInvSerial(e.target.value)} placeholder="Optional" />
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+
+                    <div className="modal-actions">
+                      <button type="button" className="cancel-button" onClick={closeAddModal}>Cancel</button>
+                      <button type="submit" className="save-button">Add Inventory</button>
+                    </div>
+                  </form>
+                );
+              })()}
       </Modal>
 
       <Modal
@@ -462,7 +583,8 @@ const Inventory: React.FC = () => {
         title={`FF&E Item — ${operationsEditIndex !== null ? (operationsRows[operationsEditIndex]?.product || 'New item') : ''}`}
         wide
       >
-        <form onSubmit={handleSaveOperationsEdit} className="modal-body">
+        <form onSubmit={handleSaveOperationsEdit} className="inventory-add-form">
+          <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Product</label>
                 <input
@@ -551,6 +673,7 @@ const Inventory: React.FC = () => {
                   </table>
                 </div>
               </div>
+          </div>
 
               <div className="modal-actions">
                 <button type="button" className="cancel-button" onClick={closeOperationsEdit}>Cancel</button>

@@ -113,13 +113,13 @@ export function setInventoryUnits(units: InventoryUnit[]): void {
   localStorage.setItem(STORAGE_UNITS, JSON.stringify(units));
 }
 
-export function addProduct(name: string, type: ProductType): InventoryProduct {
+export function addProduct(name: string, type: ProductType, sku?: string): InventoryProduct {
   const products = getInventoryProducts();
   const newProduct: InventoryProduct = {
     id: genId(),
     name: name.trim(),
     type,
-    sku: '',
+    sku: sku?.trim() ?? '',
     availability: 0,
     inUse: 0,
   };

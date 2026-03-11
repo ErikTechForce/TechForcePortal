@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -46,9 +47,8 @@ const ClientDetail: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [industry, setIndustry] = useState('');
 
-  // Edit modal states
-  const [isClientInfoModalOpen, setIsClientInfoModalOpen] = useState(false);
-  const [isContactInfoModalOpen, setIsContactInfoModalOpen] = useState(false);
+  // Edit modal state (combined)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editEmployee, setEditEmployee] = useState('');
   const [editSelectedUserId, setEditSelectedUserId] = useState<number | null>(null);
   const [editStartDate, setEditStartDate] = useState('');
@@ -211,25 +211,39 @@ const ClientDetail: React.FC = () => {
     setEditSelectedUserId(u ? u.id : null);
   }, [clientData, verifiedUsers]);
 
-  const handleClientInfoEditClick = () => {
+  const [editNotes, setEditNotes] = useState('');
+
+  const handleEditClick = () => {
     setSaveError('');
     setEditIndustry(industry);
-    setIsClientInfoModalOpen(true);
+    setEditNotes(notes);
+    setIsEditModalOpen(true);
   };
 
-  const handleClientInfoSave = async () => {
+  const handleEditSave = async () => {
     setSaveError('');
     if (!clientIdNum) {
       setEmployee(editEmployee);
       setStartDate(editStartDate);
-      setIsClientInfoModalOpen(false);
+      setPointOfContact(editPointOfContact);
+      setContactEmail(editContactEmail);
+      setContactPhone(editContactPhone);
+      setBillingAddress(editBillingAddress);
+      setSiteLocationAddress(editSiteLocationAddress);
+      setIsEditModalOpen(false);
       return;
     }
     setSaving(true);
     try {
-      const payload: { user_id?: number | null; employee_name?: string | null; start_date?: string | null; industry?: string | null } = {
+      const payload: Parameters<typeof updateClient>[1] = {
         start_date: editStartDate.trim() || null,
         industry: editIndustry.trim() || null,
+        point_of_contact: editPointOfContact.trim(),
+        contact_email: editContactEmail.trim() || null,
+        contact_phone: editContactPhone.trim() || null,
+        billing_address: editBillingAddress.trim() || null,
+        site_location: editSiteLocationAddress.trim() || null,
+        notes: editNotes.trim() || null,
       };
       if (editSelectedUserId != null) payload.user_id = editSelectedUserId;
       else if (editEmployee.trim()) payload.employee_name = editEmployee.trim();
@@ -239,10 +253,22 @@ const ClientDetail: React.FC = () => {
       setEmployee(updated.employee_name ?? '');
       setStartDate(updated.start_date ?? '');
       setIndustry(updated.industry ?? '');
+      setPointOfContact(updated.point_of_contact);
+      setContactEmail(updated.contact_email ?? '');
+      setContactPhone(updated.contact_phone ?? '');
+      setBillingAddress(updated.billing_address ?? '');
+      setSiteLocationAddress(updated.site_location ?? '');
       setEditEmployee(updated.employee_name ?? '');
       setEditStartDate(updated.start_date ?? '');
       setEditIndustry(updated.industry ?? '');
-      setIsClientInfoModalOpen(false);
+      setEditPointOfContact(updated.point_of_contact);
+      setEditContactEmail(updated.contact_email ?? '');
+      setEditContactPhone(updated.contact_phone ?? '');
+      setEditBillingAddress(updated.billing_address ?? '');
+      setEditSiteLocationAddress(updated.site_location ?? '');
+      setNotes(updated.notes ?? '');
+      setEditNotes(updated.notes ?? '');
+      setIsEditModalOpen(false);
       setClientMessage('Client updated successfully.');
       setTimeout(() => setClientMessage(''), 4000);
     } catch (err) {
@@ -252,66 +278,18 @@ const ClientDetail: React.FC = () => {
     }
   };
 
-  const handleClientInfoCancel = () => {
+  const handleEditCancel = () => {
     setEditEmployee(employee);
     setEditStartDate(startDate);
     setEditIndustry(industry);
-    setIsClientInfoModalOpen(false);
-  };
-
-  const handleContactInfoEditClick = () => {
-    setSaveError('');
-    setIsContactInfoModalOpen(true);
-  };
-
-  const handleContactInfoSave = async () => {
-    setSaveError('');
-    if (!clientIdNum) {
-      setPointOfContact(editPointOfContact);
-      setContactEmail(editContactEmail);
-      setContactPhone(editContactPhone);
-      setBillingAddress(editBillingAddress);
-      setSiteLocationAddress(editSiteLocationAddress);
-      setIsContactInfoModalOpen(false);
-      return;
-    }
-    setSaving(true);
-    try {
-      const updated = await updateClient(clientIdNum, {
-        point_of_contact: editPointOfContact.trim(),
-        contact_email: editContactEmail.trim() || null,
-        contact_phone: editContactPhone.trim() || null,
-        billing_address: editBillingAddress.trim() || null,
-        site_location: editSiteLocationAddress.trim() || null,
-      });
-      setApiClient(updated);
-      setPointOfContact(updated.point_of_contact);
-      setContactEmail(updated.contact_email ?? '');
-      setContactPhone(updated.contact_phone ?? '');
-      setBillingAddress(updated.billing_address ?? '');
-      setSiteLocationAddress(updated.site_location ?? '');
-      setEditPointOfContact(updated.point_of_contact);
-      setEditContactEmail(updated.contact_email ?? '');
-      setEditContactPhone(updated.contact_phone ?? '');
-      setEditBillingAddress(updated.billing_address ?? '');
-      setEditSiteLocationAddress(updated.site_location ?? '');
-      setIsContactInfoModalOpen(false);
-      setClientMessage('Client updated successfully.');
-      setTimeout(() => setClientMessage(''), 4000);
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to update contact info.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleContactInfoCancel = () => {
     setEditPointOfContact(pointOfContact);
     setEditContactEmail(contactEmail);
     setEditContactPhone(contactPhone);
     setEditBillingAddress(billingAddress);
     setEditSiteLocationAddress(siteLocationAddress);
-    setIsContactInfoModalOpen(false);
+    setEditNotes(notes);
+    setSaveError('');
+    setIsEditModalOpen(false);
   };
 
   if (loading && !clientData) {
@@ -351,22 +329,14 @@ const ClientDetail: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          <PageHeader
+            title={company || 'Client Details'}
+            subtitle="View and update client information"
+            onBack={() => navigate('/client')}
+            backLabel="Back"
+          />
           <div className="page-content">
-            <div className="task-detail-page-header">
-              <div>
-                <h2 className="page-title">Client Details</h2>
-                <p className="page-subtitle">View and update client information</p>
-              </div>
-              <button
-                type="button"
-                className="back-button"
-                onClick={() => navigate('/client')}
-              >
-                Back to Clients
-              </button>
-            </div>
-
-            {/* Client Information Card */}
+            {/* Combined Client Information Card */}
             <div className="client-info-card">
               <div className="client-info-header">
                 <h3 className="section-title">Client Information</h3>
@@ -375,7 +345,7 @@ const ClientDetail: React.FC = () => {
                     type="button"
                     className="client-action-btn client-action-btn--edit"
                     data-tooltip="Edit client"
-                    onClick={handleClientInfoEditClick}
+                    onClick={handleEditClick}
                     aria-label="Edit client"
                   >
                     <FontAwesomeIcon icon={faPenToSquare} />
@@ -391,73 +361,59 @@ const ClientDetail: React.FC = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="client-info-grid">
                 <div className="client-info-item">
                   <label className="client-info-label">Company</label>
                   <div className="client-info-value">{company}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Employee</label>
                   <div className="client-info-value">{employee || 'Unassigned'}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Relationship Duration</label>
                   <div className="client-info-value">{calculateRelationshipDuration(startDate)}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Industry</label>
                   <div className="client-info-value">{industry || '—'}</div>
                 </div>
               </div>
-            </div>
 
-            {/* Point of Contact Information Card */}
-            <div className="client-info-card">
-              <div className="client-info-header">
-                <h3 className="section-title">Point of Contact Information</h3>
-                <div className="client-action-buttons">
-                  <button
-                    type="button"
-                    className="client-action-btn client-action-btn--edit"
-                    data-tooltip="Edit contact"
-                    onClick={handleContactInfoEditClick}
-                    aria-label="Edit contact"
-                  >
-                    <FontAwesomeIcon icon={faPenToSquare} />
-                  </button>
-                </div>
-              </div>
-              
+              <hr className="client-info-divider" />
+
+              <h4 className="client-info-subsection-title">Point of Contact</h4>
               <div className="client-info-grid">
                 <div className="client-info-item">
-                  <label className="client-info-label">Point of Contact</label>
+                  <label className="client-info-label">Name</label>
                   <div className="client-info-value">{pointOfContact}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Email</label>
                   <div className="client-info-value">{contactEmail || 'Not set'}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Phone</label>
                   <div className="client-info-value">{contactPhone || 'Not set'}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Billing Address</label>
                   <div className="client-info-value">{billingAddress || 'Not set'}</div>
                 </div>
-
                 <div className="client-info-item">
                   <label className="client-info-label">Site Location Address</label>
                   <div className="client-info-value">{siteLocationAddress || 'Not set'}</div>
                 </div>
               </div>
+
+              {notes && (
+                <>
+                  <hr className="client-info-divider" />
+                  <h4 className="client-info-subsection-title">Notes</h4>
+                  <p className="client-info-value" style={{ whiteSpace: 'pre-wrap' }}>{notes}</p>
+                </>
+              )}
             </div>
 
             {clientMessage && (
@@ -636,46 +592,6 @@ const ClientDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Additional Notes Section */}
-            <div className="order-detail-table-section">
-              <h3 className="section-title">Additional Notes</h3>
-              <div className="form-group">
-                <label htmlFor="notes" className="form-label">Notes</label>
-                <textarea
-                  id="notes"
-                  className="form-textarea"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={5}
-                  placeholder="Enter any additional notes or comments about this client..."
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              {saveError && <p className="create-order-error" style={{ marginBottom: '1rem' }} role="alert">{saveError}</p>}
-              <button
-                type="button"
-                className="update-button"
-                disabled={saving || !clientIdNum}
-                onClick={async () => {
-                  if (!clientIdNum) return;
-                  setSaveError('');
-                  setSaving(true);
-                  try {
-                    await updateClient(clientIdNum, { notes: notes.trim() || null });
-                    setClientMessage('Client updated successfully.');
-                    setTimeout(() => setClientMessage(''), 4000);
-                  } catch (err) {
-                    setSaveError(err instanceof Error ? err.message : 'Failed to save notes.');
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-              >
-                {saving ? 'Saving…' : 'Update Notes'}
-              </button>
-            </div>
 
           </div>
         </main>
@@ -703,156 +619,126 @@ const ClientDetail: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Client Information Edit Modal */}
-      {isClientInfoModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Edit Client Information</h3>
-              <button className="modal-close-button" onClick={handleClientInfoCancel}>×</button>
-            </div>
-            <div className="modal-form">
-              <div className="form-group">
-                <label htmlFor="edit-company" className="form-label">Company</label>
-                <input
-                  type="text"
-                  id="edit-company"
-                  className="form-input"
-                  value={company}
-                  disabled
-                  readOnly
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-employee" className="form-label">Employee</label>
-                <SearchableDropdown
-                  options={verifiedUsers.map((u) => u.username)}
-                  value={editEmployee}
-                  onChange={(value) => {
-                    setEditEmployee(value);
-                    const u = verifiedUsers.find((x) => x.username === value);
-                    setEditSelectedUserId(u ? u.id : null);
-                  }}
-                  placeholder="Select employee..."
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-start-date" className="form-label">Start Date</label>
-                <input
-                  type="date"
-                  id="edit-start-date"
-                  className="form-input"
-                  value={editStartDate}
-                  onChange={(e) => setEditStartDate(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-industry" className="form-label">Industry</label>
-                <SearchableDropdown
-                  options={INDUSTRIES}
-                  value={editIndustry}
-                  onChange={setEditIndustry}
-                  placeholder="Type to search or enter industry..."
-                />
-              </div>
-
-              {saveError && <p className="create-order-error" role="alert">{saveError}</p>}
-              <div className="modal-actions">
-                <button type="button" className="cancel-button" onClick={handleClientInfoCancel} disabled={saving}>
-                  Cancel
-                </button>
-                <button type="button" className="update-button" onClick={handleClientInfoSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
+      {/* Combined Edit Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={handleEditCancel} title="Edit Client Information">
+        <div className="modal-body">
+          <div className="form-group">
+            <label htmlFor="edit-company" className="form-label">Company</label>
+            <input type="text" id="edit-company" className="form-input" value={company} disabled readOnly />
           </div>
-        </div>
-      )}
-
-      {/* Point of Contact Information Edit Modal */}
-      {isContactInfoModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Edit Point of Contact Information</h3>
-              <button className="modal-close-button" onClick={handleContactInfoCancel}>×</button>
-            </div>
-            <div className="modal-form">
-              <div className="form-group">
-                <label htmlFor="edit-point-of-contact" className="form-label">Point of Contact</label>
-                <input
-                  type="text"
-                  id="edit-point-of-contact"
-                  className="form-input"
-                  value={editPointOfContact}
-                  onChange={(e) => setEditPointOfContact(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-contact-email" className="form-label">Email</label>
-                <input
-                  type="email"
-                  id="edit-contact-email"
-                  className="form-input"
-                  value={editContactEmail}
-                  onChange={(e) => setEditContactEmail(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-contact-phone" className="form-label">Phone</label>
-                <input
-                  type="tel"
-                  id="edit-contact-phone"
-                  className="form-input"
-                  value={editContactPhone}
-                  onChange={(e) => setEditContactPhone(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-billing-address" className="form-label">Billing Address</label>
-                <textarea
-                  id="edit-billing-address"
-                  className="form-textarea"
-                  value={editBillingAddress}
-                  onChange={(e) => setEditBillingAddress(e.target.value)}
-                  rows={3}
-                  placeholder="Enter billing address..."
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit-site-location-address" className="form-label">Site Location Address</label>
-                <textarea
-                  id="edit-site-location-address"
-                  className="form-textarea"
-                  value={editSiteLocationAddress}
-                  onChange={(e) => setEditSiteLocationAddress(e.target.value)}
-                  rows={3}
-                  placeholder="Enter site location address..."
-                />
-              </div>
-
-              {saveError && <p className="create-order-error" role="alert">{saveError}</p>}
-              <div className="modal-actions">
-                <button type="button" className="cancel-button" onClick={handleContactInfoCancel} disabled={saving}>
-                  Cancel
-                </button>
-                <button type="button" className="update-button" onClick={handleContactInfoSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
+          <div className="form-group">
+            <label htmlFor="edit-employee" className="form-label">Employee</label>
+            <SearchableDropdown
+              options={verifiedUsers.map((u) => u.username)}
+              value={editEmployee}
+              onChange={(value) => {
+                setEditEmployee(value);
+                const u = verifiedUsers.find((x) => x.username === value);
+                setEditSelectedUserId(u ? u.id : null);
+              }}
+              placeholder="Select employee..."
+            />
           </div>
+          <div className="form-group">
+            <label htmlFor="edit-start-date" className="form-label">Start Date</label>
+            <input
+              type="date"
+              id="edit-start-date"
+              className="form-input"
+              value={editStartDate}
+              onChange={(e) => setEditStartDate(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="edit-industry" className="form-label">Industry</label>
+            <SearchableDropdown
+              options={INDUSTRIES}
+              value={editIndustry}
+              onChange={setEditIndustry}
+              placeholder="Type to search or enter industry..."
+            />
+          </div>
+
+          <hr style={{ margin: '1.25rem 0', borderColor: '#e5e7eb' }} />
+
+          <div className="form-group">
+            <label htmlFor="edit-point-of-contact" className="form-label">Point of Contact</label>
+            <input
+              type="text"
+              id="edit-point-of-contact"
+              className="form-input"
+              value={editPointOfContact}
+              onChange={(e) => setEditPointOfContact(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="edit-contact-email" className="form-label">Email</label>
+            <input
+              type="email"
+              id="edit-contact-email"
+              className="form-input"
+              value={editContactEmail}
+              onChange={(e) => setEditContactEmail(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="edit-contact-phone" className="form-label">Phone</label>
+            <input
+              type="tel"
+              id="edit-contact-phone"
+              className="form-input"
+              value={editContactPhone}
+              onChange={(e) => setEditContactPhone(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="edit-billing-address" className="form-label">Billing Address</label>
+            <textarea
+              id="edit-billing-address"
+              className="form-textarea"
+              value={editBillingAddress}
+              onChange={(e) => setEditBillingAddress(e.target.value)}
+              rows={3}
+              placeholder="Enter billing address..."
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="edit-site-location-address" className="form-label">Site Location Address</label>
+            <textarea
+              id="edit-site-location-address"
+              className="form-textarea"
+              value={editSiteLocationAddress}
+              onChange={(e) => setEditSiteLocationAddress(e.target.value)}
+              rows={3}
+              placeholder="Enter site location address..."
+            />
+          </div>
+
+          <hr style={{ margin: '1.25rem 0', borderColor: '#e5e7eb' }} />
+
+          <div className="form-group">
+            <label htmlFor="edit-notes" className="form-label">Notes</label>
+            <textarea
+              id="edit-notes"
+              className="form-textarea"
+              value={editNotes}
+              onChange={(e) => setEditNotes(e.target.value)}
+              rows={4}
+              placeholder="Additional notes about this client..."
+            />
+          </div>
+
+          {saveError && <p className="create-order-error" role="alert" style={{ marginTop: '0.5rem' }}>{saveError}</p>}
         </div>
-      )}
+        <div className="modal-actions">
+          <button type="button" className="cancel-button" onClick={handleEditCancel} disabled={saving}>
+            Cancel
+          </button>
+          <button type="button" className="update-button" onClick={handleEditSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

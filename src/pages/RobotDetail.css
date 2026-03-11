@@ -83,14 +83,14 @@
 }
 
 .activity-log-table thead {
-  background-color: #E9ECEF;
+  background-color: #2A425F;
 }
 
 .activity-log-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #1B1C1E;
+  color: white;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;

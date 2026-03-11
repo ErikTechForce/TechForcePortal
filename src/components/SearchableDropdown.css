@@ -17,8 +17,8 @@
 
 .searchable-dropdown-input:focus {
   outline: none;
-  border-color: #5A708D;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #73BF43;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
 .searchable-dropdown-menu {

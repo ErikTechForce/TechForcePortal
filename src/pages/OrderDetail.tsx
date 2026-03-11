@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faTrash, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PDFDocument, rgb, StandardFonts, PDFImage } from 'pdf-lib';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import SearchableDropdown from '../components/SearchableDropdown';
 import {
   fetchOrderByOrderNumber,
@@ -567,6 +568,25 @@ const OrderDetail: React.FC = () => {
   const [isTemplatedModalOpen, setIsTemplatedModalOpen] = useState(false);
   const [isChatLogModalOpen, setIsChatLogModalOpen] = useState(false);
   const chatEndRef = React.useRef<HTMLDivElement>(null);
+
+  const anyModalOpen =
+    isEditModalOpen ||
+    isShippingModalOpen ||
+    isInstallationModalOpen ||
+    isConfirmInventoryModalOpen ||
+    isDeliveryModalOpen ||
+    isContractModalOpen ||
+    !!contractToDelete ||
+    deleteOrderModalOpen ||
+    isGenerateInvoiceModalOpen ||
+    isUploadPdfModalOpen ||
+    isTemplatedModalOpen ||
+    isChatLogModalOpen;
+
+  useEffect(() => {
+    document.body.style.overflow = anyModalOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [anyModalOpen]);
 
   // Default contract form data from order and client (service address from client page when available)
   const getDefaultContractFormData = useCallback((): ContractFormData => {
@@ -1969,18 +1989,13 @@ Techforce Team`
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          <PageHeader
+            title={orderData ? `${orderData.companyName} — ${orderData.orderNumber}` : 'Order Details'}
+            subtitle="View and update order information"
+            onBack={() => navigate('/orders')}
+            backLabel="Back"
+          />
           <div className="page-content">
-            <div className="order-detail-header">
-              <h2 className="page-title">Order Details</h2>
-              <button 
-                className="back-button" 
-                onClick={() => navigate('/orders')}
-              >
-                Back to Orders
-              </button>
-            </div>
-            <p className="page-subtitle">View and update order information</p>
-            
             {/* Order Information Card */}
             <div className={`order-info-card stage-${stage.toLowerCase()}`}>
               <div className="order-info-header">
@@ -2780,7 +2795,7 @@ Techforce Team`
                       <div className="modal-actions">
                         <button type="button" className="cancel-button" onClick={() => setGenerateInvoiceStep('confirm')}>Back</button>
                         <button type="submit" className="save-button" disabled={generateInvoiceSubmitting}>
-                          {generateInvoiceSubmitting ? 'Sending…' : 'Submit & send email'}
+                          {generateInvoiceSubmitting ? 'Sending…' : 'Submit & Send Email'}
                         </button>
                       </div>
                     </form>
@@ -3847,7 +3862,7 @@ Techforce Team`
                               <th>Generated</th>
                               <th>Signed</th>
                               <th>Link</th>
-                              <th></th>
+                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3875,8 +3890,10 @@ Techforce Team`
                                     type="button"
                                     className="contract-view-pdf-button"
                                     onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}
+                                    aria-label="View PDF"
+                                    title="View PDF"
                                   >
-                                    View PDF
+                                    <FontAwesomeIcon icon={faFilePdf} />
                                   </button>
                                   <button
                                     type="button"
@@ -3911,10 +3928,12 @@ Techforce Team`
                     </button>
                   </div>
                   {!collapsedSections.invoice && (
-                    <div className="invoice-table-wrapper">
-                      {orderInvoicesLoading ? (
-                        <p className="invoice-table-empty">Loading invoices…</p>
-                      ) : (
+                    orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : orderInvoices.length === 0 ? (
+                      <p className="invoice-table-empty">No invoice data yet.</p>
+                    ) : (
+                      <div className="invoice-table-wrapper">
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -3923,26 +3942,22 @@ Techforce Team`
                             </tr>
                           </thead>
                           <tbody>
-                            {orderInvoices.length === 0 ? (
-                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
-                            ) : (
-                              orderInvoices.map((inv) => (
-                                <tr key={inv.id}>
-                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
-                                  <td>
-                                    {inv.has_pdf ? (
-                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
-                                    ) : (
-                                      '—'
-                                    )}
-                                  </td>
-                                </tr>
-                              ))
-                            )}
+                            {orderInvoices.map((inv) => (
+                              <tr key={inv.id}>
+                                <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                <td>
+                                  {inv.has_pdf ? (
+                                    <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
-                      )}
-                    </div>
+                      </div>
+                    )
                   )}
                 </div>
                 <div className="order-detail-table-section">
@@ -4051,10 +4066,12 @@ Techforce Team`
                     </button>
                   </div>
                   {!collapsedSections.invoice && (
-                    <div className="invoice-table-wrapper">
-                      {orderInvoicesLoading ? (
-                        <p className="invoice-table-empty">Loading invoices…</p>
-                      ) : (
+                    orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : orderInvoices.length === 0 ? (
+                      <p className="invoice-table-empty">No invoice data yet.</p>
+                    ) : (
+                      <div className="invoice-table-wrapper">
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -4063,26 +4080,22 @@ Techforce Team`
                             </tr>
                           </thead>
                           <tbody>
-                            {orderInvoices.length === 0 ? (
-                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
-                            ) : (
-                              orderInvoices.map((inv) => (
-                                <tr key={inv.id}>
-                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
-                                  <td>
-                                    {inv.has_pdf ? (
-                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
-                                    ) : (
-                                      '—'
-                                    )}
-                                  </td>
-                                </tr>
-                              ))
-                            )}
+                            {orderInvoices.map((inv) => (
+                              <tr key={inv.id}>
+                                <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                <td>
+                                  {inv.has_pdf ? (
+                                    <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
-                      )}
-                    </div>
+                      </div>
+                    )
                   )}
                 </div>
                 <div className="order-detail-table-section">
@@ -4141,7 +4154,7 @@ Techforce Team`
                               <th>Generated</th>
                               <th>Signed</th>
                               <th>Link</th>
-                              <th></th>
+                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4159,7 +4172,7 @@ Techforce Team`
                                   <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
                                 </td>
                                 <td className="contracts-table-actions">
-                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
+                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')} aria-label="View PDF" title="View PDF"><FontAwesomeIcon icon={faFilePdf} /></button>
                                   <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract"><FontAwesomeIcon icon={faTrash} /></button>
                                 </td>
                               </tr>
@@ -4277,10 +4290,12 @@ Techforce Team`
                     </button>
                   </div>
                   {!collapsedSections.invoice && (
-                    <div className="invoice-table-wrapper">
-                      {orderInvoicesLoading ? (
-                        <p className="invoice-table-empty">Loading invoices…</p>
-                      ) : (
+                    orderInvoicesLoading ? (
+                      <p className="invoice-table-empty">Loading invoices…</p>
+                    ) : orderInvoices.length === 0 ? (
+                      <p className="invoice-table-empty">No invoice data yet.</p>
+                    ) : (
+                      <div className="invoice-table-wrapper">
                         <table className="invoice-table">
                           <thead>
                             <tr>
@@ -4289,26 +4304,22 @@ Techforce Team`
                             </tr>
                           </thead>
                           <tbody>
-                            {orderInvoices.length === 0 ? (
-                              <tr><td colSpan={2} className="invoice-table-empty">No invoice data yet.</td></tr>
-                            ) : (
-                              orderInvoices.map((inv) => (
-                                <tr key={inv.id}>
-                                  <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
-                                  <td>
-                                    {inv.has_pdf ? (
-                                      <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
-                                    ) : (
-                                      '—'
-                                    )}
-                                  </td>
-                                </tr>
-                              ))
-                            )}
+                            {orderInvoices.map((inv) => (
+                              <tr key={inv.id}>
+                                <td>{inv.invoice_number || `Invoice #${inv.id}`}</td>
+                                <td>
+                                  {inv.has_pdf ? (
+                                    <a href={`${API_BASE}/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener noreferrer" className="invoice-view-pdf-link">View PDF</a>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
-                      )}
-                    </div>
+                      </div>
+                    )
                   )}
                 </div>
                 <div className="order-detail-table-section">
@@ -4331,7 +4342,7 @@ Techforce Team`
                               <th>Generated</th>
                               <th>Signed</th>
                               <th>Link</th>
-                              <th></th>
+                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4349,7 +4360,7 @@ Techforce Team`
                                   <button type="button" className="contract-copy-link-button" onClick={() => handleCopyContractLink(c.id)}>Copy link</button>
                                 </td>
                                 <td className="contracts-table-actions">
-                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')}>View PDF</button>
+                                  <button type="button" className="contract-view-pdf-button" onClick={() => window.open(`${API_BASE}/api/contracts/${c.id}/pdf`, '_blank')} aria-label="View PDF" title="View PDF"><FontAwesomeIcon icon={faFilePdf} /></button>
                                   <button type="button" className="contract-delete-button" onClick={() => setContractToDelete({ id: c.id, label: `${c.contract_type === 'trial' ? 'Trial' : 'Service'} contract` })} aria-label="Delete contract" title="Delete contract"><FontAwesomeIcon icon={faTrash} /></button>
                                 </td>
                               </tr>

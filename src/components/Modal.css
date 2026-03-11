@@ -13,6 +13,8 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .modal-content {
@@ -83,6 +85,7 @@
 .modal-body {
   padding: 1.5rem;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -100,7 +103,7 @@
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
-  padding: 1.25rem;
+  padding: 1rem;
   border-top: 1px solid #e5e7eb;
 }
 

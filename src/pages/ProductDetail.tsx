@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { getInventoryProducts, getUnitsByProductId, addInventoryUnit, updateInventoryUnit, deleteInventoryUnit, type InventoryUnit, type InventoryUnitStatus, type InventoryUnitCondition } from '../data/inventory';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { getInventoryProducts, setInventoryProducts, getUnitsByProductId, getProductAvailabilityAndInUse, addInventoryUnit, updateInventoryUnit, deleteInventoryUnit, type InventoryUnit, type InventoryUnitStatus, type InventoryUnitCondition, type ProductType } from '../data/inventory';
 import {
   getTimEPartsInventory,
   setTimEPartsInventory,
@@ -12,7 +14,10 @@ import {
   setBimEPartsInventory,
   type BimEInventoryRow,
 } from '../data/bimEInventoryList';
+import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
 import './Page.css';
+import './ClientDetail.css';
 import './ProductDetail.css';
 
 const ProductDetail: React.FC = () => {
@@ -61,6 +66,50 @@ const ProductDetail: React.FC = () => {
   const [partsEditPendingDelivery, setPartsEditPendingDelivery] = useState('');
 
   const isFullInventoryProduct = !!product && (product.name === 'TIM-E Bot' || product.name === 'BIM-E');
+
+  // Edit product details modal
+  const [editProductOpen, setEditProductOpen] = useState(false);
+  const [editProductName, setEditProductName] = useState('');
+  const [editProductType, setEditProductType] = useState<ProductType>('Robot');
+  const [editProductSku, setEditProductSku] = useState('');
+
+  const openEditProductModal = () => {
+    if (!product) return;
+    setEditProductName(product.name);
+    setEditProductType(product.type);
+    setEditProductSku(product.sku || '');
+    setEditProductOpen(true);
+  };
+
+  const handleSaveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+    const all = getInventoryProducts();
+    const updated = all.map((p) =>
+      p.id === product.id
+        ? { ...p, name: editProductName.trim(), type: editProductType, sku: editProductSku.trim() }
+        : p
+    );
+    setInventoryProducts(updated);
+    setEditProductOpen(false);
+    // Force re-render by navigating to same page (products are read from localStorage)
+    window.location.reload();
+  };
+
+  // Delete product confirmation modal
+  const [deleteProductOpen, setDeleteProductOpen] = useState(false);
+
+  const handleDeleteProduct = () => {
+    if (!product) return;
+    const all = getInventoryProducts();
+    setInventoryProducts(all.filter((p) => p.id !== product.id));
+    navigate('/inventory');
+  };
+
+  // Derived availability counts from actual unit statuses
+  const { availability: availableCount, inUse: inUseCount } = productId
+    ? getProductAvailabilityAndInUse(productId)
+    : { availability: 0, inUse: 0 };
 
   const parsePartsValue = (s: string): number => Number(String(s).replace(/[$,]/g, '').trim()) || 0;
   const formatPartsCurrency = (n: number): string => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
@@ -255,12 +304,29 @@ const ProductDetail: React.FC = () => {
     setAddUnitOpen(false);
   };
 
-  const handleDeleteUnit = (e: React.MouseEvent, u: InventoryUnit) => {
+  const [unitToDelete, setUnitToDelete] = useState<InventoryUnit | null>(null);
+
+  useEffect(() => {
+    const anyOpen = addUnitOpen || !!partsEditType || editProductOpen;
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [addUnitOpen, partsEditType, editProductOpen]);
+
+  const handleRequestDeleteUnit = (e: React.MouseEvent, u: InventoryUnit) => {
     e.stopPropagation();
-    const msg = u.serialNumber ? `Delete this inventory unit (serial ${u.serialNumber})?` : 'Delete this inventory unit?';
-    if (!window.confirm(msg)) return;
-    deleteInventoryUnit(u.id);
+    setUnitToDelete(u);
+  };
+
+  const handleConfirmDeleteUnit = () => {
+    if (!unitToDelete) return;
+    deleteInventoryUnit(unitToDelete.id);
     refreshUnits();
+    setUnitToDelete(null);
+    // If the edit modal was open for this unit, close it too
+    if (editingUnit?.id === unitToDelete.id) {
+      setAddUnitOpen(false);
+      setEditingUnit(null);
+    }
   };
 
   if (!productId || !product) {
@@ -272,7 +338,7 @@ const ProductDetail: React.FC = () => {
             <div className="page-content">
               <p className="page-subtitle">Product not found.</p>
               <button type="button" className="back-button" onClick={() => navigate('/inventory')}>
-                ← Back to Inventory
+                Back to Inventory
               </button>
             </div>
           </main>
@@ -288,36 +354,85 @@ const ProductDetail: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          <PageHeader
+            title={displayName}
+            subtitle={`${product.type} — Product inventory`}
+            onBack={() => navigate('/inventory')}
+            backLabel="Back"
+          />
           <div className="page-content">
-            <div className="product-detail-header">
-              <h2 className="page-title">{displayName}</h2>
-              <button type="button" className="back-button" onClick={() => navigate('/inventory')}>
-                ← Back to Inventory
-              </button>
-            </div>
-            <p className="page-subtitle">
-              {product.type} — Product inventory (country of origin, model, serial number)
-            </p>
+            {/* Product info card */}
+            <div className="product-info-card">
+              <div className="product-info-header">
+                <h3 className="section-title">Product Details</h3>
+                <div className="client-action-buttons">
+                  <button
+                    type="button"
+                    className="client-action-btn client-action-btn--edit"
+                    data-tooltip="Edit product"
+                    onClick={openEditProductModal}
+                    aria-label="Edit product"
+                  >
+                    <FontAwesomeIcon icon={faPenToSquare} />
+                  </button>
+                  <button
+                    type="button"
+                    className="client-action-btn client-action-btn--delete"
+                    data-tooltip="Delete product"
+                    onClick={() => setDeleteProductOpen(true)}
+                    aria-label="Delete product"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </div>
+              </div>
+              <div className="product-info-grid">
+                <div className="product-info-item">
+                  <label className="product-info-label">Product Name</label>
+                  <p className="product-info-value">{product.name}</p>
+                </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">Type</label>
+                  <p className="product-info-value">{product.type}</p>
+                </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">SKU</label>
+                  <p className="product-info-value">{product.sku || '—'}</p>
+                </div>
+              </div>
 
-            <div className="product-detail-actions">
-              <button
-                type="button"
-                className="save-button"
-                onClick={openAddModal}
-              >
-                Add inventory
-              </button>
+              <hr className="client-info-divider" />
+
+              <h4 className="client-info-subsection-title">Unit Counts</h4>
+              <div className="product-info-grid">
+                <div className="product-info-item">
+                  <label className="product-info-label">Total in Inventory</label>
+                  <p className="product-info-value">{units.length}</p>
+                </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">In Use</label>
+                  <p className="product-info-value">{inUseCount}</p>
+                </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">Available</label>
+                  <p className="product-info-value">{availableCount}</p>
+                </div>
+              </div>
             </div>
 
             <div className="product-table-section">
-              <div className="collapsible-header" onClick={() => toggleSection('inventory')}>
-                <h3 className="product-table-title">Inventory for this product</h3>
-                <span className={`collapse-arrow${!collapsedSections.inventory ? ' collapse-arrow--open' : ''}`}>▶</span>
+              <div className="collapsible-header">
+                <div className="collapsible-header-left" onClick={() => toggleSection('inventory')}>
+                  <h3 className="product-table-title">Inventory For This Product</h3>
+                  <span className={`collapse-arrow${!collapsedSections.inventory ? ' collapse-arrow--open' : ''}`}>▶</span>
+                </div>
+                <button type="button" className="product-add-btn" onClick={openAddModal}>
+                  + Add Inventory
+                </button>
               </div>
-              {!collapsedSections.inventory && <div className="product-table-wrapper">
-                {units.length === 0 ? (
-                  <p className="table-empty">No inventory units yet. Add inventory above.</p>
-                ) : (
+              {!collapsedSections.inventory && (units.length === 0 ? (
+                <p className="table-empty">No inventory units yet.</p>
+              ) : <div className="product-table-wrapper">
                   <table className="product-table">
                     <thead>
                       <tr>
@@ -343,13 +458,7 @@ const ProductDetail: React.FC = () => {
                         <tr
                           key={u.id}
                           className="product-inventory-row-clickable"
-                          onClick={() => {
-                            if (isFullInventoryProduct && productId) {
-                              navigate(`/inventory/product/${productId}/robot/${encodeURIComponent(u.serialNumber || u.id)}`);
-                            } else {
-                              openEditModal(u);
-                            }
-                          }}
+                          onClick={() => openEditModal(u)}
                         >
                           {isFullInventoryProduct ? (
                             <>
@@ -366,24 +475,35 @@ const ProductDetail: React.FC = () => {
                             </>
                           )}
                           <td className="product-table-actions-cell" onClick={(e) => e.stopPropagation()}>
-                            {isFullInventoryProduct && productId ? (
+                            <div className="product-row-actions">
                               <>
-                                <button type="button" className="product-inventory-edit-btn" onClick={() => navigate(`/inventory/product/${productId}/robot/${encodeURIComponent(u.serialNumber || u.id)}`)}>Edit</button>
-                                <button type="button" className="product-inventory-delete-btn" onClick={(e) => handleDeleteUnit(e, u)}>Delete</button>
+                                <button
+                                  type="button"
+                                  className="product-row-btn product-row-btn--edit"
+                                  data-tooltip="Edit"
+                                  onClick={() => openEditModal(u)}
+                                  aria-label="Edit"
+                                >
+                                  <FontAwesomeIcon icon={faPenToSquare} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="product-row-btn product-row-btn--delete"
+                                  data-tooltip="Delete"
+                                  onClick={(e) => handleRequestDeleteUnit(e, u)}
+                                  aria-label="Delete"
+                                >
+                                  <FontAwesomeIcon icon={faTrash} />
+                                </button>
                               </>
-                            ) : (
-                              <>
-                                <button type="button" className="product-inventory-edit-btn" onClick={() => openEditModal(u)}>Edit</button>
-                                <button type="button" className="product-inventory-delete-btn" onClick={(e) => handleDeleteUnit(e, u)}>Delete</button>
-                              </>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                )}
-              </div>}
+                </div>
+              )}
             </div>
 
             {product.name === 'TIM-E Bot' && (
@@ -427,13 +547,15 @@ const ProductDetail: React.FC = () => {
                           <td>{row.wasteDollars || '—'}</td>
                         </tr>
                       ))}
+                    </tbody>
+                    <tfoot>
                       <tr className="product-inventory-total-row">
                         <td colSpan={7}>Total</td>
                         <td>{formatPartsCurrency(timEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.value), 0))}</td>
                         <td></td>
                         <td>{formatPartsCurrency(timEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.wasteDollars), 0))}</td>
                       </tr>
-                    </tbody>
+                    </tfoot>
                   </table>
                 </div>}
               </div>
@@ -480,12 +602,14 @@ const ProductDetail: React.FC = () => {
                           <td>{row.pendingDelivery || '—'}</td>
                         </tr>
                       ))}
+                    </tbody>
+                    <tfoot>
                       <tr className="product-inventory-total-row">
                         <td colSpan={8}>Total</td>
                         <td></td>
                         <td>{formatPartsCurrency(bimEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.value), 0))}</td>
                       </tr>
-                    </tbody>
+                    </tfoot>
                   </table>
                 </div>}
               </div>
@@ -494,6 +618,105 @@ const ProductDetail: React.FC = () => {
         </main>
       </div>
 
+      <Modal
+        isOpen={!!unitToDelete}
+        onClose={() => setUnitToDelete(null)}
+        title="Delete inventory unit"
+        narrow
+      >
+        <div className="modal-body">
+          <p style={{ margin: '0 0 0.5rem', color: '#374151', fontSize: '0.9375rem' }}>
+            Are you sure you want to delete this inventory unit
+            {unitToDelete?.serialNumber ? <> (serial <strong>{unitToDelete.serialNumber}</strong>)</> : ''}?
+          </p>
+          <p style={{ margin: '0', color: '#8A8F93', fontSize: '0.875rem' }}>
+            This action cannot be undone.
+          </p>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="cancel-button" onClick={() => setUnitToDelete(null)}>
+            Cancel
+          </button>
+          <button type="button" className="client-delete-confirm-btn" onClick={handleConfirmDeleteUnit}>
+            Delete
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={deleteProductOpen}
+        onClose={() => setDeleteProductOpen(false)}
+        title="Delete product"
+        narrow
+      >
+        <div className="modal-body">
+          <p style={{ margin: '0 0 0.5rem', color: '#374151', fontSize: '0.9375rem' }}>
+            Are you sure you want to delete <strong>{product?.name}</strong> from inventory?
+          </p>
+          <p style={{ margin: '0', color: '#8A8F93', fontSize: '0.875rem' }}>
+            This will permanently remove the product and cannot be undone.
+          </p>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="cancel-button" onClick={() => setDeleteProductOpen(false)}>
+            Cancel
+          </button>
+          <button type="button" className="client-delete-confirm-btn" onClick={handleDeleteProduct}>
+            Delete
+          </button>
+        </div>
+      </Modal>
+
+      {editProductOpen && (
+        <div className="modal-overlay" onClick={() => setEditProductOpen(false)}>
+          <div className="modal-content modal-content--narrow" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Edit product details</h3>
+              <button type="button" className="modal-close-button" onClick={() => setEditProductOpen(false)} aria-label="Close">×</button>
+            </div>
+            <form onSubmit={handleSaveProduct}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Product Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editProductName}
+                    onChange={(e) => setEditProductName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Type</label>
+                  <select
+                    className="form-input"
+                    value={editProductType}
+                    onChange={(e) => setEditProductType(e.target.value as ProductType)}
+                  >
+                    <option value="Robot">Robot</option>
+                    <option value="Accessory">Accessory</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">SKU</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editProductSku}
+                    onChange={(e) => setEditProductSku(e.target.value)}
+                    placeholder="e.g. TIM-E-001"
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="cancel-button" onClick={() => setEditProductOpen(false)}>Cancel</button>
+                <button type="submit" className="save-button">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {addUnitOpen && (
         <div className="modal-overlay">
           <div className="modal-content add-inventory-modal" onClick={(e) => e.stopPropagation()}>
@@ -501,7 +724,8 @@ const ProductDetail: React.FC = () => {
               <h3 className="modal-title">{editingUnit ? `Edit inventory — ${displayName}` : `Add inventory — ${displayName}`}</h3>
               <button type="button" className="modal-close-button" onClick={() => { setAddUnitOpen(false); setEditingUnit(null); }} aria-label="Close">×</button>
             </div>
-            <form onSubmit={handleSaveUnit} className="modal-body inventory-edit-form">
+            <form onSubmit={handleSaveUnit} className="inventory-edit-form">
+              <div className="modal-body">
               {isFullInventoryProduct ? (
                 <>
                   <div className="inventory-modal-card">
@@ -687,10 +911,8 @@ const ProductDetail: React.FC = () => {
                   </div>
                 </div>
               )}
+              </div>
               <div className="modal-actions">
-                {editingUnit ? (
-                  <button type="button" className="product-inventory-delete-btn modal-delete-btn" onClick={(e) => { e.preventDefault(); handleDeleteUnit(e, editingUnit); setAddUnitOpen(false); setEditingUnit(null); }}>Delete</button>
-                ) : null}
                 <button type="button" className="cancel-button" onClick={() => { setAddUnitOpen(false); setEditingUnit(null); }}>Cancel</button>
                 <button type="submit" className="save-button">{editingUnit ? 'Save' : 'Add'}</button>
               </div>

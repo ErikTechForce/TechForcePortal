@@ -6,6 +6,7 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { fetchClients, createClient, type ClientRow } from '../api/clients';
 import { fetchVerifiedUsers, type VerifiedUser } from '../api/users';
 import { getInventoryProducts } from '../data/inventory';
+import { INDUSTRIES } from '../constants/industries';
 import Modal from '../components/Modal';
 import './Page.css';
 import './Client.css';
@@ -37,6 +38,7 @@ const Client: React.FC = () => {
   const [formBillingAddress, setFormBillingAddress] = useState('');
   const [formSiteLocation, setFormSiteLocation] = useState('');
   const [formSource, setFormSource] = useState('');
+  const [formIndustry, setFormIndustry] = useState('');
   const [formEmployeeName, setFormEmployeeName] = useState('');
   const [formSelectedUserId, setFormSelectedUserId] = useState<number | null>(null);
   const [verifiedUsers, setVerifiedUsers] = useState<VerifiedUser[]>([]);
@@ -117,6 +119,7 @@ const Client: React.FC = () => {
     setFormBillingAddress('');
     setFormSiteLocation('');
     setFormSource('');
+    setFormIndustry('');
     setFormEmployeeName('');
     setSubmitError('');
     setAddModalOpen(true);
@@ -158,6 +161,7 @@ const Client: React.FC = () => {
         billing_address: formBillingAddress.trim() || undefined,
         site_location: formSiteLocation.trim() || undefined,
         source: formType === 'lead' ? formSource.trim() || undefined : undefined,
+        industry: formIndustry.trim() || undefined,
         ...(formType === 'client' && formSelectedUserId != null
           ? { user_id: formSelectedUserId }
           : formType === 'client'
@@ -208,7 +212,7 @@ const Client: React.FC = () => {
             {loading ? (
               <p className="page-subtitle">Loading clients...</p>
             ) : (
-              <>
+              <div className="clients-tables-container">
                 <div className="clients-section">
                   <div className="collapsible-header" onClick={() => toggleSection('clients')}>
                     <h3 className="clients-title">Clients</h3>
@@ -276,7 +280,7 @@ const Client: React.FC = () => {
                     <p className="page-subtitle">{apiLeads.length === 0 ? 'No leads yet.' : 'No leads match your search.'}</p>
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </main>
@@ -285,169 +289,150 @@ const Client: React.FC = () => {
       <Modal isOpen={addModalOpen} onClose={closeAddModal} title="Add Client or Lead" wide>
         <form onSubmit={handleAddSubmit}>
           <div className="modal-body">
-              <div className="form-group">
-                <span className="form-label">Add as</span>
-                <div className="add-client-type-row">
-                  <label className="add-client-radio-label">
-                    <input
-                      type="radio"
-                      name="formType"
-                      checked={formType === 'client'}
-                      onChange={() => setFormType('client')}
-                    />
-                    Client
-                  </label>
-                  <label className="add-client-radio-label">
-                    <input
-                      type="radio"
-                      name="formType"
-                      checked={formType === 'lead'}
-                      onChange={() => setFormType('lead')}
-                    />
-                    Lead
-                  </label>
-                </div>
+            {/* Type selector */}
+            <div className="form-group">
+              <span className="form-label">Add as</span>
+              <div className="add-client-type-row">
+                <label className="add-client-radio-label">
+                  <input type="radio" name="formType" checked={formType === 'client'} onChange={() => setFormType('client')} />
+                  Client
+                </label>
+                <label className="add-client-radio-label">
+                  <input type="radio" name="formType" checked={formType === 'lead'} onChange={() => setFormType('lead')} />
+                  Lead
+                </label>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="add-company" className="form-label">Company *</label>
-                <input
-                  id="add-company"
-                  type="text"
-                  className="form-input"
-                  value={formCompany}
-                  onChange={(e) => setFormCompany(e.target.value)}
-                  required
-                  placeholder="Company name"
-                />
-              </div>
+            {/* ── Client / Lead info ── */}
+            <div className="form-group">
+              <label htmlFor="add-company" className="form-label">Company *</label>
+              <input
+                id="add-company" type="text" className="form-input"
+                value={formCompany} onChange={(e) => setFormCompany(e.target.value)}
+                required placeholder="Company name"
+              />
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="add-poc" className="form-label">Point of Contact *</label>
-                <input
-                  id="add-poc"
-                  type="text"
-                  className="form-input"
-                  value={formPointOfContact}
-                  onChange={(e) => setFormPointOfContact(e.target.value)}
-                  required
-                  placeholder="Full name"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="add-email" className="form-label">Email</label>
-                <input
-                  id="add-email"
-                  type="email"
-                  className="form-input"
-                  value={formContactEmail}
-                  onChange={(e) => setFormContactEmail(e.target.value)}
-                  placeholder="contact@company.com"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="add-phone" className="form-label">Phone</label>
-                <input
-                  id="add-phone"
-                  type="tel"
-                  className="form-input"
-                  value={formContactPhone}
-                  onChange={(e) => setFormContactPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                />
-              </div>
-
-              {formType === 'lead' && (
+            {formType === 'client' && (
+              <>
                 <div className="form-group">
-                  <label htmlFor="add-source" className="form-label">Source *</label>
-                  <input
-                    id="add-source"
-                    type="text"
-                    className="form-input"
-                    value={formSource}
-                    onChange={(e) => setFormSource(e.target.value)}
-                    required={formType === 'lead'}
-                    placeholder="e.g. LinkedIn, Referral"
+                  <label htmlFor="add-employee" className="form-label">Assigned Employee</label>
+                  <SearchableDropdown
+                    options={verifiedUsers.map((u) => u.username)}
+                    value={formEmployeeName}
+                    onChange={(display) => {
+                      setFormEmployeeName(display);
+                      const u = verifiedUsers.find((x) => x.username === display);
+                      setFormSelectedUserId(u ? u.id : null);
+                    }}
+                    placeholder="Select employee..."
                   />
                 </div>
-              )}
+                <div className="form-group">
+                  <label htmlFor="add-start-date" className="form-label">Start Date</label>
+                  <input
+                    id="add-start-date" type="date" className="form-input"
+                    value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="add-industry" className="form-label">Industry</label>
+                  <SearchableDropdown
+                    options={INDUSTRIES}
+                    value={formIndustry}
+                    onChange={setFormIndustry}
+                    placeholder="Type to search or enter industry..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="add-product" className="form-label">Product</label>
+                  <SearchableDropdown
+                    options={inventoryProductNames}
+                    value={formProduct}
+                    onChange={setFormProduct}
+                    placeholder="Select product..."
+                  />
+                </div>
+              </>
+            )}
 
-              {formType === 'client' && (
-                <>
-                  <div className="form-group">
-                    <label htmlFor="add-employee" className="form-label">Assigned Employee</label>
-                    <SearchableDropdown
-                      options={verifiedUsers.map((u) => u.username)}
-                      value={formEmployeeName}
-                      onChange={(display) => {
-                        setFormEmployeeName(display);
-                        const u = verifiedUsers.find((x) => x.username === display);
-                        setFormSelectedUserId(u ? u.id : null);
-                      }}
-                      placeholder="Select employee..."
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="add-product" className="form-label">Product</label>
-                    <SearchableDropdown
-                      options={inventoryProductNames}
-                      value={formProduct}
-                      onChange={setFormProduct}
-                      placeholder="Select product..."
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="add-start-date" className="form-label">Start Date</label>
-                    <input
-                      id="add-start-date"
-                      type="date"
-                      className="form-input"
-                      value={formStartDate}
-                      onChange={(e) => setFormStartDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="add-billing" className="form-label">Billing Address</label>
-                    <textarea
-                      id="add-billing"
-                      className="form-textarea"
-                      value={formBillingAddress}
-                      onChange={(e) => setFormBillingAddress(e.target.value)}
-                      rows={2}
-                      placeholder="Street, City, State, ZIP"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="add-site" className="form-label">Site Location</label>
-                    <textarea
-                      id="add-site"
-                      className="form-textarea"
-                      value={formSiteLocation}
-                      onChange={(e) => setFormSiteLocation(e.target.value)}
-                      rows={2}
-                      placeholder="Installation or service address"
-                    />
-                  </div>
-                </>
-              )}
-
+            {formType === 'lead' && (
               <div className="form-group">
-                <label htmlFor="add-notes" className="form-label">Notes</label>
-                <textarea
-                  id="add-notes"
-                  className="form-textarea"
-                  value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Additional notes..."
+                <label htmlFor="add-source" className="form-label">Source *</label>
+                <input
+                  id="add-source" type="text" className="form-input"
+                  value={formSource} onChange={(e) => setFormSource(e.target.value)}
+                  required={formType === 'lead'} placeholder="e.g. Website Inquiry, Event"
                 />
               </div>
+            )}
 
-              {submitError && (
-                <p className="add-client-error" role="alert">{submitError}</p>
-              )}
+            <hr style={{ margin: '1.25rem 0', borderColor: '#e5e7eb' }} />
+
+            {/* ── Point of Contact ── */}
+            <p className="client-info-subsection-title">Point of Contact</p>
+
+            <div className="form-group">
+              <label htmlFor="add-poc" className="form-label">Name *</label>
+              <input
+                id="add-poc" type="text" className="form-input"
+                value={formPointOfContact} onChange={(e) => setFormPointOfContact(e.target.value)}
+                required placeholder="Full name"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="add-email" className="form-label">Email</label>
+              <input
+                id="add-email" type="email" className="form-input"
+                value={formContactEmail} onChange={(e) => setFormContactEmail(e.target.value)}
+                placeholder="contact@company.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="add-phone" className="form-label">Phone</label>
+              <input
+                id="add-phone" type="tel" className="form-input"
+                value={formContactPhone} onChange={(e) => setFormContactPhone(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+              />
+            </div>
+
+            {formType === 'client' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="add-billing" className="form-label">Billing Address</label>
+                  <textarea
+                    id="add-billing" className="form-textarea"
+                    value={formBillingAddress} onChange={(e) => setFormBillingAddress(e.target.value)}
+                    rows={2} placeholder="Street, City, State, ZIP"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="add-site" className="form-label">Site Location</label>
+                  <textarea
+                    id="add-site" className="form-textarea"
+                    value={formSiteLocation} onChange={(e) => setFormSiteLocation(e.target.value)}
+                    rows={2} placeholder="Installation or service address"
+                  />
+                </div>
+              </>
+            )}
+
+            <hr style={{ margin: '1.25rem 0', borderColor: '#e5e7eb' }} />
+
+            <div className="form-group">
+              <label htmlFor="add-notes" className="form-label">Notes</label>
+              <textarea
+                id="add-notes" className="form-textarea"
+                value={formNotes} onChange={(e) => setFormNotes(e.target.value)}
+                rows={3} placeholder="Additional notes..."
+              />
+            </div>
+
+            {submitError && (
+              <p className="add-client-error" role="alert">{submitError}</p>
+            )}
           </div>
 
           <div className="modal-actions">

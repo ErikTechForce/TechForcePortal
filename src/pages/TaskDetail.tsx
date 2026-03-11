@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import SearchableDropdown from '../components/SearchableDropdown';
 import TagSelector from '../components/TagSelector';
@@ -238,21 +239,13 @@ const TaskDetail: React.FC = () => {
       <div className="page-layout">
         <Sidebar />
         <main className="page-main">
+          <PageHeader
+            title={task ? `Task #${task.id} Details` : 'Task Details'}
+            subtitle="View and update task information"
+            onBack={() => navigate('/tasks')}
+            backLabel="Back"
+          />
           <div className="page-content">
-            <div className="task-detail-page-header">
-              <div>
-                <h2 className="page-title">Task Details</h2>
-                <p className="page-subtitle">View and update task information</p>
-              </div>
-              <button
-                type="button"
-                className="back-button"
-                onClick={() => navigate('/tasks')}
-              >
-                Back to Tasks
-              </button>
-            </div>
-
             {/* ── Read-only info card ── */}
             <div className="task-info-card">
               <div className="task-info-header">
@@ -280,11 +273,9 @@ const TaskDetail: React.FC = () => {
               </div>
 
               <div className="task-info-section">
-                <h4 className="task-info-section-title">Task</h4>
                 <div className="task-info-grid">
                   <div className="task-info-item">
-                    <span className="task-info-label">Name</span>
-                    <span className="task-info-value">{name || '—'}</span>
+                    <span className="task-info-name-value">{name || '—'}</span>
                   </div>
                 </div>
               </div>

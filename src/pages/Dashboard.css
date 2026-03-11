@@ -124,8 +124,8 @@
 
 .dash-activity .activity-log-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 0 1.5rem 1.5rem 1.5rem;
+  padding: 1.25rem;
+  overflow: visible;
 }
 
 .dash-leads {
@@ -393,7 +393,6 @@
   background-color: white;
   border: 1px solid #E9ECEF;
   border-radius: 8px;
-  padding: 1.5rem;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
@@ -402,10 +401,6 @@
   font-weight: 600;
   color: #1B1C1E;
   margin: 0 0 1rem 0;
-}
-
-.activity-log-content {
-  min-height: 200px;
 }
 
 .activity-log-list {

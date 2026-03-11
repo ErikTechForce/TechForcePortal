@@ -36,7 +36,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* background: #FAF7F2; */
+  /* background: #1B1C1E; */
   background: radial-gradient(circle, #FAF7F2 0%, rgb(115, 191, 67, 0.2) 100%);
   padding: 20px;
   gap: 3rem;
@@ -71,7 +71,7 @@
 }
 
 .login-header h1 {
-  color: #1A293F;
+  color: #2F6F44;
   margin-bottom: 8px;
 }
 
@@ -107,11 +107,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.form-group input:focus {
-  border-color: #73BF43;
-  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
 }
 
 .form-group input::placeholder {

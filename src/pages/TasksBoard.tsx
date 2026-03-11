@@ -554,15 +554,49 @@ const TasksBoard: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="completed-tasks-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('completedTasks')}>
+                    <h3 className="completed-tasks-title">Completed Tasks</h3>
+                    <span className={`collapse-arrow${!collapsedSections.completedTasks ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.completedTasks && <>
+                  <div className="collapsible-table-wrapper"><table className="completed-tasks-table">
+                    <thead>
+                      <tr>
+                        <th>Task #</th>
+                        <th>Task Name</th>
+                        <th>Priority</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {completed.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} data-label="">No completed tasks</td>
+                        </tr>
+                      ) : (
+                        completed.map((task) => (
+                          <tr
+                            key={task.id}
+                            onClick={() => handleTaskClick(task.id)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td data-label="Task #">#{task.id}</td>
+                            <td data-label="Task Name">{task.name}</td>
+                            <td data-label="Priority">{task.priority ?? '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table></div>
+                  </>}
+                </div>
+
                 <div className="assigned-companies-section">
                   <div className="collapsible-header" onClick={() => toggleSection('assignedCompanies')}>
                     <h3 className="assigned-companies-title">Assigned Companies</h3>
                     <span className={`collapse-arrow${!collapsedSections.assignedCompanies ? ' collapse-arrow--open' : ''}`}>▶</span>
                   </div>
                   {!collapsedSections.assignedCompanies && <>
-                  <p className="page-subtitle" style={{ marginBottom: '0.75rem' }}>
-                    Clients assigned to you
-                  </p>
                   <div className="collapsible-table-wrapper"><table className="assigned-companies-table">
                     <thead>
                       <tr>
@@ -588,46 +622,6 @@ const TasksBoard: React.FC = () => {
                             <td data-label="Employee">{client.employee_name ?? '—'}</td>
                             <td data-label="Point of Contact">{client.point_of_contact}</td>
                             <td data-label="Product">{client.product ?? '—'}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table></div>
-                  </>}
-                </div>
-
-                <div className="completed-tasks-section">
-                  <div className="collapsible-header" onClick={() => toggleSection('completedTasks')}>
-                    <h3 className="completed-tasks-title">Completed Tasks</h3>
-                    <span className={`collapse-arrow${!collapsedSections.completedTasks ? ' collapse-arrow--open' : ''}`}>▶</span>
-                  </div>
-                  {!collapsedSections.completedTasks && <>
-                  <p className="page-subtitle" style={{ marginBottom: '0.75rem' }}>
-                    Tasks assigned to you with status Completed
-                  </p>
-                  <div className="collapsible-table-wrapper"><table className="completed-tasks-table">
-                    <thead>
-                      <tr>
-                        <th>Task #</th>
-                        <th>Task Name</th>
-                        <th>Priority</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {completed.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} data-label="">No completed tasks</td>
-                        </tr>
-                      ) : (
-                        completed.map((task) => (
-                          <tr
-                            key={task.id}
-                            onClick={() => handleTaskClick(task.id)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <td data-label="Task #">#{task.id}</td>
-                            <td data-label="Task Name">{task.name}</td>
-                            <td data-label="Priority">{task.priority ?? '—'}</td>
                           </tr>
                         ))
                       )}

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLayout } from '../context/LayoutContext';
+import Modal from './Modal';
 import './Sidebar.css';
 
 interface MenuItem {
@@ -15,6 +16,7 @@ const Sidebar: React.FC = () => {
   const { logout } = useAuth();
   const layout = useLayout();
   const isOpen = layout?.mobileMenuOpen ?? false;
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -107,13 +109,34 @@ const Sidebar: React.FC = () => {
               </Link>
             </li>
             <li className="sidebar-menu-item">
-              <button type="button" className="sidebar-logout" onClick={handleLogout}>
+              <button type="button" className="sidebar-logout" onClick={() => setConfirmOpen(true)}>
                 Log out
               </button>
             </li>
           </ul>
         </nav>
       </aside>
+
+      <Modal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Log out"
+        narrow
+      >
+        <div className="modal-body">
+          <p style={{ margin: '0 0 1.5rem', color: '#374151', fontSize: '0.9375rem' }}>
+            Are you sure you want to log out?
+          </p>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="cancel-button" onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </button>
+          <button type="button" className="sidebar-logout-confirm-btn" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
+      </Modal>
     </>
   );
 };

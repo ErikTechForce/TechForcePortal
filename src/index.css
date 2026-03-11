@@ -54,17 +54,30 @@ html {
 
 /* ── Shared scrollable table wrapper ───────────────────────────── */
 .collapsible-table-wrapper {
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 320px;
   border-radius: 8px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
 }
 
+/* ── Global table header colour ────────────────────────────────── */
+thead {
+  background-color: #2A425F;
+  color: white;
+}
+
+thead th {
+  background-color: #2A425F;
+  color: white;
+}
+
 .collapsible-table-wrapper thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background-color: #E9ECEF;
+  background-color: #2A425F;
+  color: white;
 }
 
 /* ── Shared collapsible section styles ─────────────────────────── */
