@@ -6,7 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import pool from './config/database.js';
-import { sendVerificationEmail, sendTaskAssignedEmail, sendInvoiceConfirmationEmail, sendPasswordResetEmail } from './config/mailer.js';
+import { sendVerificationEmail, sendTaskAssignedEmail, sendInvoiceConfirmationEmail, sendPasswordResetEmail, sendSignedContractToBillingEmail } from './config/mailer.js';
 
 dotenv.config();
 
@@ -996,20 +996,16 @@ app.get('/api/tasks', async (req, res) => {
       }
     }
 
-    // All unassigned tasks; prioritize those whose tags match the user's roles (sort matching first)
+    // Unassigned tasks that share at least one role with the user (only show role-matching tasks)
     const unassignedResult = userRoles.length > 0
       ? await pool.query(
           `${baseTaskQuery}
            WHERE t.assigned_to_id IS NULL
-           ORDER BY EXISTS (SELECT 1 FROM task_tags tt WHERE tt.task_id = t.id AND tt.role = ANY($1::text[])) DESC,
-                    t.updated_at DESC`,
+             AND EXISTS (SELECT 1 FROM task_tags tt WHERE tt.task_id = t.id AND tt.role = ANY($1::text[]))
+           ORDER BY t.updated_at DESC`,
           [userRoles]
         )
-      : await pool.query(
-          `${baseTaskQuery}
-           WHERE t.assigned_to_id IS NULL
-           ORDER BY t.updated_at DESC`
-        );
+      : { rows: [] as Record<string, unknown>[] };
     for (const row of unassignedResult.rows as Record<string, unknown>[]) {
       const taskId = Number(row.id);
       const tagRes = await pool.query('SELECT role FROM task_tags WHERE task_id = $1 ORDER BY role', [taskId]);
@@ -1064,6 +1060,70 @@ app.get('/api/tasks/all', async (req, res) => {
   } catch (err: unknown) {
     const e = err as { message?: string };
     res.status(500).json({ error: e.message || 'Failed to fetch tasks.' });
+  }
+});
+
+// GET /api/tasks/board?userId=1 — tasks that share roles with the user, excluding those in their todo/in progress/unassigned
+app.get('/api/tasks/board', async (req, res) => {
+  try {
+    const userId = req.query.userId != null ? Number(req.query.userId) : NaN;
+    if (!Number.isInteger(userId) || userId < 1) {
+      return res.status(400).json({ error: 'Valid userId query is required.' });
+    }
+    const employeeIdResult = await pool.query('SELECT id FROM employees WHERE user_id = $1', [userId]);
+    const employeeId = (employeeIdResult.rows[0] as { id?: number } | undefined)?.id ?? null;
+    const userRolesResult = await pool.query(
+      'SELECT role FROM user_roles WHERE user_id = $1',
+      [userId]
+    );
+    const userRoles = (userRolesResult.rows as { role: string }[]).map((r) => r.role);
+    if (userRoles.length === 0) {
+      return res.json({ tasks: [] });
+    }
+
+    const excludeIds: number[] = [];
+    if (employeeId) {
+      const myTaskIds = await pool.query(
+        'SELECT id FROM tasks WHERE assigned_to_id = $1 AND status IN (\'To-Do\', \'In Progress\')',
+        [employeeId]
+      );
+      excludeIds.push(...(myTaskIds.rows as { id: number }[]).map((r) => r.id));
+    }
+    const unassignedIds = await pool.query(
+      'SELECT id FROM tasks WHERE assigned_to_id IS NULL'
+    );
+    excludeIds.push(...(unassignedIds.rows as { id: number }[]).map((r) => r.id));
+    const excludeSet = new Set(excludeIds);
+
+    const baseTaskQuery = `
+      SELECT DISTINCT t.id, t.name, t.status, t.assigned_to_id, t.client_id, t.start_date, t.due_date, t.notes, t.priority, t.created_at, t.updated_at,
+             e.name AS assigned_to_name,
+             e.user_id AS assigned_to_user_id,
+             c.company AS client_company
+      FROM tasks t
+      INNER JOIN task_tags tt ON tt.task_id = t.id AND tt.role = ANY($1::text[])
+      LEFT JOIN employees e ON e.id = t.assigned_to_id
+      LEFT JOIN clients c ON c.id = t.client_id
+      ORDER BY t.updated_at DESC
+    `;
+    const result = await pool.query(baseTaskQuery, [userRoles]);
+    const rows = (result.rows as Record<string, unknown>[]).filter(
+      (row) => !excludeSet.has(Number(row.id))
+    );
+    const taskIds = rows.map((r) => Number(r.id));
+    const tagsByTaskId = new Map<number, string[]>();
+    for (const taskId of taskIds) {
+      const tagRes = await pool.query('SELECT role FROM task_tags WHERE task_id = $1 ORDER BY role', [taskId]);
+      tagsByTaskId.set(taskId, (tagRes.rows as { role: string }[]).map((r) => r.role));
+    }
+    const tasks = rows.map((row) => {
+      const taskId = Number(row.id);
+      return taskRowToJson(row, tagsByTaskId.get(taskId) ?? []);
+    });
+    res.json({ tasks });
+  } catch (err: unknown) {
+    const e = err as { message?: string };
+    res.status(500).json({ error: e.message || 'Failed to fetch board tasks.' });
   }
 });
 
@@ -2231,6 +2291,10 @@ app.patch('/api/contracts/:contractId/signed', async (req, res) => {
       billingCity?: string;
       billingState?: string;
       billingZip?: string;
+      billingContactName?: string;
+      billingContactPhone?: string;
+      billingContactEmail?: string;
+      clientInitials?: string;
     };
     const { pdf_signed } = body;
     if (!pdf_signed || typeof pdf_signed !== 'string') {
@@ -2243,14 +2307,18 @@ app.patch('/api/contracts/:contractId/signed', async (req, res) => {
     );
     if (selectResult.rows.length === 0) return res.status(404).json({ error: 'Contract not found.' });
     const row = selectResult.rows[0] as { id: number; order_number?: string; form_data?: unknown };
-    const hasBilling =
+    const hasBillingOrInitials =
       body.billingEntity != null ||
       body.billingAddress != null ||
       body.billingCity != null ||
       body.billingState != null ||
-      body.billingZip != null;
+      body.billingZip != null ||
+      body.billingContactName != null ||
+      body.billingContactPhone != null ||
+      body.billingContactEmail != null ||
+      (body.clientInitials != null && String(body.clientInitials).trim() !== '');
     const current = (row.form_data && typeof row.form_data === 'object' ? row.form_data : {}) as Record<string, unknown>;
-    const merged = hasBilling
+    const merged = hasBillingOrInitials
       ? {
           ...current,
           ...(body.billingEntity != null && body.billingEntity !== '' && { billingEntity: String(body.billingEntity).trim() }),
@@ -2258,6 +2326,10 @@ app.patch('/api/contracts/:contractId/signed', async (req, res) => {
           ...(body.billingCity != null && body.billingCity !== '' && { billingCity: String(body.billingCity).trim() }),
           ...(body.billingState != null && body.billingState !== '' && { billingState: String(body.billingState).trim() }),
           ...(body.billingZip != null && body.billingZip !== '' && { billingZip: String(body.billingZip).trim() }),
+          ...(body.billingContactName != null && body.billingContactName !== '' && { billingContactName: String(body.billingContactName).trim() }),
+          ...(body.billingContactPhone != null && body.billingContactPhone !== '' && { billingContactPhone: String(body.billingContactPhone).trim() }),
+          ...(body.billingContactEmail != null && body.billingContactEmail !== '' && { billingContactEmail: String(body.billingContactEmail).trim() }),
+          ...(body.clientInitials != null && String(body.clientInitials).trim() !== '' && { clientInitials: String(body.clientInitials).trim() }),
         }
       : null;
     if (merged !== null) {
@@ -2287,6 +2359,15 @@ app.patch('/api/contracts/:contractId/signed', async (req, res) => {
         `INSERT INTO activity_logs (order_number, action, "user") VALUES ($1, $2, $3)`,
         [row.order_number, `Client submitted signed contract on ${signedDate}`, 'Client']
       );
+    }
+    const billingEmail = (body.billingContactEmail && String(body.billingContactEmail).trim()) || (merged && (merged.billingContactEmail as string) && String(merged.billingContactEmail).trim());
+    if (billingEmail) {
+      try {
+        await sendSignedContractToBillingEmail(billingEmail, pdfBuffer, row.order_number);
+      } catch (mailErr: unknown) {
+        const errMsg = mailErr instanceof Error ? mailErr.message : 'Unknown error';
+        console.error('Failed to send signed contract to billing email:', errMsg);
+      }
     }
     res.json({ success: true });
   } catch (err: unknown) {

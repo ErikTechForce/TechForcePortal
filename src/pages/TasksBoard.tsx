@@ -5,7 +5,7 @@ import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
 import AddTaskForm from './AddTask';
 import { useAuth } from '../context/AuthContext';
-import { fetchTasks, fetchAllTasks, updateTask, type TaskRow } from '../api/tasks';
+import { fetchTasks, fetchAllTasks, fetchBoardTasks, updateTask, type TaskRow } from '../api/tasks';
 import { fetchClients, type ClientRow } from '../api/clients';
 import { fetchOrdersForUser, type OrderRow } from '../api/orderApi';
 import { TAG_PILL_COLORS, ROLE_LABELS as TAG_LABELS } from '../constants/taskTags';
@@ -58,10 +58,12 @@ const TasksBoard: React.FC = () => {
   const [error, setError] = useState('');
   const [addTaskModalOpen, setAddTaskModalOpen] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    taskBoard: false,
     assignedCompanies: false,
     completedTasks: false,
     allTasks: false,
   });
+  const [boardTasks, setBoardTasks] = useState<TaskRow[]>([]);
   const toggleSection = (key: string) =>
     setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -191,6 +193,22 @@ const TasksBoard: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [isAdmin, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setBoardTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchBoardTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setBoardTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setBoardTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!openFilterCol) return;
@@ -663,6 +681,78 @@ const TasksBoard: React.FC = () => {
                     <h3 className="tasks-card-title">Unassigned Tasks:</h3>
                     {renderTaskList(unassigned, 'unassigned')}
                   </div>
+                </div>
+
+                <div className="task-board-section">
+                  <div className="collapsible-header" onClick={() => toggleSection('taskBoard')}>
+                    <h3 className="completed-tasks-title">Task Board</h3>
+                    <span className={`collapse-arrow${!collapsedSections.taskBoard ? ' collapse-arrow--open' : ''}`}>▶</span>
+                  </div>
+                  {!collapsedSections.taskBoard && (
+                    <div className="collapsible-table-wrapper">
+                      <table className="all-tasks-table">
+                        <thead>
+                          <tr>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Roles</th>
+                            <th>Assigned to</th>
+                            <th>Company</th>
+                            <th>Due date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {boardTasks.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} data-label="">No tasks that share your roles (excluding your to-dos, in progress, and unassigned).</td>
+                            </tr>
+                          ) : (
+                            boardTasks.map((task) => (
+                              <tr key={task.id} className="all-tasks-row" onClick={() => handleTaskClick(task.id)}>
+                                <td data-label="Task">{task.name}</td>
+                                <td data-label="Status">
+                                  <span
+                                    className="dashboard-pill"
+                                    style={{ backgroundColor: STATUS_PILL_COLORS[task.status] ?? '#e5e7eb' }}
+                                  >
+                                    {task.status}
+                                  </span>
+                                </td>
+                                <td data-label="Priority">
+                                  {task.priority ? (
+                                    <span
+                                      className="dashboard-pill"
+                                      style={{ backgroundColor: PRIORITY_PILL_COLORS[task.priority] ?? '#e5e7eb' }}
+                                    >
+                                      {task.priority}
+                                    </span>
+                                  ) : '—'}
+                                </td>
+                                <td data-label="Roles">
+                                  <div className="dashboard-admin-tasks-tags">
+                                    {(task.tags?.length ? task.tags : []).map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="dashboard-pill"
+                                        style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                                      >
+                                        {TAG_LABELS[tag] ?? tag.replace(/_/g, ' ')}
+                                      </span>
+                                    ))}
+                                    {(!task.tags || task.tags.length === 0) && '—'}
+                                  </div>
+                                </td>
+                                <td data-label="Assigned to">{task.assigned_to_name ?? '—'}</td>
+                                <td data-label="Company">{task.client_company ?? '—'}</td>
+                                <td data-label="Due date">{task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 <div className="completed-tasks-section">

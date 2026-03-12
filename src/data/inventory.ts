@@ -12,6 +12,8 @@ export interface InventoryProduct {
   sku: string;
   availability: number;
   inUse: number;
+  /** When set, item appears on dashboard low-stock card when availability < this number; highlight yellow when below buffer, red when < 10. */
+  lowStockBuffer?: number | null;
 }
 
 export type InventoryUnitStatus = 'Deployed' | 'In Storage' | 'Repair' | 'Out of Order';
@@ -183,14 +185,16 @@ export function getProductAvailabilityAndInUse(productId: string): { availabilit
   return { availability, inUse };
 }
 
-/** Products with units available < 25 (for dashboard low-stock widget). Sorted by availability ascending. */
-export function getLowStockProducts(): { product: InventoryProduct; availability: number }[] {
+/** Only products with a buffer set appear here: when availability < product.lowStockBuffer. Sorted by availability ascending. */
+export function getLowStockProducts(): { product: InventoryProduct; availability: number; threshold: number }[] {
   const products = getInventoryProducts();
-  const result: { product: InventoryProduct; availability: number }[] = [];
+  const result: { product: InventoryProduct; availability: number; threshold: number }[] = [];
   for (const product of products) {
+    const buffer = product.lowStockBuffer;
+    if (buffer == null || buffer <= 0) continue;
     const { availability } = getProductAvailabilityAndInUse(product.id);
-    if (availability < 25) {
-      result.push({ product, availability });
+    if (availability < buffer) {
+      result.push({ product, availability, threshold: buffer });
     }
   }
   result.sort((a, b) => a.availability - b.availability);

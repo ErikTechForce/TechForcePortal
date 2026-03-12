@@ -175,9 +175,12 @@ const MONTHLY_UNIT_PRICES: Record<string, number> = {
   qtyStackingChairCart: 15,
   qtyCargoCart: 35,
   qtyHousekeepingCart: 40,
-  qtyBIME: 2000,
+  qtyBIME: 2000, // not used directly: BIM-E is $2000 for 1, $1500 each for 2+
   qtyMobileBIME: 1200,
 };
+
+const BIM_E_UNIT_PRICE_ONE = 2000;
+const BIM_E_UNIT_PRICE_TWO_OR_MORE = 1500;
 
 /** One-time unit prices for Additional Accessories Cost */
 const ONE_TIME_UNIT_PRICES: Record<string, number> = {
@@ -456,13 +459,17 @@ const OrderDetail: React.FC = () => {
   const [generatedContractPdfUrl, setGeneratedContractPdfUrl] = useState<string | null>(null);
   const [isGeneratingContractPdf, setIsGeneratingContractPdf] = useState(false);
 
-  // Computed: sum of (qty × unit price) for all monthly items
+  // Computed: sum of (qty × unit price) for all monthly items. BIM-E: $2000 for 1, $1500 each for 2+.
   const computedMonthlyRoboticServiceCost = React.useMemo(() => {
     let total = 0;
     for (const [key, unitPrice] of Object.entries(MONTHLY_UNIT_PRICES)) {
+      if (key === 'qtyBIME') continue;
       const qty = parseInt(contractFormData[key as keyof ContractFormData] as string, 10) || 0;
       total += qty * unitPrice;
     }
+    const bimeQty = parseInt(contractFormData.qtyBIME as string, 10) || 0;
+    if (bimeQty >= 2) total += bimeQty * BIM_E_UNIT_PRICE_TWO_OR_MORE;
+    else if (bimeQty === 1) total += BIM_E_UNIT_PRICE_ONE;
     return total;
   }, [
     contractFormData.qtyTimEBot,
@@ -3884,7 +3891,7 @@ Techforce Team`
                             <div className="contract-form-group"><label className="form-label">Stacking Chair Cart ($15/cart)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyStackingChairCart} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyStackingChairCart: e.target.value }))} placeholder="Qty" /></div>
                             <div className="contract-form-group"><label className="form-label">Cargo Cart ($35/cart)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyCargoCart} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyCargoCart: e.target.value }))} placeholder="Qty" /></div>
                             <div className="contract-form-group"><label className="form-label">Housekeeping Cart ($40/cart)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyHousekeepingCart} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyHousekeepingCart: e.target.value }))} placeholder="Qty" /></div>
-                            <div className="contract-form-group"><label className="form-label">BIM-E ($2,000/mo)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyBIME} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyBIME: e.target.value }))} placeholder="Qty" /></div>
+                            <div className="contract-form-group"><label className="form-label">BIM-E ($2,000/mo for 1, $1,500/mo each for 2+)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyBIME} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyBIME: e.target.value }))} placeholder="Qty" /></div>
                             <div className="contract-form-group"><label className="form-label">Mobile BIM-E ($1,200/mo)</label><input type="text" className="form-input form-input-qty" value={contractFormData.qtyMobileBIME} onChange={(e) => setContractFormData(prev => ({ ...prev, qtyMobileBIME: e.target.value }))} placeholder="Qty" /></div>
                           </div>
                           <div className="contract-form-group contract-form-group-inline">

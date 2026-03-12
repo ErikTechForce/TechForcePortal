@@ -188,6 +188,55 @@
   margin: 0 0 1.5rem 0;
 }
 
+.contract-acknowledgment-section {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 50%, rgba(233, 236, 239, 1) 100%);
+  border-radius: 8px;
+  box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
+  border-left: 4px solid #2F6F44;
+}
+
+.contract-acknowledgment-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1B1C1E;
+  margin: 0 0 1rem 0;
+}
+
+.contract-acknowledgment-section .contract-disclaimer-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #1f2937;
+  margin: 0 0 0.75rem 0;
+}
+
+.contract-initial-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1B1C1E;
+  margin: 0 0 0.5rem 0;
+}
+
+.contract-initial-input-group {
+  margin-top: 0.5rem;
+}
+
+.contract-initial-input-group .form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.contract-initials-input {
+  max-width: 8rem;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .signature-pad-container {
   display: flex;
   flex-direction: column;

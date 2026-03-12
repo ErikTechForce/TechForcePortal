@@ -63,6 +63,13 @@
   font-weight: 500;
 }
 
+.form-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.35rem;
+}
+
 /* Table section collapsible header: only the left part is clickable */
 .product-table-section .collapsible-header {
   cursor: default;

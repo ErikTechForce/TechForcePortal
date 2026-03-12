@@ -14,12 +14,6 @@ const LowStockInventory: React.FC = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const getRowClass = (availability: number): string => {
-    if (availability < 10) return 'low-stock-row low-stock-red';
-    if (availability < 25) return 'low-stock-row low-stock-yellow';
-    return 'low-stock-row';
-  };
-
   return (
     <div className="dashboard-card low-stock-card">
       <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/inventory')}>
@@ -27,13 +21,13 @@ const LowStockInventory: React.FC = () => {
       </h3>
       <div className="card-content">
         {lowStock.length === 0 ? (
-          <p className="low-stock-empty">No items below 25 units.</p>
+          <p className="low-stock-empty">No low-stock items. Set a buffer on a product to see it here when stock falls below that number.</p>
         ) : (
           <ul className="low-stock-list">
             {lowStock.map(({ product, availability }) => (
               <li
                 key={product.id}
-                className={getRowClass(availability)}
+                className="low-stock-row low-stock-yellow"
                 onClick={() => navigate(`/inventory/product/${product.id}`)}
               >
                 <span className="low-stock-name">{product.name}</span>

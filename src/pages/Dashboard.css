@@ -43,93 +43,55 @@
   margin: 0 0 2rem 0;
 }
 
-/* ── Dashboard grid layout ── */
+/* ── Dashboard grid layout (desktop: 2 rows of 3 cards, fixed height + scroll) ── */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(7, 110px);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
 }
 
-/* shared: every cell clips its content */
+/* Fixed row height so all cards in the row are the same size */
+.dashboard-grid-row-1 {
+  margin-bottom: 1.25rem;
+  height: 380px;
+  grid-template-rows: 1fr;
+}
+
+.dashboard-grid-row-2 {
+  margin-bottom: 1.25rem;
+  height: 380px;
+  grid-template-rows: 1fr;
+}
+
+/* Cards fill their grid cell and clip/scroll content */
 .dash-sales,
 .dash-robots,
 .dash-leads,
-.dash-tasks {
+.dash-tasks,
+.dash-pending,
+.dash-inventory {
   overflow: hidden;
   min-height: 0;
-}
-
-.dash-inventory {
-  min-height: 0;
-}
-
-/* div1 — Sales */
-.dash-sales {
-  grid-column: span 2 / span 2;
-  grid-row: span 3 / span 3;
-}
-
-/* div2 — Robots Online */
-.dash-robots {
-  grid-column: span 2 / span 2;
-  grid-row: span 3 / span 3;
-  grid-column-start: 3;
-}
-
-/* div3 — Low Stock Inventory */
-.dash-inventory {
-  grid-column: span 2 / span 2;
-  grid-row: span 3 / span 3;
-  grid-column-start: 5;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* div4 — Tasks */
-.dash-tasks {
-  grid-column: span 2 / span 2;
-  grid-row: span 4 / span 4;
-  grid-row-start: 4;
-}
-
-/* div5 — Pending / Orders */
 .dash-pending {
-  grid-column: span 2 / span 2;
-  grid-row: span 2 / span 2;
-  grid-column-start: 3;
-  grid-row-start: 4;
-  /* card styles live here so overflow: hidden doesn't clip the border/shadow */
   background-color: white;
   border: 1px solid #E9ECEF;
   border-radius: 8px;
   box-shadow: 0 1px 10px rgba(27, 28, 30, 0.2);
   transition: box-shadow 0.2s ease;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .dash-pending:hover {
   box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
 }
 
-/* div6 — Leads */
-.dash-leads {
-  grid-column: span 2 / span 2;
-  grid-row: span 2 / span 2;
-  grid-column-start: 3;
-  grid-row-start: 6;
-}
-
-/* div7 — Activity Log */
+/* Activity Log — full width below rows, not minimized */
 .dash-activity {
-  grid-column: span 2 / span 2;
-  grid-row: span 4 / span 4;
-  grid-column-start: 5;
-  grid-row-start: 4;
-
+  width: 100%;
   background-color: white;
   border: 1px solid #E9ECEF;
   border-radius: 8px;
@@ -138,7 +100,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 320px;
 }
 
 .dash-activity:hover {
@@ -154,10 +116,10 @@
 }
 
 .dash-activity .activity-log-content {
-  flex-grow: 1;
-  height: 0;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  flex: 1;
+  min-height: 260px;
+  max-height: 400px;
+  padding: 1rem 1.5rem;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -214,6 +176,7 @@
 .dash-leads .card-content,
 .dash-tasks .card-content {
   flex: 1;
+  min-height: 0;
   max-height: none;
   overflow-y: auto;
 }
@@ -231,6 +194,7 @@
 
 .dash-pending .pending-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -250,37 +214,38 @@
   overflow: hidden;
 }
 
+/* Chart cards: single child fills and shrinks to cell */
+.dash-sales.dashboard-chart-card > * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-sales .sales-chart {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Robots card: title fixed height, chart wrapper fills and centers */
+.dash-robots .chart-title {
+  flex-shrink: 0;
+}
+
+.dash-robots .robots-chart-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .dashboard-chart-card:hover {
   box-shadow: 0 1px 20px rgba(27, 28, 30, 0.25);
-}
-
-.robots-legend {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid #E9ECEF;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.robots-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.robots-legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.robots-legend-label {
-  font-size: 0.875rem;
-  color: #5A708D;
-  white-space: nowrap;
 }
 
 .robots-chart-wrapper {
@@ -288,7 +253,9 @@
   align-items: center;
   justify-content: center;
   flex: 1;
+  min-height: 0;
   padding: 1rem;
+  overflow: visible;
 }
 
 .dashboard-chart-card .chart-title {
@@ -604,8 +571,8 @@
   background: #8A8F93;
 }
 
-/* Grid collapses to single column at 1540px */
-@media (max-width: 1540px) {
+/* Grid collapses to single column below 1024px (keeps 3-column rows on desktop) */
+@media (max-width: 1024px) {
   .dashboard-content {
     padding: 1rem;
     max-width: 100%;
@@ -622,28 +589,26 @@
     grid-auto-rows: auto;
   }
 
-  /* reset explicit placement so items stack in a single column */
-  .dash-pending,
+  /* Rows no longer fixed height when stacked */
+  .dashboard-grid-row-1,
+  .dashboard-grid-row-2 {
+    height: auto;
+  }
+
   .dash-sales,
   .dash-robots,
   .dash-inventory,
-  .dash-activity,
+  .dash-pending,
   .dash-leads,
   .dash-tasks {
-    grid-column: auto;
-    grid-column-start: auto;
-    grid-row: auto;
-    grid-row-start: auto;
-    overflow: hidden;
+    height: auto;
   }
 
-  .dash-sales      { order: 1; }
-  .dash-robots     { order: 2; }
-  .dash-inventory  { order: 3; }
-  .dash-tasks      { order: 4; }
-  .dash-pending    { order: 5; }
-  .dash-leads      { order: 6; }
-  .dash-activity   { order: 7; }
+  .dash-sales,
+  .dash-robots,
+  .dash-inventory {
+    min-height: 320px;
+  }
 
   /* pending: let the flex layout fill the fixed height and scroll */
   .dash-pending .pending-component {
@@ -655,7 +620,7 @@
     min-height: 0;
   }
 
-  /* leads & tasks: fill the fixed card height */
+  /* leads & tasks: fixed card height when stacked */
   .dash-leads.dashboard-card,
   .dash-tasks.dashboard-card {
     height: 350px;
@@ -668,6 +633,14 @@
     min-height: 0;
   }
 
+  .dash-activity {
+    min-height: 320px;
+  }
+
+  .dash-activity .activity-log-content {
+    min-height: 260px;
+  }
+
   /* all list items wrap to column at this breakpoint */
   .dash-list-item {
     flex-direction: column;
@@ -675,18 +648,15 @@
     gap: 0.25rem;
   }
 
-  /* task pills fill full width when item is in column mode */
   .dash-list-item .dashboard-task-pills {
     width: 100%;
   }
 
-  /* pending order tabs — tighter at collapsed width */
   .pending-tab {
     padding: 0.6rem 0.25rem;
     font-size: 0.8rem;
   }
 
-  /* task priority filter buttons — match pending tabs */
   .dash-tasks-filter-btn {
     padding: 0.6rem 0.1rem;
     font-size: 0.75rem;
@@ -711,29 +681,12 @@
     font-size: 1.4rem;
   }
 
-  /* single-column grid with auto heights */
   .dashboard-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-auto-rows: auto;
   }
 
-  /* reset all explicit placement so every card stacks naturally */
-  .dash-sales,
-  .dash-robots,
-  .dash-inventory,
-  .dash-tasks,
-  .dash-pending,
-  .dash-leads,
-  .dash-activity {
-    grid-column: auto;
-    grid-column-start: auto;
-    grid-row: auto;
-    grid-row-start: auto;
-    overflow: hidden;
-  }
-
-  /* meaningful min-heights for each card in single-column view */
   .dash-sales,
   .dash-robots,
   .dash-inventory {
@@ -753,16 +706,6 @@
     min-height: 240px;
   }
 
-  /* stacking order */
-  .dash-sales      { order: 1; }
-  .dash-robots     { order: 2; }
-  .dash-inventory  { order: 3; }
-  .dash-tasks      { order: 4; }
-  .dash-pending    { order: 5; }
-  .dash-leads      { order: 6; }
-  .dash-activity   { order: 7; }
-
-  /* leads & tasks: fill the fixed card height */
   .dash-leads.dashboard-card,
   .dash-tasks.dashboard-card {
     height: auto;

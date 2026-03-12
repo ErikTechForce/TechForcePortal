@@ -10,9 +10,10 @@ interface PieChartData {
 interface PieChartProps {
   data: PieChartData[];
   size?: number;
+  onSliceClick?: () => void;
 }
 
-const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
+const PieChart: React.FC<PieChartProps> = ({ data, size = 200, onSliceClick }) => {
   const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   
@@ -87,7 +88,8 @@ const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
         onMouseEnter={(e) => handleMouseEnter(index, e)}
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
-        style={{ cursor: 'pointer', opacity: hoveredSlice === index ? 0.8 : 1, transition: 'opacity 0.2s ease' }}
+        onClick={() => onSliceClick?.()}
+        style={{ cursor: onSliceClick ? 'pointer' : 'default', opacity: hoveredSlice === index ? 0.8 : 1, transition: 'opacity 0.2s ease' }}
       />
     );
   });

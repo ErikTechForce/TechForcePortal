@@ -74,9 +74,82 @@
   font-family: inherit;
 }
 
-.employees-edit-btn {
+.employees-edit-btn,
+.employees-view-tasks-btn {
+  margin-right: 0.5rem;
   font-size: 0.875rem;
   padding: 0.35rem 0.75rem;
+}
+
+.employees-view-tasks-btn:last-child {
+  margin-right: 0;
+}
+
+.employees-tasks-row td {
+  vertical-align: top;
+  padding: 0;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.employees-tasks-cell {
+  padding: 0.75rem 1rem 0.75rem 1.5rem !important;
+}
+
+.employees-tasks-table-wrapper {
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.employees-tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.employees-tasks-table thead {
+  background-color: #e5e7eb;
+}
+
+.employees-tasks-table th {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.employees-tasks-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.employees-tasks-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.employees-tasks-table-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.employees-tasks-table-row:hover {
+  background-color: #e5e7eb;
+}
+
+.employees-task-pill {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.employees-task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 .employees-modal-overlay {

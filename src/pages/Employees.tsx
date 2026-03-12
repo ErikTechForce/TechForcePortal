@@ -7,10 +7,25 @@ import Modal from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { fetchVerifiedUsers, updateUserRoles, type VerifiedUser } from '../api/users';
 import { ROLE_OPTIONS } from '../api/users';
-import { TAG_PILL_COLORS } from '../constants/taskTags';
+import { fetchAllTasks, type TaskRow } from '../api/tasks';
+import { TAG_PILL_COLORS, ROLE_LABELS as TASK_ROLE_LABELS } from '../constants/taskTags';
 import './Page.css';
 import './Settings.css';
 import './Employees.css';
+
+const STATUS_PILL_COLORS: Record<string, string> = {
+  Unassigned: '#e5e7eb',
+  'To-Do': '#bfdbfe',
+  'In Progress': '#fde68a',
+  Completed: '#bbf7d0',
+};
+
+const PRIORITY_PILL_COLORS: Record<string, string> = {
+  Low: '#73BF4380',
+  Medium: '#FFC10780',
+  High: '#E48B5280',
+  Urgent: '#ef444480',
+};
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
@@ -47,6 +62,8 @@ const Employees: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [warnSelfAdminRevoke, setWarnSelfAdminRevoke] = useState(false);
   const [pendingRoles, setPendingRoles] = useState<string[] | null>(null);
+  const [allTasks, setAllTasks] = useState<TaskRow[]>([]);
+  const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
 
   const isAdmin = Array.isArray(user?.roles) && user!.roles.includes('admin');
 
@@ -85,6 +102,29 @@ const Employees: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [isAdmin, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin || !user?.id) {
+      setAllTasks([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllTasks(user.id)
+      .then((list) => {
+        if (!cancelled) setAllTasks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllTasks([]);
+      });
+    return () => { cancelled = true; };
+  }, [isAdmin, user?.id]);
+
+  const tasksForUser = (userId: number) =>
+    allTasks.filter((t) => t.assigned_to_user_id === userId);
+
+  const toggleTasks = (userId: number) => {
+    setExpandedUserId((prev) => (prev === userId ? null : userId));
+  };
 
   const openEdit = (u: VerifiedUser) => {
     setEditUserId(u.id);
@@ -191,34 +231,120 @@ const Employees: React.FC = () => {
                           </td>
                         </tr>
                       ) : (
-                        filteredUsers.map((u) => (
-                        <tr key={u.id}>
-                          <td>{u.username}</td>
-                          <td>{u.email}</td>
-                          <td>
-                            <div className="employees-roles-pills">
-                              {(getUserRoles(u).length === 0 ? ['—'] : getUserRoles(u)).map((r) => (
-                                <span
-                                  key={r}
-                                  className="employees-pill"
-                                  style={TAG_PILL_COLORS[r] ? { backgroundColor: TAG_PILL_COLORS[r] } : undefined}
-                                >
-                                  {ROLE_LABELS[r] ?? r}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td>
-                            <button
-                              type="button"
-                              className="update-button employees-edit-btn"
-                              onClick={() => openEdit(u)}
-                            >
-                              Edit Roles
-                            </button>
-                          </td>
-                        </tr>
-                        ))
+                        filteredUsers.map((u) => {
+                          const tasks = tasksForUser(u.id);
+                          const isExpanded = expandedUserId === u.id;
+                          return (
+                            <React.Fragment key={u.id}>
+                              <tr>
+                                <td>{u.username}</td>
+                                <td>{u.email}</td>
+                                <td>
+                                  <div className="employees-roles-pills">
+                                    {(getUserRoles(u).length === 0 ? ['—'] : getUserRoles(u)).map((r) => (
+                                      <span
+                                        key={r}
+                                        className="employees-pill"
+                                        style={TAG_PILL_COLORS[r] ? { backgroundColor: TAG_PILL_COLORS[r] } : undefined}
+                                      >
+                                        {ROLE_LABELS[r] ?? r}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="update-button employees-edit-btn"
+                                    onClick={() => openEdit(u)}
+                                  >
+                                    Edit Roles
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="update-button employees-view-tasks-btn"
+                                    onClick={() => toggleTasks(u.id)}
+                                    title={isExpanded ? 'Hide tasks' : 'View assigned tasks'}
+                                    aria-expanded={isExpanded}
+                                  >
+                                    {isExpanded ? 'Hide tasks' : 'View tasks'}
+                                  </button>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr className="employees-tasks-row">
+                                  <td colSpan={4} className="employees-tasks-cell">
+                                    <div className="employees-tasks-table-wrapper">
+                                      <table className="employees-tasks-table">
+                                        <thead>
+                                          <tr>
+                                            <th>Task</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                            <th>Roles</th>
+                                            <th>Company</th>
+                                            <th>Due date</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {tasks.length === 0 ? (
+                                            <tr>
+                                              <td colSpan={6}>No tasks assigned.</td>
+                                            </tr>
+                                          ) : (
+                                            tasks.map((t) => (
+                                              <tr
+                                                key={t.id}
+                                                className="employees-tasks-table-row"
+                                                onClick={() => navigate(`/tasks/${t.id}`)}
+                                              >
+                                                <td data-label="Task">{t.name}</td>
+                                                <td data-label="Status">
+                                                  <span
+                                                    className="employees-task-pill"
+                                                    style={{ backgroundColor: STATUS_PILL_COLORS[t.status] ?? '#e5e7eb' }}
+                                                  >
+                                                    {t.status}
+                                                  </span>
+                                                </td>
+                                                <td data-label="Priority">
+                                                  {t.priority ? (
+                                                    <span
+                                                      className="employees-task-pill"
+                                                      style={{ backgroundColor: PRIORITY_PILL_COLORS[t.priority] ?? '#e5e7eb' }}
+                                                    >
+                                                      {t.priority}
+                                                    </span>
+                                                  ) : '—'}
+                                                </td>
+                                                <td data-label="Roles">
+                                                  <div className="employees-task-tags">
+                                                    {(t.tags?.length ? t.tags : []).map((tag) => (
+                                                      <span
+                                                        key={tag}
+                                                        className="employees-task-pill"
+                                                        style={{ backgroundColor: TAG_PILL_COLORS[tag] ?? '#e5e7eb' }}
+                                                      >
+                                                        {TASK_ROLE_LABELS[tag] ?? tag.replace(/_/g, ' ')}
+                                                      </span>
+                                                    ))}
+                                                    {(!t.tags || t.tags.length === 0) && '—'}
+                                                  </div>
+                                                </td>
+                                                <td data-label="Company">{t.client_company ?? '—'}</td>
+                                                <td data-label="Due date">{t.due_date ? new Date(t.due_date).toLocaleDateString() : '—'}</td>
+                                              </tr>
+                                            ))
+                                          )}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

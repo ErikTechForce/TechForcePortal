@@ -49,6 +49,14 @@ export async function fetchAllTasks(adminUserId: number): Promise<TaskRow[]> {
   return data.tasks ?? [];
 }
 
+/** Tasks that share roles with the user, excluding those in their todo / in progress / unassigned (for Task Board table). */
+export async function fetchBoardTasks(userId: number): Promise<TaskRow[]> {
+  const res = await fetch(`${API_BASE}/api/tasks/board?userId=${encodeURIComponent(userId)}`);
+  if (!res.ok) throw new Error('Failed to fetch board tasks');
+  const data = await res.json();
+  return data.tasks ?? [];
+}
+
 export async function fetchTask(id: number): Promise<TaskRow | null> {
   const res = await fetch(`${API_BASE}/api/tasks/${id}`);
   if (res.status === 404) return null;

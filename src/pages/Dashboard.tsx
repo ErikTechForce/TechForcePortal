@@ -16,6 +16,8 @@ import './Dashboard.css';
 const STATUS_FILTER_ORDER = ['To-Do', 'In Progress'] as const;
 type StatusFilter = typeof STATUS_FILTER_ORDER[number];
 
+const ACTIVITY_LOG_MAX_DISPLAY = 50;
+
 const STATUS_PILL_COLORS: Record<string, string> = {
   Unassigned: '#8A8F93',
   'To-Do': '#bfdbfe',
@@ -244,35 +246,11 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="dashboard-content">
-            <div className="dashboard-grid">
-
-              {/* div1 — Sales */}
-              <div className="dash-sales dashboard-card dashboard-chart-card">
-                <SalesChart productData={salesProductData} totalData={salesTotalData} />
+            {/* Desktop: row 1 — Orders, Tasks, Leads */}
+            <div className="dashboard-grid dashboard-grid-row-1">
+              <div className="dash-pending dashboard-card">
+                <Pending />
               </div>
-
-              {/* div2 — Robots Online */}
-              <div className="dash-robots dashboard-card dashboard-chart-card">
-                <h3 className="chart-title">Robots Online</h3>
-                <div className="robots-legend">
-                  {robotsData.map((item) => (
-                    <div key={item.label} className="robots-legend-item">
-                      <span className="robots-legend-dot" style={{ backgroundColor: item.color }} />
-                      <span className="robots-legend-label">{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="robots-chart-wrapper">
-                  <PieChart data={robotsData} size={180} />
-                </div>
-              </div>
-
-              {/* div3 — Low Stock Inventory */}
-              <div className="dash-inventory">
-                <LowStockInventory />
-              </div>
-
-              {/* div4 — Tasks */}
               <div className="dash-tasks dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/tasks')}>Your Tasks</h3>
                 <div className="dash-tasks-filter-bar">
@@ -310,13 +288,6 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
               </div>
-
-              {/* div5 — Pending / Orders */}
-              <div className="dash-pending dashboard-card">
-                <Pending />
-              </div>
-
-              {/* div6 — Leads */}
               <div className="dash-leads dashboard-card">
                 <h3 className="card-title" style={{ cursor: 'pointer' }} onClick={() => navigate('/client')}>Leads</h3>
                 <div className="card-content">
@@ -332,29 +303,44 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* div7 — Activity Log */}
-              <div className="dash-activity dashboard-card">
-                <h3 className="activity-log-title">Activity Log</h3>
-                <div className="activity-log-content">
-                  <div className="activity-log-list">
-                    {siteActivity.length === 0 ? (
-                      <p className="activity-log-empty">No activity recorded yet.</p>
-                    ) : (
-                      siteActivity.map((entry) => (
-                        <div key={entry.id} className="activity-log-item">
-                          <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
-                          {entry.action}
-                          {entry.user && entry.user !== 'System' && (
-                            <span className="activity-log-user"> — {entry.user}</span>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
+            {/* Desktop: row 2 — Sales, Inventory, Robots */}
+            <div className="dashboard-grid dashboard-grid-row-2">
+              <div className="dash-sales dashboard-card dashboard-chart-card">
+                <SalesChart productData={salesProductData} totalData={salesTotalData} />
+              </div>
+              <div className="dash-inventory">
+                <LowStockInventory />
+              </div>
+              <div className="dash-robots dashboard-card dashboard-chart-card">
+                <h3 className="chart-title">Robots Online</h3>
+                <div className="robots-chart-wrapper">
+                  <PieChart data={robotsData} size={150} onSliceClick={() => navigate('/inventory')} />
                 </div>
               </div>
+            </div>
 
+            {/* Activity Log — full width below, not minimized */}
+            <div className="dash-activity dashboard-card">
+              <h3 className="activity-log-title">Activity Log</h3>
+              <div className="activity-log-content">
+                <div className="activity-log-list">
+                  {siteActivity.length === 0 ? (
+                    <p className="activity-log-empty">No activity recorded yet.</p>
+                  ) : (
+                    siteActivity.slice(0, ACTIVITY_LOG_MAX_DISPLAY).map((entry) => (
+                      <div key={entry.id} className="activity-log-item">
+                        <span className="activity-log-time">[{formatActivityTime(entry.created_at)}]</span>{' '}
+                        {entry.action}
+                        {entry.user && entry.user !== 'System' && (
+                          <span className="activity-log-user"> — {entry.user}</span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </main>

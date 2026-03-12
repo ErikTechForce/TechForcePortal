@@ -186,3 +186,35 @@ export async function sendInvoiceConfirmationEmail(payload: InvoiceConfirmationP
     throw err;
   }
 }
+
+/** Send a copy of the signed contract PDF to the billing contact email (when client submits via contract link). */
+export async function sendSignedContractToBillingEmail(
+  to: string,
+  pdfBuffer: Buffer,
+  orderNumber?: string
+): Promise<void> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('Email not sent: SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD).');
+    return;
+  }
+  const orderRef = orderNumber ? ` Order ${orderNumber}.` : '';
+  try {
+    await transporter.sendMail({
+      from: MAIL_FROM,
+      to: to.trim(),
+      subject: orderNumber ? `Signed contract – Order ${orderNumber}` : 'Signed contract – TechForce Robotics',
+      text: `Please find the signed contract attached.${orderRef}`,
+      html: `<p>Please find the signed contract attached.${orderRef}</p>`,
+      attachments: [
+        {
+          filename: orderNumber ? `Signed-Contract-${orderNumber}.pdf` : 'Signed-Contract.pdf',
+          content: pdfBuffer,
+        },
+      ],
+    });
+  } catch (err) {
+    console.error('Failed to send signed contract to billing email:', err);
+    throw err;
+  }
+}

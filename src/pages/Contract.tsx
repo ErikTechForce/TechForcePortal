@@ -122,6 +122,8 @@ const TEXT_PLACEMENTS: Record<string, Placement> = {
   techforceSignature: { x: 100, y: 105, width: 180, height: 54, pageIndex: 4 },
   /** Client signature on page 5, right side */
   clientSignatureLastPage: { x: 340, y: 105, width: 180, height: 54, pageIndex: 4 },
+  /** Client initials (third-party electrician acknowledgment) at bottom of page 2 */
+  clientInitials: { x: 346, y: 142, fontSize: 10, pageIndex: 1 },
 };
 
 /** Trial agreement: same coordinates as OrderDetail (generated contract) so client-signed PDF matches. */
@@ -143,6 +145,7 @@ const TRIAL_TEXT_PLACEMENTS: Record<string, Placement> = {
   scopeText: { x: 100, y: 580, fontSize: 9, pageIndex: 1 },
   techforceSignature: { x: 110, y: 360, width: 180, height: 54, pageIndex: 5 },
   clientSignatureLastPage: { x: 340, y: 360, width: 180, height: 54, pageIndex: 5 },
+  clientInitials: { x: 340, y: 370, fontSize: 10, pageIndex: 1 },
 };
 
 const Contract: React.FC = () => {
@@ -170,6 +173,7 @@ const Contract: React.FC = () => {
   const [billingContactEmail, setBillingContactEmail] = useState('');
   const [contractStatus, setContractStatus] = useState<'pending' | 'signed' | null>(null);
   const [contractStatusLoading, setContractStatusLoading] = useState(true);
+  const [clientInitials, setClientInitials] = useState('');
 
   const CLIENT_SIGNATURE_PLACEMENT = TEXT_PLACEMENTS.clientSignatureLastPage as { x: number; y: number; width?: number; height?: number };
 
@@ -423,7 +427,7 @@ const Contract: React.FC = () => {
     setSignature(null);
   };
 
-  const generatePdfWithSignature = async (signatureImage: string) => {
+  const generatePdfWithSignature = async (signatureImage: string, initials?: string) => {
     try {
       setIsGeneratingPdf(true);
       const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
@@ -579,6 +583,22 @@ const Contract: React.FC = () => {
         height: clientSigPlacement.height ?? 54,
       });
 
+      if (initials && initials.trim()) {
+        const initialsPlacement = placements.clientInitials as { x: number; y: number; fontSize?: number; pageIndex?: number } | undefined;
+        if (initialsPlacement) {
+          const page2 = pages[initialsPlacement.pageIndex ?? 1] ?? pages[1];
+          if (page2) {
+            page2.drawText(initials.trim(), {
+              x: initialsPlacement.x,
+              y: initialsPlacement.y,
+              size: initialsPlacement.fontSize ?? 10,
+              font: helveticaFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+        }
+      }
+
       const pdfBytes = await pdfDoc.save();
       const url = URL.createObjectURL(new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' }));
       setIsGeneratingPdf(false);
@@ -597,8 +617,8 @@ const Contract: React.FC = () => {
     const dataURL = canvas.toDataURL('image/png');
     setSignature(dataURL);
     
-    // Generate PDF with signature
-    const signedPdf = await generatePdfWithSignature(dataURL);
+    // Generate PDF with signature and initials (if entered) so preview shows initials on page 2
+    const signedPdf = await generatePdfWithSignature(dataURL, clientInitials.trim() || undefined);
     if (signedPdf) {
       // Clean up previous blob URL if it exists
       if (signedPdfUrl && signedPdfUrl.startsWith('blob:')) {
@@ -627,27 +647,26 @@ const Contract: React.FC = () => {
       alert('Please sign the contract before submitting.');
       return;
     }
+    const initials = (clientInitials || '').trim();
+    if (!initials) {
+      alert('Please enter your initials to acknowledge the third-party electrician terms.');
+      return;
+    }
     if (!contractId) {
       alert('Invalid contract link.');
       return;
     }
     setIsSubmitting(true);
     try {
-      let pdfUrlToSend = signedPdfUrl;
-      if (!pdfUrlToSend) {
-        const url = await generatePdfWithSignature(signature);
-        if (url) {
-          pdfUrlToSend = url;
-          if (signedPdfUrl && signedPdfUrl.startsWith('blob:')) URL.revokeObjectURL(signedPdfUrl);
-          setSignedPdfUrl(url);
-        }
-      }
-      if (!pdfUrlToSend) {
+      // Regenerate PDF with signature + initials so submitted PDF has initials on bottom of page 2
+      const url = await generatePdfWithSignature(signature, initials);
+      if (!url) {
         alert('Could not generate the signed PDF. Please try again.');
         setIsSubmitting(false);
         return;
       }
-      const res = await fetch(pdfUrlToSend);
+      if (signedPdfUrl && signedPdfUrl.startsWith('blob:')) URL.revokeObjectURL(signedPdfUrl);
+      const res = await fetch(url);
       const blob = await res.blob();
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -668,6 +687,10 @@ const Contract: React.FC = () => {
           billingCity: billingCity?.trim() || undefined,
           billingState: billingState?.trim() || undefined,
           billingZip: billingZip?.trim() || undefined,
+          billingContactName: billingContactName?.trim() || undefined,
+          billingContactPhone: billingContactPhone?.trim() || undefined,
+          billingContactEmail: billingContactEmail?.trim() || undefined,
+          clientInitials: initials,
         }),
       });
       if (!patchRes.ok) {
@@ -911,6 +934,28 @@ const Contract: React.FC = () => {
                 </div>
               </div>
 
+              {/* Third-party electrician acknowledgment — separate section above signature */}
+              <div className="contract-acknowledgment-section">
+                <h2 className="contract-acknowledgment-title">Third-party electrician terms</h2>
+                <p className="contract-disclaimer-text">
+                  Third-party electrician will alter all necessary access doors and any power requirements to power the robot(s). This will include a minimum automatic door opener for the robot(s)'s operation. All third-party costs to be paid by Client to their vendor. Cost may vary based upon needs. TechForce to manage and coordinate with third-party vendor at no cost to Client.
+                </p>
+                <p className="contract-initial-label">Initial to acknowledge.</p>
+                <div className="contract-initial-input-group">
+                  <label htmlFor="contract-initials" className="form-label">Your initials</label>
+                  <input
+                    id="contract-initials"
+                    type="text"
+                    className="form-input contract-initials-input"
+                    value={clientInitials}
+                    onChange={(e) => setClientInitials(e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 8))}
+                    placeholder="e.g. JC"
+                    maxLength={8}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+
               {/* Signature Section */}
               <div className="signature-section">
                 <h2 className="signature-section-title">Sign Contract</h2>
@@ -959,7 +1004,7 @@ const Contract: React.FC = () => {
                   type="button"
                   className="submit-contract-button"
                   onClick={handleSubmit}
-                  disabled={!signature || isSubmitting}
+                  disabled={!signature || !clientInitials.trim() || isSubmitting}
                 >
                   {isSubmitting ? 'Submitting…' : 'Submit Signed Contract'}
                 </button>

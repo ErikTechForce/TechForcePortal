@@ -277,6 +277,10 @@
   padding: 2rem !important;
 }
 
+.task-board-section {
+  margin-top: 2rem;
+}
+
 .completed-tasks-section {
   margin-top: 2rem;
 }

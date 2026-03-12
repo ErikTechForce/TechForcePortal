@@ -72,22 +72,26 @@ const ProductDetail: React.FC = () => {
   const [editProductName, setEditProductName] = useState('');
   const [editProductType, setEditProductType] = useState<ProductType>('Robot');
   const [editProductSku, setEditProductSku] = useState('');
+  const [editProductLowStockBuffer, setEditProductLowStockBuffer] = useState('');
 
   const openEditProductModal = () => {
     if (!product) return;
     setEditProductName(product.name);
     setEditProductType(product.type);
     setEditProductSku(product.sku || '');
+    setEditProductLowStockBuffer(product.lowStockBuffer != null ? String(product.lowStockBuffer) : '');
     setEditProductOpen(true);
   };
 
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
+    const bufRaw = editProductLowStockBuffer.trim();
+    const lowStockBuffer = bufRaw === '' ? undefined : Math.max(0, Math.floor(Number(bufRaw))) || undefined;
     const all = getInventoryProducts();
     const updated = all.map((p) =>
       p.id === product.id
-        ? { ...p, name: editProductName.trim(), type: editProductType, sku: editProductSku.trim() }
+        ? { ...p, name: editProductName.trim(), type: editProductType, sku: editProductSku.trim(), lowStockBuffer: lowStockBuffer ?? null }
         : p
     );
     setInventoryProducts(updated);
@@ -417,6 +421,18 @@ const ProductDetail: React.FC = () => {
                   <label className="product-info-label">Available</label>
                   <p className="product-info-value">{availableCount}</p>
                 </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">Low stock buffer</label>
+                  <p className="product-info-value">{product.lowStockBuffer != null && product.lowStockBuffer > 0 ? product.lowStockBuffer : '—'}</p>
+                </div>
+                <div className="product-info-item">
+                  <label className="product-info-label">Items need to be produced</label>
+                  <p className="product-info-value">
+                    {product.lowStockBuffer != null && product.lowStockBuffer > 0 && product.lowStockBuffer > availableCount
+                      ? product.lowStockBuffer - availableCount
+                      : '—'}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -706,6 +722,20 @@ const ProductDetail: React.FC = () => {
                     onChange={(e) => setEditProductSku(e.target.value)}
                     placeholder="e.g. TIM-E-001"
                   />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Low stock buffer</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className="form-input"
+                    value={editProductLowStockBuffer}
+                    onChange={(e) => setEditProductLowStockBuffer(e.target.value)}
+                    placeholder="Default: 25"
+                    aria-label="Low stock buffer — show on dashboard when below this number"
+                  />
+                  <span className="form-hint">When stock falls below this number, the item appears on the dashboard low-stock card (highlighted yellow). Leave blank to hide from the low-stock card.</span>
                 </div>
               </div>
               <div className="modal-actions">
