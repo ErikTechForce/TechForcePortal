@@ -13,6 +13,8 @@ export interface TimEInventoryRow {
   value: string;
   discardedUnits: string;
   wasteDollars: string;
+  /** When set, part appears on dashboard low-stock card when available < this number. */
+  lowStockBuffer?: number | null;
 }
 
 /** Rows for TIM-E Product Inventory List (Bots Gen 1 & Gen 2 moved to product inventory table). */

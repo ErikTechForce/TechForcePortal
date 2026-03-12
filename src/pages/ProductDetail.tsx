@@ -64,6 +64,7 @@ const ProductDetail: React.FC = () => {
   const [partsEditDiscardedUnits, setPartsEditDiscardedUnits] = useState('');
   const [partsEditWasteDollars, setPartsEditWasteDollars] = useState('');
   const [partsEditPendingDelivery, setPartsEditPendingDelivery] = useState('');
+  const [partsEditLowStockBuffer, setPartsEditLowStockBuffer] = useState('');
 
   const isFullInventoryProduct = !!product && (product.name === 'TIM-E Bot' || product.name === 'BIM-E');
 
@@ -147,6 +148,7 @@ const ProductDetail: React.FC = () => {
     setPartsEditDiscardedUnits(row.discardedUnits);
     setPartsEditWasteDollars(row.wasteDollars);
     setPartsEditPendingDelivery('');
+    setPartsEditLowStockBuffer(row.lowStockBuffer != null ? String(row.lowStockBuffer) : '');
   };
 
   const openBimEPartsEdit = (index: number) => {
@@ -165,6 +167,7 @@ const ProductDetail: React.FC = () => {
     setPartsEditDiscardedUnits(row.discardedUnits);
     setPartsEditWasteDollars('');
     setPartsEditPendingDelivery(row.pendingDelivery);
+    setPartsEditLowStockBuffer(row.lowStockBuffer != null ? String(row.lowStockBuffer) : '');
   };
 
   const closePartsEdit = () => {
@@ -176,6 +179,8 @@ const ProductDetail: React.FC = () => {
     e.preventDefault();
     if (partsEditType === 'tim-e' && partsEditIndex !== null) {
       const next = [...timEPartsRows];
+      const buf = partsEditLowStockBuffer.trim();
+      const lowStockBuffer = buf === '' ? undefined : Math.max(0, Math.floor(Number(buf))) || undefined;
       next[partsEditIndex] = {
         product: partsEditProduct.trim(),
         available: partsEditAvailable.trim(),
@@ -187,11 +192,14 @@ const ProductDetail: React.FC = () => {
         value: partsEditValue.trim(),
         discardedUnits: partsEditDiscardedUnits.trim(),
         wasteDollars: partsEditWasteDollars.trim(),
+        lowStockBuffer: lowStockBuffer ?? null,
       };
       setTimEPartsRows(next);
       setTimEPartsInventory(next);
     } else if (partsEditType === 'bim-e' && partsEditIndex !== null) {
       const next = [...bimEPartsRows];
+      const buf = partsEditLowStockBuffer.trim();
+      const lowStockBuffer = buf === '' ? undefined : Math.max(0, Math.floor(Number(buf))) || undefined;
       next[partsEditIndex] = {
         product: partsEditProduct.trim(),
         available: partsEditAvailable.trim(),
@@ -203,6 +211,7 @@ const ProductDetail: React.FC = () => {
         value: partsEditValue.trim(),
         discardedUnits: partsEditDiscardedUnits.trim(),
         pendingDelivery: partsEditPendingDelivery.trim(),
+        lowStockBuffer: lowStockBuffer ?? null,
       };
       setBimEPartsRows(next);
       setBimEPartsInventory(next);
@@ -542,6 +551,7 @@ const ProductDetail: React.FC = () => {
                         <th>Value</th>
                         <th>Discarded Units</th>
                         <th>Waste $</th>
+                        <th>Buffer</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -561,6 +571,7 @@ const ProductDetail: React.FC = () => {
                           <td>{row.value || '—'}</td>
                           <td>{row.discardedUnits || '—'}</td>
                           <td>{row.wasteDollars || '—'}</td>
+                          <td>{row.lowStockBuffer != null && row.lowStockBuffer > 0 ? row.lowStockBuffer : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -570,6 +581,7 @@ const ProductDetail: React.FC = () => {
                         <td>{formatPartsCurrency(timEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.value), 0))}</td>
                         <td></td>
                         <td>{formatPartsCurrency(timEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.wasteDollars), 0))}</td>
+                        <td></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -597,6 +609,7 @@ const ProductDetail: React.FC = () => {
                         <th>Value</th>
                         <th>Discarded Units</th>
                         <th>Pending Delivery</th>
+                        <th>Buffer</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -616,14 +629,15 @@ const ProductDetail: React.FC = () => {
                           <td>{row.value || '—'}</td>
                           <td>{row.discardedUnits || '—'}</td>
                           <td>{row.pendingDelivery || '—'}</td>
+                          <td>{row.lowStockBuffer != null && row.lowStockBuffer > 0 ? row.lowStockBuffer : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="product-inventory-total-row">
-                        <td colSpan={8}>Total</td>
-                        <td></td>
+                        <td colSpan={9}>Total</td>
                         <td>{formatPartsCurrency(bimEPartsRows.reduce((sum, r) => sum + parsePartsValue(r.value), 0))}</td>
+                        <td></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -1007,6 +1021,19 @@ const ProductDetail: React.FC = () => {
                   <input type="text" className="form-input" value={partsEditPendingDelivery} onChange={(e) => setPartsEditPendingDelivery(e.target.value)} />
                 </div>
               )}
+              <div className="form-group">
+                <label className="form-label">Low stock buffer</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  className="form-input"
+                  value={partsEditLowStockBuffer}
+                  onChange={(e) => setPartsEditLowStockBuffer(e.target.value)}
+                  placeholder="Show on dashboard when below this"
+                />
+                <span className="form-hint">When available falls below this number, this part appears on the dashboard low-stock card. Leave blank to hide.</span>
+              </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-button" onClick={closePartsEdit}>Cancel</button>
                 <button type="submit" className="save-button">Save</button>

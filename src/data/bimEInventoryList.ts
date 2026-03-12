@@ -13,6 +13,8 @@ export interface BimEInventoryRow {
   value: string;
   discardedUnits: string;
   pendingDelivery: string;
+  /** When set, part appears on dashboard low-stock card when available < this number. */
+  lowStockBuffer?: number | null;
 }
 
 export const BIM_E_INVENTORY_LIST: BimEInventoryRow[] = [

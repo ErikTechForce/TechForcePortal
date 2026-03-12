@@ -3,6 +3,9 @@
  * Persisted in localStorage so Inventory and ProductDetail stay in sync.
  */
 
+import { getTimEPartsInventory } from './timEInventoryList';
+import { getBimEPartsInventory } from './bimEInventoryList';
+
 export type ProductType = 'Robot' | 'Accessory';
 
 export interface InventoryProduct {
@@ -195,6 +198,34 @@ export function getLowStockProducts(): { product: InventoryProduct; availability
     const { availability } = getProductAvailabilityAndInUse(product.id);
     if (availability < buffer) {
       result.push({ product, availability, threshold: buffer });
+    }
+  }
+  result.sort((a, b) => a.availability - b.availability);
+  return result;
+}
+
+/** Low-stock parts from TIM-E and BIM-E parts inventory: only rows with lowStockBuffer set and available < buffer. */
+export type LowStockPart = { productName: string; availability: number; threshold: number; source: 'tim-e' | 'bim-e' };
+
+export function getLowStockParts(): LowStockPart[] {
+  const timERows = getTimEPartsInventory() as Array<{ product: string; available: string; lowStockBuffer?: number | null }>;
+  const bimERows = getBimEPartsInventory() as Array<{ product: string; available: string; lowStockBuffer?: number | null }>;
+  const result: LowStockPart[] = [];
+  const parseAvailable = (s: string) => Math.max(0, parseInt(String(s).trim(), 10) || 0);
+  for (const row of timERows) {
+    const buffer = row.lowStockBuffer;
+    if (buffer == null || buffer <= 0) continue;
+    const availability = parseAvailable(row.available);
+    if (availability < buffer) {
+      result.push({ productName: row.product, availability, threshold: buffer, source: 'tim-e' });
+    }
+  }
+  for (const row of bimERows) {
+    const buffer = row.lowStockBuffer;
+    if (buffer == null || buffer <= 0) continue;
+    const availability = parseAvailable(row.available);
+    if (availability < buffer) {
+      result.push({ productName: row.product, availability, threshold: buffer, source: 'bim-e' });
     }
   }
   result.sort((a, b) => a.availability - b.availability);
